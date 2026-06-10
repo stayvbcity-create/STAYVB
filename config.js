@@ -24,9 +24,8 @@
 window.STAYVB_CONFIG = (function () {
 
     // ── Supabase konekcija ─────────────────────────────────────────
-    // ⚠️  ZAMENI sa svojim ključevima iz Supabase Dashboard → Settings → API
-    const SUPABASE_URL = 'https://TVOJ_PROJEKAT.supabase.co';
-    const SUPABASE_ANON_KEY = 'TVOJ_ANON_KLJUC';
+    const SUPABASE_URL = 'https://zapmsxvwxjeoglpzldhl.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcG1zeHZ3eGplb2dscHpsZGhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMjY4NDQsImV4cCI6MjA5NjcwMjg0NH0.szTiMlsQJZCgbFE89eRn1YIN133smnEkPhVmcaVmGqM';
 
     // ── Admin hash ─────────────────────────────────────────────────
     // SHA-256 hash admin lozinke
@@ -35,7 +34,7 @@ window.STAYVB_CONFIG = (function () {
     const ADMIN_HASH = 'd923beddc6b3a0112d357d097d9f873f95ea0464acd09020829b3a3c2bd6fa7e';
 
     // ── App podešavanja ────────────────────────────────────────────
-    const APP_URL = 'https://TVOJ_DOMEN.com';   // bez trailing slash
+    const APP_URL = 'https://stayvb.onrender.com';
     const PARTNER_PANEL_URL = APP_URL + '/partner.html';
     const STAMP_URL = APP_URL + '/stamp.html';
 
