@@ -2,553 +2,703 @@
 <html lang="sr-Latn">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>StayVB — Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StayVB — God Mode Admin</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="security-guard.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
-<!-- QR Generator -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
-*{box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:#020617;color:white;min-height:100vh;margin:0}
-.app{max-width:900px;margin:0 auto;padding:20px 16px 60px}
-
-/* Header */
-.header{background:linear-gradient(135deg,rgba(251,191,36,0.10),transparent),#0f172a;border-bottom:1px solid rgba(251,191,36,0.15);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;position:sticky;top:0;z-index:100}
-.header-title{font-size:1.1rem;font-weight:900;color:#fbbf24;letter-spacing:-0.02em}
-.logout-btn{padding:8px 14px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);font-size:10px;font-weight:900;color:rgba(255,255,255,0.5);cursor:pointer;font-family:inherit;text-transform:uppercase}
-
-/* Tabs */
-.tabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.08);overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}
-.tabs::-webkit-scrollbar{display:none}
-.tab{padding:14px 18px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;color:rgba(255,255,255,0.4);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all 0.18s}
-.tab.active{color:#fbbf24;border-bottom-color:#fbbf24}
-.tab-content{display:none;padding-top:20px}
-.tab-content.active{display:block}
-
-/* Stats grid */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:24px}
-.stat-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:1.2rem;padding:14px;text-align:center}
-.stat-num{font-size:2rem;font-weight:900;letter-spacing:-0.04em}
-.stat-label{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.35);margin-top:4px}
-
-/* Table */
-.data-table{width:100%;border-collapse:collapse}
-.data-table th{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.35);padding:8px 10px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.08)}
-.data-table td{padding:10px;font-size:12px;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.05);vertical-align:middle}
-.data-table tr:hover td{background:rgba(255,255,255,0.02)}
-
-/* Toggle switch */
-.toggle{position:relative;width:40px;height:22px;display:inline-block}
-.toggle input{opacity:0;width:0;height:0}
-.toggle-slider{position:absolute;inset:0;background:rgba(255,255,255,0.12);border-radius:999px;cursor:pointer;transition:0.3s}
-.toggle-slider:before{content:"";position:absolute;height:16px;width:16px;left:3px;top:3px;background:white;border-radius:50%;transition:0.3s}
-.toggle input:checked + .toggle-slider{background:#10b981}
-.toggle input:checked + .toggle-slider:before{transform:translateX(18px)}
-
-/* Form */
-.modal-overlay{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px}
-.modal-overlay.open{display:flex}
-.modal-box{background:#1e293b;border:1px solid rgba(251,191,36,0.20);border-radius:2rem;padding:28px 24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;position:relative}
-.field-group{margin-bottom:14px}
-.field-label{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.35);margin-bottom:5px;display:block}
-.field-input{width:100%;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:12px;color:white;font-size:13px;font-weight:700;font-family:inherit;outline:none}
-.field-input:focus{border-color:rgba(251,191,36,0.40)}
-
-/* Buttons */
-.btn-gold{padding:10px 18px;background:linear-gradient(135deg,#d97706,#f59e0b);color:#0f172a;border:none;border-radius:10px;font-size:11px;font-weight:900;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:0.08em}
-.btn-red{padding:8px 14px;background:rgba(239,68,68,0.12);color:#fca5a5;border:1px solid rgba(239,68,68,0.25);border-radius:10px;font-size:10px;font-weight:900;cursor:pointer;font-family:inherit}
-.btn-ghost{padding:8px 14px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.10);border-radius:10px;font-size:10px;font-weight:900;cursor:pointer;font-family:inherit}
-.btn-green{padding:8px 14px;background:rgba(16,185,129,0.15);color:#6ee7b7;border:1px solid rgba(16,185,129,0.25);border-radius:10px;font-size:10px;font-weight:900;cursor:pointer;font-family:inherit}
-
-/* Tag badges */
-.tag{padding:3px 8px;border-radius:6px;font-size:9px;font-weight:900;text-transform:uppercase}
-.tag-apt{background:rgba(100,116,139,0.20);color:#94a3b8}
-.tag-hotel{background:rgba(59,130,246,0.20);color:#93c5fd}
-.tag-rest{background:rgba(249,115,22,0.20);color:#fdba74}
-.tag-attr{background:rgba(16,185,129,0.20);color:#6ee7b7}
-.tag-biz{background:rgba(139,92,246,0.20);color:#c4b5fd}
-
-/* QR box */
-.qr-box{background:white;border-radius:16px;padding:16px;text-align:center;display:inline-block}
-.qr-url{font-family:monospace;font-size:10px;color:rgba(255,255,255,0.4);word-break:break-all;margin-top:8px;padding:8px;background:rgba(0,0,0,0.3);border-radius:8px}
-
-/* Search input */
-.search-input{width:100%;padding:12px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:12px;color:white;font-size:13px;font-weight:700;font-family:inherit;outline:none;margin-bottom:14px}
-.search-input::placeholder{color:rgba(255,255,255,0.25)}
-
-.section-title{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.35);margin:0 0 12px}
-.msg{font-size:11px;font-weight:800;min-height:16px;color:#6ee7b7;text-align:center;margin-top:8px}
-
-/* Reward card */
-.reward-card{background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.18);border-radius:1.2rem;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#030712;color:white;min-height:100vh}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:#0f172a;border-right:1px solid rgba(255,255,255,0.06);z-index:100;display:flex;flex-direction:column}
+.main{margin-left:220px;min-height:100vh;padding:28px 28px 60px}
+@media(max-width:768px){.sidebar{width:100%;height:auto;position:relative;flex-direction:row;flex-wrap:wrap;border-right:none;border-bottom:1px solid rgba(255,255,255,0.06)}.main{margin-left:0;padding:16px 12px 40px}}
+.sidebar-logo{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.sidebar-logo-text{font-size:1.2rem;font-weight:900;color:#fbbf24}
+.sidebar-logo-sub{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.18em;color:rgba(255,255,255,0.25);margin-top:2px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 18px;font-size:12px;font-weight:800;color:rgba(255,255,255,0.45);cursor:pointer;transition:all 0.15s;border-left:2px solid transparent;white-space:nowrap}
+.nav-item:hover{color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.04)}
+.nav-item.active{color:#fbbf24;border-left-color:#fbbf24;background:rgba(251,191,36,0.07)}
+.nav-icon{font-size:14px;width:18px;text-align:center}
+.nav-section{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.16em;color:rgba(255,255,255,0.20);padding:14px 18px 4px}
+.sidebar-bottom{margin-top:auto;padding:14px 18px;border-top:1px solid rgba(255,255,255,0.06)}
+.page{display:none}.page.active{display:block}
+.page-title{font-size:1.4rem;font-weight:900;letter-spacing:-0.03em;margin-bottom:4px}
+.page-sub{font-size:11px;color:rgba(255,255,255,0.35);font-weight:700;margin-bottom:24px;text-transform:uppercase;letter-spacing:0.10em}
+.card{background:#0f172a;border:1px solid rgba(255,255,255,0.07);border-radius:1.5rem;padding:20px}
+.card-sm{background:#0f172a;border:1px solid rgba(255,255,255,0.07);border-radius:1rem;padding:14px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.stat{background:#0f172a;border:1px solid rgba(255,255,255,0.07);border-radius:1.2rem;padding:16px;position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;top:0;left:0;right:0;height:2px}
+.stat.gold::before{background:linear-gradient(90deg,#d97706,#fbbf24)}
+.stat.green::before{background:linear-gradient(90deg,#059669,#34d399)}
+.stat.blue::before{background:linear-gradient(90deg,#2563eb,#60a5fa)}
+.stat.red::before{background:linear-gradient(90deg,#dc2626,#f87171)}
+.stat.purple::before{background:linear-gradient(90deg,#7c3aed,#a78bfa)}
+.stat.orange::before{background:linear-gradient(90deg,#ea580c,#fb923c)}
+.stat-num{font-size:2rem;font-weight:900;letter-spacing:-0.04em;line-height:1}
+.stat-label{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.30);margin-top:6px}
+.stat-sub{font-size:10px;font-weight:700;color:rgba(255,255,255,0.40);margin-top:4px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.30);padding:10px 12px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.06);white-space:nowrap}
+.tbl td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle}
+.tbl tr:hover td{background:rgba(255,255,255,0.02)}
+.tbl-wrap{overflow-x:auto;border-radius:1.2rem;border:1px solid rgba(255,255,255,0.07)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap}
+.b-paid{background:rgba(16,185,129,0.15);color:#6ee7b7;border:1px solid rgba(16,185,129,0.25)}
+.b-pending{background:rgba(245,158,11,0.15);color:#fcd34d;border:1px solid rgba(245,158,11,0.25)}
+.b-overdue{background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.25)}
+.b-off{background:rgba(100,116,139,0.15);color:#94a3b8}
+.b-apt{background:rgba(100,116,139,0.15);color:#94a3b8}
+.b-hotel{background:rgba(59,130,246,0.15);color:#93c5fd}
+.b-rest{background:rgba(249,115,22,0.15);color:#fdba74}
+.b-attr{background:rgba(16,185,129,0.15);color:#6ee7b7}
+.b-biz{background:rgba(139,92,246,0.15);color:#c4b5fd}
+.b-basic{background:rgba(100,116,139,0.12);color:#94a3b8;border:1px solid rgba(100,116,139,0.20)}
+.b-standard{background:rgba(59,130,246,0.12);color:#93c5fd;border:1px solid rgba(59,130,246,0.20)}
+.b-premium{background:rgba(251,191,36,0.12);color:#fcd34d;border:1px solid rgba(251,191,36,0.20)}
+.tog{position:relative;width:38px;height:21px;display:inline-block;flex-shrink:0}
+.tog input{opacity:0;width:0;height:0}
+.tog-s{position:absolute;inset:0;background:rgba(255,255,255,0.10);border-radius:999px;cursor:pointer;transition:0.25s}
+.tog-s:before{content:"";position:absolute;height:15px;width:15px;left:3px;top:3px;background:white;border-radius:50%;transition:0.25s}
+.tog input:checked + .tog-s{background:#10b981}
+.tog input:checked + .tog-s:before{transform:translateX(17px)}
+.btn{padding:9px 16px;border-radius:10px;font-size:11px;font-weight:900;cursor:pointer;font-family:inherit;border:none;transition:all 0.15s;text-transform:uppercase;letter-spacing:0.08em;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn:active{transform:scale(0.96)}
+.btn-gold{background:linear-gradient(135deg,#d97706,#f59e0b);color:#0f172a}
+.btn-green{background:rgba(16,185,129,0.15);color:#6ee7b7;border:1px solid rgba(16,185,129,0.25)}
+.btn-red{background:rgba(239,68,68,0.12);color:#fca5a5;border:1px solid rgba(239,68,68,0.20)}
+.btn-ghost{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.10)}
+.btn-blue{background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.25)}
+.btn-sm{padding:6px 11px;font-size:10px}
+.modal{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex}
+.modal-box{background:#1e293b;border:1px solid rgba(251,191,36,0.15);border-radius:2rem;padding:28px 24px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;position:relative}
+.modal-title{font-size:1rem;font-weight:900;color:#fbbf24;margin-bottom:20px}
+.modal-close{position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:rgba(255,255,255,0.6);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.field{margin-bottom:14px}
+.field label{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.35);display:block;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:12px;color:white;font-size:13px;font-weight:700;font-family:inherit;outline:none;transition:border-color 0.15s}
+.field input:focus,.field select:focus{border-color:rgba(251,191,36,0.40)}
+.field input::placeholder{color:rgba(255,255,255,0.20)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-msg{font-size:11px;font-weight:800;min-height:16px;text-align:center;margin-top:8px}
+.form-msg.ok{color:#6ee7b7}.form-msg.err{color:#f87171}
+.search-box{width:100%;padding:11px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;color:white;font-size:13px;font-weight:700;font-family:inherit;outline:none;margin-bottom:16px}
+.search-box::placeholder{color:rgba(255,255,255,0.20)}
+.rev-card{background:linear-gradient(135deg,rgba(251,191,36,0.10),rgba(251,191,36,0.04));border:1px solid rgba(251,191,36,0.20);border-radius:1.5rem;padding:20px}
+.top-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.p-num{font-family:monospace;font-size:1rem;font-weight:900;color:#fbbf24;background:rgba(251,191,36,0.10);padding:4px 10px;border-radius:8px;border:1px solid rgba(251,191,36,0.20)}
 </style>
 </head>
 <body>
-
-<div class="header">
-  <div>
-    <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.18em;color:rgba(255,255,255,0.3)">StayVB</span>
-    <div class="header-title">⚡ God Mode Admin</div>
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-text">⚡ StayVB</div>
+    <div class="sidebar-logo-sub">God Mode Admin</div>
   </div>
-  <button class="logout-btn" onclick="StayVBGuard.logoutAdmin()">Odjavi se</button>
+  <div style="overflow-y:auto;flex:1">
+    <div class="nav-section">Pregled</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span> Dashboard</div>
+    <div class="nav-item" onclick="showPage('stats',this)"><span class="nav-icon">📈</span> Statistike</div>
+    <div class="nav-section">Upravljanje</div>
+    <div class="nav-item" onclick="showPage('partners',this)"><span class="nav-icon">🏢</span> Partneri</div>
+    <div class="nav-item" onclick="showPage('stamps',this)"><span class="nav-icon">⭐</span> Stamp mape</div>
+    <div class="nav-item" onclick="showPage('loyalty',this)"><span class="nav-icon">🎁</span> Loyalty</div>
+    <div class="nav-item" onclick="showPage('events',this)"><span class="nav-icon">🎸</span> Događaji</div>
+    <div class="nav-section">Finansije</div>
+    <div class="nav-item" onclick="showPage('billing',this)"><span class="nav-icon">💰</span> Naplata</div>
+    <div class="nav-item" onclick="showPage('revenue',this)"><span class="nav-icon">📋</span> Prihodi</div>
+    <div class="nav-section">Alati</div>
+    <div class="nav-item" onclick="showPage('qr',this)"><span class="nav-icon">📱</span> QR Generator</div>
+  </div>
+  <div class="sidebar-bottom">
+    <button class="btn btn-ghost btn-sm" style="width:100%" onclick="StayVBGuard.logoutAdmin()">🚪 Odjavi se</button>
+  </div>
 </div>
 
-<div class="app">
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('dashboard',this)">Dashboard</button>
-    <button class="tab" onclick="switchTab('partners',this)">Partneri</button>
-    <button class="tab" onclick="switchTab('stamps',this)">Stamp mape</button>
-    <button class="tab" onclick="switchTab('loyalty',this)">Loyalty</button>
-    <button class="tab" onclick="switchTab('events',this)">Događaji</button>
-    <button class="tab" onclick="switchTab('billing',this)">Finansije</button>
-    <button class="tab" onclick="switchTab('qr',this)">QR Generator</button>
+<div class="main">
+  <!-- DASHBOARD -->
+  <div id="page-dashboard" class="page active">
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub">Pregled sistema u realnom vremenu</div>
+    <div class="stats-row">
+      <div class="stat gold"><div class="stat-num" id="d-partners">—</div><div class="stat-label">Aktivnih partnera</div></div>
+      <div class="stat green"><div class="stat-num" id="d-paid">—</div><div class="stat-label">Platili ovaj mesec</div><div class="stat-sub" id="d-paid-rev">—</div></div>
+      <div class="stat red"><div class="stat-num" id="d-pending">—</div><div class="stat-label">Čeka uplatu</div><div class="stat-sub" id="d-pend-rev">—</div></div>
+      <div class="stat blue"><div class="stat-num" id="d-guests">—</div><div class="stat-label">Ukupno gostiju</div></div>
+      <div class="stat purple"><div class="stat-num" id="d-stamps">—</div><div class="stat-label">Pečata skupljeno</div></div>
+      <div class="stat orange"><div class="stat-num" id="d-hh">—</div><div class="stat-label">Happy Hour danas</div></div>
+      <div class="stat green"><div class="stat-num" id="d-book">—</div><div class="stat-label">Rezervacije</div></div>
+      <div class="stat gold"><div class="stat-num" id="d-rew">—</div><div class="stat-label">Nagrade čekaju</div></div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="top-bar">
+        <div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:#f87171">⚠️ Nisu platili ovaj mesec</div>
+        <button class="btn btn-gold btn-sm" onclick="generateBilling()">Generiši billing</button>
+      </div>
+      <div id="unpaid-list"></div>
+    </div>
+    <div class="card">
+      <div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.35);margin-bottom:14px">🏆 Top partneri po aktivnosti</div>
+      <div id="top-partners"></div>
+    </div>
   </div>
 
-  <!-- DASHBOARD -->
-  <div id="tab-dashboard" class="tab-content active">
-    <div class="stats-grid" id="stats-grid">
-      <div class="stat-card"><div class="stat-num" id="s-partners" style="color:#fbbf24">—</div><div class="stat-label">Partnera</div></div>
-      <div class="stat-card"><div class="stat-num" id="s-hh" style="color:#f97316">—</div><div class="stat-label">HH danas</div></div>
-      <div class="stat-card"><div class="stat-num" id="s-events" style="color:#a78bfa">—</div><div class="stat-label">Događaji 7d</div></div>
-      <div class="stat-card"><div class="stat-num" id="s-rewards" style="color:#fbbf24">—</div><div class="stat-label">Nagrade čekaju</div></div>
-      <div class="stat-card"><div class="stat-num" id="s-bookings" style="color:#10b981">—</div><div class="stat-label">Rezervacije danas</div></div>
-      <div class="stat-card"><div class="stat-num" id="s-stamps" style="color:#38bdf8">—</div><div class="stat-label">Stamp lokacije</div></div>
-    </div>
-    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:1.2rem;padding:14px;text-align:center">
-      <p style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:700;margin:0">Poslednje osveženje: <span id="last-refresh">—</span></p>
+  <!-- STATISTIKE -->
+  <div id="page-stats" class="page">
+    <div class="page-title">Statistike</div>
+    <div class="page-sub">Analitika sistema</div>
+    <div class="stats-row" id="stats-grid"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card"><div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.35);margin-bottom:14px">Partneri po tipu</div><div id="type-chart"></div></div>
+      <div class="card"><div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.35);margin-bottom:14px">Partneri po planu</div><div id="plan-chart"></div></div>
     </div>
   </div>
 
   <!-- PARTNERI -->
-  <div id="tab-partners" class="tab-content">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-      <h2 class="section-title" style="margin:0">Svi partneri</h2>
-      <button class="btn-gold" onclick="openNewPartner()">+ Novi partner</button>
+  <div id="page-partners" class="page">
+    <div class="top-bar">
+      <div><div class="page-title">Partneri</div><div class="page-sub" style="margin-bottom:0">Upravljanje partnerima</div></div>
+      <button class="btn btn-gold" onclick="openNewPartner()">+ Novi partner</button>
     </div>
-    <input class="search-input" id="p-search" placeholder="Pretraži..." oninput="filterPartners()">
-    <div id="partners-table" style="overflow-x:auto"></div>
+    <input class="search-box" id="p-search" placeholder="🔍  Pretraži po imenu ili kodu..." oninput="filterPartners()">
+    <div class="tbl-wrap" id="partners-tbl"></div>
   </div>
 
-  <!-- STAMP MAPE -->
-  <div id="tab-stamps" class="tab-content">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-      <h2 class="section-title" style="margin:0">Stamp lokacije na radaru</h2>
-      <button class="btn-gold" onclick="openNewStampLoc()">+ Nova lokacija</button>
+  <!-- STAMP -->
+  <div id="page-stamps" class="page">
+    <div class="top-bar">
+      <div><div class="page-title">Stamp lokacije</div><div class="page-sub" style="margin-bottom:0">Radar mapa</div></div>
+      <button class="btn btn-gold" onclick="openNewStamp()">+ Nova lokacija</button>
     </div>
-    <div id="stamp-locs-table" style="overflow-x:auto"></div>
+    <div class="tbl-wrap" id="stamps-tbl"></div>
   </div>
 
   <!-- LOYALTY -->
-  <div id="tab-loyalty" class="tab-content">
-    <h2 class="section-title">Nagrade na čekanju</h2>
-    <div id="rewards-list"></div>
+  <div id="page-loyalty" class="page">
+    <div class="page-title">Loyalty nagrade</div>
+    <div class="page-sub">Gosti sa 10 pečata</div>
+    <div id="loyalty-list"></div>
   </div>
 
-  <!-- DOGAĐAJI -->
-  <div id="tab-events" class="tab-content">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <h2 class="section-title" style="margin:0">Gradski događaji</h2>
-      <button class="btn-gold" onclick="openNewEvent()">+ Novi</button>
+  <!-- EVENTI -->
+  <div id="page-events" class="page">
+    <div class="top-bar">
+      <div><div class="page-title">Gradski događaji</div><div class="page-sub" style="margin-bottom:0">Javni kalendar</div></div>
+      <button class="btn btn-gold" onclick="openNewEvent()">+ Novi</button>
     </div>
     <div id="events-list"></div>
   </div>
 
-  <!-- FINANSIJE -->
-  <div id="tab-billing" class="tab-content">
-    <h2 class="section-title">Prihodi po mesecima</h2>
-    <div id="billing-content"></div>
+  <!-- BILLING -->
+  <div id="page-billing" class="page">
+    <div class="page-title">Naplata</div>
+    <div class="page-sub">Mesečna pretplata po partneru</div>
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+      <select id="billing-month" style="padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:12px;color:white;font-size:13px;font-weight:700;font-family:inherit;outline:none" onchange="loadBilling()"></select>
+      <button class="btn btn-blue" onclick="generateBilling()">⚙️ Generiši za mesec</button>
+    </div>
+    <div class="rev-card" style="margin-bottom:20px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+        <div><div style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.35)">Ukupno</div><div style="font-size:1.8rem;font-weight:900;color:#fbbf24;margin-top:4px" id="bill-total">—</div></div>
+        <div><div style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.35)">Naplaćeno</div><div style="font-size:1.8rem;font-weight:900;color:#6ee7b7;margin-top:4px" id="bill-paid">—</div></div>
+        <div><div style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.35)">Na čekanju</div><div style="font-size:1.8rem;font-weight:900;color:#f87171;margin-top:4px" id="bill-pend">—</div></div>
+      </div>
+    </div>
+    <div class="tbl-wrap" id="billing-tbl"></div>
   </div>
 
-  <!-- QR GENERATOR -->
-  <div id="tab-qr" class="tab-content">
-    <h2 class="section-title">QR kodovi za partnere</h2>
-    <div id="qr-partner-list"></div>
+  <!-- PRIHODI -->
+  <div id="page-revenue" class="page">
+    <div class="page-title">Prihodi</div>
+    <div class="page-sub">Istorija po mesecima</div>
+    <div id="revenue-content"></div>
+  </div>
+
+  <!-- QR -->
+  <div id="page-qr" class="page">
+    <div class="page-title">QR Generator</div>
+    <div class="page-sub">QR kodovi za sve partnere</div>
+    <div id="qr-list"></div>
   </div>
 </div>
 
-<!-- MODALS -->
-<div id="modal-partner" class="modal-overlay">
+<!-- MODALI -->
+<div id="modal-partner" class="modal">
   <div class="modal-box">
-    <button onclick="closeModal('modal-partner')" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.08);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px">✕</button>
-    <h3 style="font-size:1rem;font-weight:900;margin:0 0 20px;color:#fbbf24" id="modal-partner-title">Novi partner</h3>
-    <div class="field-group"><label class="field-label">Naziv</label><input class="field-input" id="mp-name" placeholder="Ime objekta"></div>
-    <div class="field-group"><label class="field-label">Tip</label>
-      <select class="field-input" id="mp-type">
-        <option value="apartment">🏠 Apartman</option>
-        <option value="hotel">🏨 Hotel</option>
-        <option value="restaurant">🍽 Restoran</option>
-        <option value="attraction">🎡 Atrakcija</option>
-        <option value="business">🛍 Mali biznis</option>
-      </select>
+    <button class="modal-close" onclick="closeModal('modal-partner')">✕</button>
+    <div class="modal-title">Novi partner</div>
+    <div class="field"><label>Naziv objekta</label><input id="mp-name" placeholder="npr. Apartman Sunce"></div>
+    <div class="field-row">
+      <div class="field"><label>Tip</label>
+        <select id="mp-type">
+          <option value="apartment">🏠 Apartman</option>
+          <option value="hotel">🏨 Hotel</option>
+          <option value="restaurant">🍽 Restoran</option>
+          <option value="attraction">🎡 Atrakcija</option>
+          <option value="business">🛍 Mali biznis</option>
+        </select>
+      </div>
+      <div class="field"><label>Plan</label>
+        <select id="mp-plan" onchange="updatePrice()">
+          <option value="basic">Basic — 500 RSD/mes</option>
+          <option value="standard">Standard — 1000 RSD/mes</option>
+          <option value="premium">Premium — 2000 RSD/mes</option>
+        </select>
+      </div>
     </div>
-    <div class="field-group"><label class="field-label">PIN (4-6 cifara)</label><input class="field-input" id="mp-pin" type="number" placeholder="npr. 4521" maxlength="6"></div>
-    <div class="field-group"><label class="field-label">Partner kod (jedinstven)</label><input class="field-input" id="mp-code" placeholder="npr. REST_VRNJAK" style="text-transform:uppercase"></div>
-    <div class="field-group"><label class="field-label">Telefon</label><input class="field-input" id="mp-phone" placeholder="+381..."></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div class="field-group"><label class="field-label">Lat</label><input class="field-input" id="mp-lat" placeholder="43.6208"></div>
-      <div class="field-group"><label class="field-label">Lng</label><input class="field-input" id="mp-lng" placeholder="20.8973"></div>
+    <div class="field"><label>PIN (4-6 cifara)</label><input id="mp-pin" type="number" placeholder="npr. 4521"></div>
+    <div class="field-row">
+      <div class="field"><label>Telefon</label><input id="mp-phone" placeholder="+381..."></div>
+      <div class="field"><label>WhatsApp</label><input id="mp-wa" placeholder="+381..."></div>
     </div>
-    <button class="btn-gold" style="width:100%;padding:14px;font-size:12px" onclick="savePartner()">Sačuvaj partnera</button>
-    <p class="msg" id="mp-msg"></p>
+    <div class="field-row">
+      <div class="field"><label>Lat</label><input id="mp-lat" placeholder="43.6208"></div>
+      <div class="field"><label>Lng</label><input id="mp-lng" placeholder="20.8973"></div>
+    </div>
+    <div class="field"><label>Beleška (interno)</label><input id="mp-note" placeholder="Napomena za admina..."></div>
+    <div style="padding:12px 14px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.20);border-radius:12px;font-size:12px;font-weight:700;color:#fcd34d;margin-bottom:14px">
+      Mesečna cena: <strong id="mp-price">500 RSD</strong> · Kod se generiše automatski (4 cifre)
+    </div>
+    <button class="btn btn-gold" style="width:100%;padding:14px;font-size:12px;justify-content:center" onclick="savePartner()">Kreiraj partnera →</button>
+    <div class="form-msg" id="mp-msg"></div>
   </div>
 </div>
 
-<div id="modal-stamp" class="modal-overlay">
+<div id="modal-edit" class="modal">
   <div class="modal-box">
-    <button onclick="closeModal('modal-stamp')" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.08);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px">✕</button>
-    <h3 style="font-size:1rem;font-weight:900;margin:0 0 20px;color:#fbbf24">Nova stamp lokacija</h3>
-    <div class="field-group"><label class="field-label">Naziv</label><input class="field-input" id="ms-name" placeholder="npr. Vidikovac Goč"></div>
-    <div class="field-group"><label class="field-label">Opis</label><input class="field-input" id="ms-desc" placeholder="Kratak opis za goste"></div>
-    <div class="field-group"><label class="field-label">Kod (jedinstven)</label><input class="field-input" id="ms-code" placeholder="npr. LOC_VIDOVAC" style="text-transform:uppercase"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div class="field-group"><label class="field-label">Lat</label><input class="field-input" id="ms-lat"></div>
-      <div class="field-group"><label class="field-label">Lng</label><input class="field-input" id="ms-lng"></div>
+    <button class="modal-close" onclick="closeModal('modal-edit')">✕</button>
+    <div class="modal-title" id="edit-title">Uredi partnera</div>
+    <input type="hidden" id="edit-id">
+    <div class="field"><label>Naziv</label><input id="edit-name"></div>
+    <div class="field-row">
+      <div class="field"><label>Plan</label>
+        <select id="edit-plan">
+          <option value="basic">Basic — 500 RSD/mes</option>
+          <option value="standard">Standard — 1000 RSD/mes</option>
+          <option value="premium">Premium — 2000 RSD/mes</option>
+        </select>
+      </div>
+      <div class="field"><label>Novi PIN (prazno = ne menja)</label><input id="edit-pin" type="number" placeholder="ostavi prazno"></div>
     </div>
-    <button class="btn-gold" style="width:100%;padding:14px;font-size:12px" onclick="saveStampLoc()">Dodaj lokaciju</button>
-    <p class="msg" id="ms-msg"></p>
+    <div class="field-row">
+      <div class="field"><label>Telefon</label><input id="edit-phone"></div>
+      <div class="field"><label>WhatsApp</label><input id="edit-wa"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Lat</label><input id="edit-lat"></div>
+      <div class="field"><label>Lng</label><input id="edit-lng"></div>
+    </div>
+    <div class="field"><label>Beleška admina</label><input id="edit-note"></div>
+    <button class="btn btn-gold" style="width:100%;padding:14px;font-size:12px;justify-content:center;margin-top:4px" onclick="saveEdit()">Sačuvaj izmene</button>
+    <div class="form-msg" id="edit-msg"></div>
   </div>
 </div>
 
-<div id="modal-event" class="modal-overlay">
+<div id="modal-stamp" class="modal">
   <div class="modal-box">
-    <button onclick="closeModal('modal-event')" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.08);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px">✕</button>
-    <h3 style="font-size:1rem;font-weight:900;margin:0 0 20px;color:#fbbf24">Novi gradski događaj</h3>
-    <div class="field-group"><label class="field-label">Naziv</label><input class="field-input" id="me-title"></div>
-    <div class="field-group"><label class="field-label">Datum</label><input type="date" class="field-input" id="me-date"></div>
-    <div class="field-group"><label class="field-label">Vreme</label><input type="time" class="field-input" id="me-time"></div>
-    <div class="field-group"><label class="field-label">Lokacija</label><input class="field-input" id="me-loc"></div>
-    <div class="field-group"><label class="field-label">Opis</label><textarea class="field-input" id="me-desc" style="min-height:70px"></textarea></div>
-    <button class="btn-gold" style="width:100%;padding:14px;font-size:12px" onclick="saveEvent()">Dodaj događaj</button>
-    <p class="msg" id="me-msg"></p>
+    <button class="modal-close" onclick="closeModal('modal-stamp')">✕</button>
+    <div class="modal-title">Nova stamp lokacija</div>
+    <div class="field"><label>Naziv</label><input id="ms-name" placeholder="npr. Vidikovac Goč"></div>
+    <div class="field"><label>Opis za goste</label><input id="ms-desc" placeholder="Kratki opis..."></div>
+    <div class="field-row">
+      <div class="field"><label>Lat</label><input id="ms-lat" placeholder="43.6380"></div>
+      <div class="field"><label>Lng</label><input id="ms-lng" placeholder="20.8870"></div>
+    </div>
+    <button class="btn btn-gold" style="width:100%;padding:14px;font-size:12px;justify-content:center" onclick="saveStamp()">Dodaj lokaciju</button>
+    <div class="form-msg" id="ms-msg"></div>
+  </div>
+</div>
+
+<div id="modal-event" class="modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-event')">✕</button>
+    <div class="modal-title">Novi gradski događaj</div>
+    <div class="field"><label>Naziv</label><input id="me-title" placeholder="npr. Živa muzika u parku"></div>
+    <div class="field-row">
+      <div class="field"><label>Datum</label><input type="date" id="me-date"></div>
+      <div class="field"><label>Vreme</label><input type="time" id="me-time"></div>
+    </div>
+    <div class="field"><label>Lokacija</label><input id="me-loc" placeholder="Gradski park..."></div>
+    <div class="field"><label>Opis</label><textarea id="me-desc" placeholder="Kratki opis..." style="min-height:70px;resize:vertical"></textarea></div>
+    <button class="btn btn-gold" style="width:100%;padding:14px;font-size:12px;justify-content:center" onclick="saveEvent()">Dodaj događaj</button>
+    <div class="form-msg" id="me-msg"></div>
   </div>
 </div>
 
 <script>
 const sb = C.db();
+const PLANS = {basic:500,standard:1000,premium:2000};
 let allPartners = [];
 
-// ── Tabs ──────────────────────────────────────────────────────────
-const TAB_LOADERS = {partners: loadPartners, stamps: loadStampLocs, loyalty: loadRewards, events: loadEvents, billing: loadBilling, qr: loadQR, dashboard: loadDashboard};
-
-function switchTab(id, btn){
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('tab-'+id).classList.add('active');
-  if(TAB_LOADERS[id]) TAB_LOADERS[id]();
+function showPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  ({dashboard:loadDashboard,stats:loadStats,partners:loadPartners,stamps:loadStamps,loyalty:loadLoyalty,events:loadEvents,billing:loadBilling,revenue:loadRevenue,qr:loadQR})[id]?.();
 }
 
-// ── Dashboard ─────────────────────────────────────────────────────
 async function loadDashboard(){
-  const today = new Date().toISOString().split('T')[0];
-  const in7 = new Date(Date.now()+7*24*60*60*1000).toISOString().split('T')[0];
-  const [{count:pCount},{count:hhCount},{count:evCount},{count:rwCount},{count:bkCount},{count:slCount}] = await Promise.all([
-    sb.from('partners').select('*',{count:'exact',head:true}).eq('is_active',true),
-    sb.from('partners').select('*',{count:'exact',head:true}).eq('hh_active',true).eq('hh_date',today),
-    sb.from('events').select('*',{count:'exact',head:true}).gte('event_date',today).lte('event_date',in7).eq('is_active',true),
-    sb.from('guests').select('*',{count:'exact',head:true}).eq('reward_status','pending'),
-    sb.from('bookings').select('*',{count:'exact',head:true}).eq('booking_date',today).eq('status','confirmed'),
-    sb.from('stamp_locations').select('*',{count:'exact',head:true}).eq('is_active',true)
-  ]);
-  document.getElementById('s-partners').textContent = pCount||0;
-  document.getElementById('s-hh').textContent = hhCount||0;
-  document.getElementById('s-events').textContent = evCount||0;
-  document.getElementById('s-rewards').textContent = rwCount||0;
-  document.getElementById('s-bookings').textContent = bkCount||0;
-  document.getElementById('s-stamps').textContent = slCount||0;
-  document.getElementById('last-refresh').textContent = new Date().toLocaleTimeString('sr-RS');
+  const {data:s} = await sb.rpc('get_system_stats');
+  if(!s) return;
+  document.getElementById('d-partners').textContent=s.total_partners||0;
+  document.getElementById('d-paid').textContent=s.partners_paid||0;
+  document.getElementById('d-paid-rev').textContent=(s.revenue_month||0).toLocaleString()+' RSD';
+  document.getElementById('d-pending').textContent=s.partners_pending||0;
+  document.getElementById('d-pend-rev').textContent=(s.revenue_pending||0).toLocaleString()+' RSD';
+  document.getElementById('d-guests').textContent=s.total_guests||0;
+  document.getElementById('d-stamps').textContent=s.total_stamps||0;
+  document.getElementById('d-hh').textContent=s.hh_today||0;
+  document.getElementById('d-book').textContent=s.total_bookings||0;
+  document.getElementById('d-rew').textContent=s.pending_rewards||0;
+  document.getElementById('top-partners').innerHTML=(s.top_partners||[]).map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <span style="font-size:11px;font-weight:900;color:rgba(255,255,255,0.25);width:16px">${i+1}</span>
+      <span style="flex:1;font-size:13px;font-weight:800">${esc(p.name)}</span>
+      <span style="font-size:11px;font-weight:900;color:#fbbf24">${p.scans} skeniranja</span>
+    </div>`).join('')||'<p style="font-size:12px;color:rgba(255,255,255,0.3);font-weight:700">Nema podataka.</p>';
+  const month=new Date().toISOString().slice(0,7);
+  const {data:unpaid}=await sb.from('partner_billing').select('*,partners(name,partner_code)').eq('month_year',month).in('status',['pending','overdue']);
+  document.getElementById('unpaid-list').innerHTML=(unpaid||[]).length===0
+    ?'<p style="font-size:12px;color:#6ee7b7;font-weight:700">✓ Svi su platili ovaj mesec!</p>'
+    :(unpaid||[]).map(b=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+        <span class="p-num">${esc(b.partners?.partner_code||'')}</span>
+        <span style="flex:1;font-size:13px;font-weight:800">${esc(b.partners?.name||'')}</span>
+        <span style="font-size:12px;font-weight:900;color:#fcd34d">${b.amount_rsd} RSD</span>
+        <button class="btn btn-green btn-sm" onclick="markPaid('${b.partner_id}','${month}',this)">✓ Platio</button>
+      </div>`).join('');
 }
 
-// ── Partners ──────────────────────────────────────────────────────
+async function loadStats(){
+  const {data:s}=await sb.rpc('get_system_stats');
+  if(!s) return;
+  document.getElementById('stats-grid').innerHTML=`
+    <div class="stat gold"><div class="stat-num">${s.total_partners||0}</div><div class="stat-label">Ukupno partnera</div></div>
+    <div class="stat green"><div class="stat-num">${s.premium_partners||0}</div><div class="stat-label">Premium</div></div>
+    <div class="stat blue"><div class="stat-num">${s.total_guests||0}</div><div class="stat-label">Gostiju</div></div>
+    <div class="stat purple"><div class="stat-num">${s.total_stamps||0}</div><div class="stat-label">Pečata</div></div>
+    <div class="stat orange"><div class="stat-num">${s.total_bookings||0}</div><div class="stat-label">Rezervacija</div></div>
+    <div class="stat gold"><div class="stat-num">${(s.revenue_month||0).toLocaleString()}</div><div class="stat-label">Prihod mesec (RSD)</div></div>`;
+  const {data:byType}=await sb.from('partners').select('type').eq('is_active',true);
+  const tc={};(byType||[]).forEach(p=>{tc[p.type]=(tc[p.type]||0)+1;});
+  const te={apartment:'🏠',hotel:'🏨',restaurant:'🍽',attraction:'🎡',business:'🛍'};
+  const tot=(byType||[]).length||1;
+  document.getElementById('type-chart').innerHTML=Object.entries(tc).map(([t,c])=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <span style="font-size:14px">${te[t]||'📍'}</span>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-bottom:4px"><span>${t}</span><span style="color:#fbbf24">${c}</span></div>
+        <div style="height:5px;background:rgba(255,255,255,0.08);border-radius:999px"><div style="height:100%;background:#fbbf24;border-radius:999px;width:${Math.round(c/tot*100)}%"></div></div>
+      </div>
+    </div>`).join('');
+  const {data:byPlan}=await sb.from('partners').select('plan').eq('is_active',true);
+  const pc={basic:0,standard:0,premium:0};(byPlan||[]).forEach(p=>{pc[p.plan||'basic']++;});
+  const pcol={basic:'#94a3b8',standard:'#60a5fa',premium:'#fbbf24'};
+  const ptot=(byPlan||[]).length||1;
+  document.getElementById('plan-chart').innerHTML=Object.entries(pc).map(([p,c])=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-bottom:4px">
+          <span style="text-transform:capitalize">${p}</span>
+          <span style="color:${pcol[p]}">${c} · ${((PLANS[p]||0)*c).toLocaleString()} RSD/mes</span>
+        </div>
+        <div style="height:5px;background:rgba(255,255,255,0.08);border-radius:999px"><div style="height:100%;background:${pcol[p]};border-radius:999px;width:${Math.round(c/ptot*100)}%"></div></div>
+      </div>
+    </div>`).join('');
+}
+
 async function loadPartners(){
-  const {data} = await sb.from('partners').select('*, partner_content(short_desc)').order('type').order('name');
-  allPartners = data || [];
+  const {data}=await sb.from('partners').select('*').order('partner_code');
+  allPartners=data||[];
   renderPartners(allPartners);
 }
 
 function filterPartners(){
-  const q = document.getElementById('p-search').value.toLowerCase();
-  renderPartners(allPartners.filter(p => p.name.toLowerCase().includes(q) || p.partner_code.toLowerCase().includes(q)));
+  const q=document.getElementById('p-search').value.toLowerCase();
+  renderPartners(allPartners.filter(p=>p.name.toLowerCase().includes(q)||(p.partner_code||'').includes(q)));
 }
 
-function tagClass(type){return {apartment:'tag-apt',hotel:'tag-hotel',restaurant:'tag-rest',attraction:'tag-attr',business:'tag-biz'}[type]||'tag-apt';}
+function tb(t){return `<span class="badge b-${t==='apartment'?'apt':t==='hotel'?'hotel':t==='restaurant'?'rest':t==='attraction'?'attr':'biz'}">${{apartment:'🏠',hotel:'🏨',restaurant:'🍽',attraction:'🎡',business:'🛍'}[t]||'📍'} ${t}</span>`;}
+function pb(p){return `<span class="badge b-${p||'basic'}">${(p||'basic').toUpperCase()}</span>`;}
+function payb(s){return s==='paid'?`<span class="badge b-paid">✓ Platio</span>`:s==='overdue'?`<span class="badge b-overdue">Kasni</span>`:`<span class="badge b-pending">Čeka</span>`;}
 
 function renderPartners(list){
-  document.getElementById('partners-table').innerHTML = `
-    <table class="data-table">
-      <thead><tr>
-        <th>Naziv</th><th>Tip</th><th>Kod</th><th>Premium</th><th>Aktivan</th><th>Loyalty</th><th>Booking</th><th>Akcije</th>
-      </tr></thead>
-      <tbody>
-        ${list.map(p => `
-          <tr>
-            <td style="font-weight:900">${esc(p.name)}</td>
-            <td><span class="tag ${tagClass(p.type)}">${p.type}</span></td>
-            <td style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.5)">${esc(p.partner_code)}</td>
-            <td><label class="toggle"><input type="checkbox" ${p.is_premium?'checked':''} onchange="toggleField('${p.id}','is_premium',this.checked)"><span class="toggle-slider"></span></label></td>
-            <td><label class="toggle"><input type="checkbox" ${p.is_active?'checked':''} onchange="toggleField('${p.id}','is_active',this.checked)"><span class="toggle-slider"></span></label></td>
-            <td><label class="toggle"><input type="checkbox" ${p.loyalty_enabled?'checked':''} onchange="toggleField('${p.id}','loyalty_enabled',this.checked)"><span class="toggle-slider"></span></label></td>
-            <td><label class="toggle"><input type="checkbox" ${p.has_booking?'checked':''} onchange="toggleField('${p.id}','has_booking',this.checked)"><span class="toggle-slider"></span></label></td>
-            <td style="display:flex;gap:6px;flex-wrap:wrap">
-              <button class="btn-ghost" onclick="regen('${p.id}')">🔄 URL</button>
-              <button class="btn-red" onclick="deletePartner('${p.id}')">✕</button>
-            </td>
-          </tr>`).join('')}
-      </tbody>
+  document.getElementById('partners-tbl').innerHTML=`
+    <table class="tbl">
+      <thead><tr><th>Kod</th><th>Naziv</th><th>Tip</th><th>Plan</th><th>Plaćanje</th><th>Aktivan</th><th>Loyalty</th><th>Akcije</th></tr></thead>
+      <tbody>${list.map(p=>`<tr>
+        <td><span class="p-num">${esc(p.partner_code||'')}</span></td>
+        <td style="font-weight:900;max-width:160px">${esc(p.name)}${p.admin_note?`<div style="font-size:10px;color:rgba(255,255,255,0.35)">${esc(p.admin_note)}</div>`:''}</td>
+        <td>${tb(p.type)}</td>
+        <td>${pb(p.plan)}</td>
+        <td>${payb(p.payment_status)}</td>
+        <td><label class="tog"><input type="checkbox" ${p.is_active?'checked':''} onchange="tog('${p.id}','is_active',this.checked)"><span class="tog-s"></span></label></td>
+        <td><label class="tog"><input type="checkbox" ${p.loyalty_enabled?'checked':''} onchange="tog('${p.id}','loyalty_enabled',this.checked)"><span class="tog-s"></span></label></td>
+        <td><div style="display:flex;gap:5px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="openEdit('${p.id}')">✏️</button>
+          <button class="btn btn-blue btn-sm" onclick="regenToken('${p.id}')">🔄 URL</button>
+          <button class="btn btn-red btn-sm" onclick="delPartner('${p.id}')">✕</button>
+        </div></td>
+      </tr>`).join('')}</tbody>
     </table>`;
 }
 
-async function toggleField(id, field, value){
-  await sb.from('partners').update({[field]: value}).eq('id', id);
-}
+async function tog(id,field,val){await sb.from('partners').update({[field]:val}).eq('id',id);}
 
-async function regen(id){
-  if(!confirm('Regenerisati URL? Stari link više neće raditi.')) return;
-  const {data} = await sb.rpc('regenerate_partner_token', {p_partner_id: id});
-  const url = location.origin + '/partner.html?t=' + data;
-  prompt('Novi partner URL (kopiraj i pošalji):', url);
+async function regenToken(id){
+  if(!confirm('Regenerisati URL? Stari link prestaje da radi.')) return;
+  const {data}=await sb.rpc('regenerate_partner_token',{p_partner_id:id});
+  prompt('Novi URL (kopiraj i pošalji):',location.origin+'/partner.html?t='+data);
   loadPartners();
 }
 
-async function deletePartner(id){
-  if(!confirm('Obrisati partnera? Ovo se ne može poništiti.')) return;
-  await sb.from('partners').delete().eq('id', id);
+async function delPartner(id){
+  if(!confirm('Obrisati partnera?')) return;
+  await sb.from('partners').delete().eq('id',id);
   loadPartners();
+}
+
+function openEdit(id){
+  const p=allPartners.find(x=>x.id===id); if(!p) return;
+  document.getElementById('edit-id').value=p.id;
+  document.getElementById('edit-title').textContent='Uredi: '+p.name;
+  document.getElementById('edit-name').value=p.name||'';
+  document.getElementById('edit-plan').value=p.plan||'basic';
+  document.getElementById('edit-pin').value='';
+  document.getElementById('edit-phone').value=p.phone||'';
+  document.getElementById('edit-wa').value=p.whatsapp||'';
+  document.getElementById('edit-lat').value=p.lat||'';
+  document.getElementById('edit-lng').value=p.lng||'';
+  document.getElementById('edit-note').value=p.admin_note||'';
+  document.getElementById('edit-msg').textContent='';
+  openModal('modal-edit');
+}
+
+async function saveEdit(){
+  const id=document.getElementById('edit-id').value;
+  const plan=document.getElementById('edit-plan').value;
+  const pin=document.getElementById('edit-pin').value.trim();
+  const u={name:document.getElementById('edit-name').value.trim(),plan,monthly_price:PLANS[plan]||500,is_premium:plan==='premium',has_booking:plan==='premium',phone:document.getElementById('edit-phone').value.trim()||null,whatsapp:document.getElementById('edit-wa').value.trim()||null,lat:parseFloat(document.getElementById('edit-lat').value)||null,lng:parseFloat(document.getElementById('edit-lng').value)||null,admin_note:document.getElementById('edit-note').value.trim()||null};
+  if(pin) u.pin=pin;
+  await sb.from('partners').update(u).eq('id',id);
+  const m=document.getElementById('edit-msg'); m.textContent='✓ Sačuvano!'; m.className='form-msg ok';
+  setTimeout(()=>{closeModal('modal-edit');loadPartners();},1000);
 }
 
 function openNewPartner(){
-  ['mp-name','mp-pin','mp-code','mp-phone','mp-lat','mp-lng'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('mp-type').value = 'apartment';
-  document.getElementById('mp-msg').textContent = '';
-  document.getElementById('modal-partner-title').textContent = 'Novi partner';
+  ['mp-name','mp-pin','mp-phone','mp-wa','mp-lat','mp-lng','mp-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('mp-type').value='apartment';
+  document.getElementById('mp-plan').value='basic';
+  document.getElementById('mp-price').textContent='500 RSD';
+  document.getElementById('mp-msg').textContent='';
   openModal('modal-partner');
 }
 
+function updatePrice(){
+  const p=document.getElementById('mp-plan').value;
+  document.getElementById('mp-price').textContent=(PLANS[p]||500).toLocaleString()+' RSD';
+}
+
 async function savePartner(){
-  const name = document.getElementById('mp-name').value.trim();
-  const type = document.getElementById('mp-type').value;
-  const pin  = document.getElementById('mp-pin').value.trim();
-  const code = document.getElementById('mp-code').value.trim().toUpperCase();
-  const phone= document.getElementById('mp-phone').value.trim();
-  const lat  = parseFloat(document.getElementById('mp-lat').value) || null;
-  const lng  = parseFloat(document.getElementById('mp-lng').value) || null;
-  if(!name || !pin || !code){ document.getElementById('mp-msg').textContent = '⚠️ Naziv, PIN i kod su obavezni.'; return; }
-  const {data, error} = await sb.rpc('admin_create_partner', {p_name:name, p_type:type, p_pin:pin, p_partner_code:code, p_phone:phone||null, p_lat:lat, p_lng:lng});
-  if(error){ document.getElementById('mp-msg').textContent = '⚠️ ' + error.message; return; }
-  const partnerUrl = location.origin + '/partner.html?t=' + data[0].access_token;
+  const name=document.getElementById('mp-name').value.trim();
+  const pin=document.getElementById('mp-pin').value.trim();
+  const plan=document.getElementById('mp-plan').value;
+  const msg=document.getElementById('mp-msg');
+  if(!name||!pin){msg.textContent='⚠️ Naziv i PIN su obavezni.';msg.className='form-msg err';return;}
+  if(pin.length<4){msg.textContent='⚠️ PIN min 4 cifre.';msg.className='form-msg err';return;}
+  msg.textContent='Kreiranje...';msg.className='form-msg';
+  const {data,error}=await sb.rpc('admin_create_partner',{p_name:name,p_type:document.getElementById('mp-type').value,p_pin:pin,p_plan:plan,p_phone:document.getElementById('mp-phone').value.trim()||null,p_lat:parseFloat(document.getElementById('mp-lat').value)||null,p_lng:parseFloat(document.getElementById('mp-lng').value)||null});
+  if(error){msg.textContent='⚠️ '+error.message;msg.className='form-msg err';return;}
+  const wa=document.getElementById('mp-wa').value.trim();
+  const note=document.getElementById('mp-note').value.trim();
+  if(wa||note) await sb.from('partners').update({whatsapp:wa||null,admin_note:note||null}).eq('id',data[0].partner_id);
   closeModal('modal-partner');
-  prompt('Partner kreiran! Kopiraj i pošalji URL:', partnerUrl);
+  alert('✅ Partner kreiran!\n\nKod: '+data[0].partner_code+'\n\nURL za partnera:\n'+location.origin+'/partner.html?t='+data[0].access_token+'\n\nKopiraj i pošalji vlasniku!');
   loadPartners();
 }
 
-// ── Stamp lokacije ────────────────────────────────────────────────
-async function loadStampLocs(){
-  const {data} = await sb.from('stamp_locations').select('*').order('sort_order').order('name');
-  const locs = data || [];
-  document.getElementById('stamp-locs-table').innerHTML = `
-    <table class="data-table">
-      <thead><tr><th>Naziv</th><th>Tip</th><th>Kod</th><th>Aktivan</th><th>Na radaru</th><th>Akcije</th></tr></thead>
-      <tbody>
-        ${locs.map(l => `
-          <tr>
-            <td style="font-weight:900">${esc(l.name)}</td>
-            <td><span class="tag ${l.type==='public'?'tag-attr':'tag-rest'}">${l.type}</span></td>
-            <td style="font-family:monospace;font-size:11px;color:rgba(255,255,255,0.5)">${esc(l.location_code)}</td>
-            <td><label class="toggle"><input type="checkbox" ${l.is_active?'checked':''} onchange="toggleStamp('${l.id}','is_active',this.checked)"><span class="toggle-slider"></span></label></td>
-            <td><label class="toggle"><input type="checkbox" ${l.show_on_radar?'checked':''} onchange="toggleStamp('${l.id}','show_on_radar',this.checked)"><span class="toggle-slider"></span></label></td>
-            <td><button class="btn-red" onclick="deleteStampLoc('${l.id}')">✕</button></td>
-          </tr>`).join('')}
-      </tbody>
+async function loadBilling(){
+  const sel=document.getElementById('billing-month');
+  if(sel.options.length===0){const now=new Date();for(let i=0;i<12;i++){const d=new Date(now.getFullYear(),now.getMonth()-i,1);const v=d.toISOString().slice(0,7);const o=document.createElement('option');o.value=v;o.textContent=v;if(i===0)o.selected=true;sel.appendChild(o);}}
+  const month=sel.value;
+  const {data:bills}=await sb.from('partner_billing').select('*,partners(name,partner_code,type,plan)').eq('month_year',month).order('status');
+  const list=bills||[];
+  const total=list.reduce((s,b)=>s+b.amount_rsd,0);
+  const paid=list.filter(b=>b.status==='paid').reduce((s,b)=>s+b.amount_rsd,0);
+  const pend=list.filter(b=>b.status!=='paid').reduce((s,b)=>s+b.amount_rsd,0);
+  document.getElementById('bill-total').textContent=total.toLocaleString()+' RSD';
+  document.getElementById('bill-paid').textContent=paid.toLocaleString()+' RSD';
+  document.getElementById('bill-pend').textContent=pend.toLocaleString()+' RSD';
+  document.getElementById('billing-tbl').innerHTML=`
+    <table class="tbl">
+      <thead><tr><th>Kod</th><th>Partner</th><th>Tip</th><th>Plan</th><th>Iznos</th><th>Status</th><th>Plaćeno</th><th>Akcija</th></tr></thead>
+      <tbody>${list.map(b=>`<tr>
+        <td><span class="p-num">${esc(b.partners?.partner_code||'')}</span></td>
+        <td style="font-weight:900">${esc(b.partners?.name||'')}</td>
+        <td>${tb(b.partners?.type||'')}</td>
+        <td>${pb(b.plan)}</td>
+        <td style="font-weight:900;color:#fbbf24">${b.amount_rsd.toLocaleString()} RSD</td>
+        <td>${payb(b.status)}</td>
+        <td style="font-size:11px;color:rgba(255,255,255,0.4)">${b.paid_at?new Date(b.paid_at).toLocaleDateString('sr-RS'):'—'}</td>
+        <td>${b.status!=='paid'
+          ?`<button class="btn btn-green btn-sm" onclick="markPaid('${b.partner_id}','${month}',this)">✓ Platio</button>`
+          :`<button class="btn btn-ghost btn-sm" onclick="markUnpaid('${b.partner_id}','${month}',this)">↩ Poništi</button>`
+        }</td>
+      </tr>`).join('')}</tbody>
     </table>`;
 }
 
-async function toggleStamp(id, field, value){
-  await sb.from('stamp_locations').update({[field]: value}).eq('id', id);
+async function markPaid(pid,month,btn){btn.disabled=true;btn.textContent='...';await sb.rpc('mark_payment',{p_partner_id:pid,p_month:month,p_paid:true});loadBilling();loadDashboard();}
+async function markUnpaid(pid,month,btn){btn.disabled=true;await sb.rpc('mark_payment',{p_partner_id:pid,p_month:month,p_paid:false});loadBilling();}
+
+async function generateBilling(){
+  const month=document.getElementById('billing-month')?.value||new Date().toISOString().slice(0,7);
+  if(!confirm('Generisati billing za '+month+'?')) return;
+  const {data}=await sb.rpc('generate_monthly_billing',{p_month:month});
+  alert('Generisano '+data+' zapisa.');
+  loadBilling();
 }
 
-async function deleteStampLoc(id){
-  if(!confirm('Obrisati stamp lokaciju?')) return;
-  await sb.from('stamp_locations').delete().eq('id', id);
-  loadStampLocs();
+async function loadRevenue(){
+  const {data}=await sb.from('partner_billing').select('month_year,status,amount_rsd').order('month_year',{ascending:false});
+  const g={};(data||[]).forEach(b=>{if(!g[b.month_year])g[b.month_year]={total:0,paid:0,pending:0};g[b.month_year].total+=b.amount_rsd;if(b.status==='paid')g[b.month_year].paid+=b.amount_rsd;else g[b.month_year].pending+=b.amount_rsd;});
+  document.getElementById('revenue-content').innerHTML=Object.entries(g).map(([m,d])=>`
+    <div class="card-sm" style="margin-bottom:10px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <span style="font-size:13px;font-weight:900;min-width:80px">${m}</span>
+      <span style="font-size:1.1rem;font-weight:900;color:#fbbf24">${d.total.toLocaleString()} RSD</span>
+      <span class="badge b-paid">Naplaćeno: ${d.paid.toLocaleString()} RSD</span>
+      ${d.pending>0?`<span class="badge b-pending">Čeka: ${d.pending.toLocaleString()} RSD</span>`:''}
+    </div>`).join('')||'<p style="color:rgba(255,255,255,0.3);font-size:13px">Nema podataka.</p>';
 }
 
-function openNewStampLoc(){
-  ['ms-name','ms-desc','ms-code','ms-lat','ms-lng'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('ms-msg').textContent = '';
+async function loadStamps(){
+  const {data}=await sb.from('stamp_locations').select('*').order('sort_order').order('name');
+  document.getElementById('stamps-tbl').innerHTML=`
+    <table class="tbl">
+      <thead><tr><th>Naziv</th><th>Tip</th><th>Koordinate</th><th>Aktivan</th><th>Na radaru</th><th>Akcije</th></tr></thead>
+      <tbody>${(data||[]).map(l=>`<tr>
+        <td style="font-weight:900">${esc(l.name)}</td>
+        <td><span class="badge ${l.type==='public'?'b-attr':'b-rest'}">${l.type}</span></td>
+        <td style="font-size:10px;color:rgba(255,255,255,0.4)">${l.lat}, ${l.lng}</td>
+        <td><label class="tog"><input type="checkbox" ${l.is_active?'checked':''} onchange="togS('${l.id}','is_active',this.checked)"><span class="tog-s"></span></label></td>
+        <td><label class="tog"><input type="checkbox" ${l.show_on_radar?'checked':''} onchange="togS('${l.id}','show_on_radar',this.checked)"><span class="tog-s"></span></label></td>
+        <td><button class="btn btn-red btn-sm" onclick="delStamp('${l.id}')">✕</button></td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+}
+
+async function togS(id,f,v){await sb.from('stamp_locations').update({[f]:v}).eq('id',id);}
+async function delStamp(id){if(!confirm('Obrisati?'))return;await sb.from('stamp_locations').delete().eq('id',id);loadStamps();}
+
+function openNewStamp(){
+  ['ms-name','ms-desc','ms-lat','ms-lng'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ms-msg').textContent='';
   openModal('modal-stamp');
 }
 
-async function saveStampLoc(){
-  const name = document.getElementById('ms-name').value.trim();
-  const desc = document.getElementById('ms-desc').value.trim();
-  const code = document.getElementById('ms-code').value.trim().toUpperCase();
-  const lat  = parseFloat(document.getElementById('ms-lat').value);
-  const lng  = parseFloat(document.getElementById('ms-lng').value);
-  if(!name || !code || !lat || !lng){ document.getElementById('ms-msg').textContent = '⚠️ Sva polja su obavezna.'; return; }
-  const {error} = await sb.from('stamp_locations').insert({name, description:desc||null, location_code:code, type:'public', lat, lng, is_active:true, show_on_radar:true});
-  if(error){ document.getElementById('ms-msg').textContent = '⚠️ ' + error.message; return; }
-  closeModal('modal-stamp');
-  loadStampLocs();
+async function saveStamp(){
+  const name=document.getElementById('ms-name').value.trim();
+  const desc=document.getElementById('ms-desc').value.trim();
+  const lat=parseFloat(document.getElementById('ms-lat').value);
+  const lng=parseFloat(document.getElementById('ms-lng').value);
+  const msg=document.getElementById('ms-msg');
+  if(!name||!lat||!lng){msg.textContent='⚠️ Popuni sva polja.';msg.className='form-msg err';return;}
+  const code='LOC_'+name.toUpperCase().replace(/[^A-Z0-9]/g,'_').slice(0,12)+'_'+Date.now().toString().slice(-4);
+  const {error}=await sb.from('stamp_locations').insert({name,description:desc||null,location_code:code,type:'public',lat,lng,is_active:true,show_on_radar:true});
+  if(error){msg.textContent='⚠️ '+error.message;msg.className='form-msg err';return;}
+  closeModal('modal-stamp');loadStamps();
 }
 
-// ── Loyalty rewards ───────────────────────────────────────────────
-async function loadRewards(){
-  const {data} = await sb.from('guests').select('*, partners(name)').eq('reward_status','pending').order('created_at');
-  const list = data || [];
-  document.getElementById('rewards-list').innerHTML = list.length === 0
-    ? '<p style="font-size:13px;color:rgba(255,255,255,0.35);font-weight:700">Nema nagrada na čekanju 🎉</p>'
-    : list.map(g => `
-        <div class="reward-card">
-          <div style="flex:1">
-            <div style="font-weight:900;font-size:13px">${g.reward_phone || g.reward_email || 'Nema kontakta'}</div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:3px">${g.stamp_count} pečata · ${new Date(g.created_at).toLocaleDateString('sr-RS')}</div>
-          </div>
-          <button class="btn-green" onclick="markRewardSent('${g.id}',this)">✓ Poslato</button>
-        </div>`).join('');
+async function loadLoyalty(){
+  const {data}=await sb.from('guests').select('*').eq('reward_status','pending').order('created_at');
+  document.getElementById('loyalty-list').innerHTML=(data||[]).length===0
+    ?'<div class="card-sm" style="text-align:center;padding:32px"><p style="color:#6ee7b7;font-weight:700">🎉 Nema nagrada na čekanju!</p></div>'
+    :(data||[]).map(g=>`
+      <div class="card-sm" style="margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="flex:1"><div style="font-weight:900">${g.reward_phone||'Bez kontakta'}</div><div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:3px">${g.stamp_count} pečata · ${new Date(g.created_at).toLocaleDateString('sr-RS')}</div></div>
+        <button class="btn btn-green btn-sm" onclick="markRew('${g.id}',this)">✓ Poslato</button>
+      </div>`).join('');
 }
 
-async function markRewardSent(guestId, btn){
-  await sb.from('guests').update({reward_status:'sent'}).eq('id', guestId);
-  btn.closest('.reward-card').remove();
-}
+async function markRew(id,btn){btn.disabled=true;await sb.from('guests').update({reward_status:'sent'}).eq('id',id);loadLoyalty();}
 
-// ── Events ────────────────────────────────────────────────────────
 async function loadEvents(){
-  const today = new Date().toISOString().split('T')[0];
-  const {data} = await sb.from('events').select('*, partners(name)').gte('event_date', today).eq('is_active', true).order('event_date').order('event_time');
-  const list = data || [];
-  document.getElementById('events-list').innerHTML = list.length === 0
-    ? '<p style="font-size:13px;color:rgba(255,255,255,0.35);font-weight:700">Nema budućih događaja.</p>'
-    : list.map(e => `
-        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:1rem;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
-          <div style="flex:1">
-            <div style="font-weight:900">${esc(e.title)}</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.4)">${e.event_date} ${e.event_time?'· '+e.event_time.slice(0,5):''} ${e.partners?'· '+e.partners.name:''}</div>
-          </div>
-          <button class="btn-red" onclick="deleteEvent('${e.id}',this)">✕</button>
-        </div>`).join('');
+  const today=new Date().toISOString().split('T')[0];
+  const {data}=await sb.from('events').select('*').gte('event_date',today).eq('is_active',true).order('event_date').order('event_time');
+  document.getElementById('events-list').innerHTML=(data||[]).length===0
+    ?'<div class="card-sm"><p style="color:rgba(255,255,255,0.3);font-size:13px;font-weight:700">Nema budućih događaja.</p></div>'
+    :(data||[]).map(e=>`
+      <div class="card-sm" style="margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <div style="flex:1"><div style="font-weight:900">${esc(e.title)}</div><div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px">${e.event_date} ${e.event_time?'u '+e.event_time.slice(0,5):''} ${e.location?'· '+e.location:''}</div></div>
+        <button class="btn btn-red btn-sm" onclick="delEv('${e.id}',this)">✕</button>
+      </div>`).join('');
 }
 
-function openNewEvent(){ openModal('modal-event'); }
+function openNewEvent(){
+  ['me-title','me-loc','me-desc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('me-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('me-msg').textContent='';
+  openModal('modal-event');
+}
 
 async function saveEvent(){
-  const title = document.getElementById('me-title').value.trim();
-  const date  = document.getElementById('me-date').value;
-  if(!title || !date){ document.getElementById('me-msg').textContent = '⚠️ Naziv i datum su obavezni.'; return; }
-  await sb.from('events').insert({title, event_date:date, event_time:document.getElementById('me-time').value||null, location:document.getElementById('me-loc').value.trim()||null, description:document.getElementById('me-desc').value.trim()||null, is_active:true, partner_id:null});
-  closeModal('modal-event');
-  loadEvents();
+  const title=document.getElementById('me-title').value.trim();
+  const date=document.getElementById('me-date').value;
+  const msg=document.getElementById('me-msg');
+  if(!title||!date){msg.textContent='⚠️ Naziv i datum su obavezni.';msg.className='form-msg err';return;}
+  await sb.from('events').insert({title,event_date:date,event_time:document.getElementById('me-time').value||null,location:document.getElementById('me-loc').value.trim()||null,description:document.getElementById('me-desc').value.trim()||null,is_active:true});
+  closeModal('modal-event');loadEvents();
 }
 
-async function deleteEvent(id, btn){
-  if(!confirm('Obrisati događaj?')) return;
-  await sb.from('events').update({is_active:false}).eq('id', id);
-  btn.closest('div[style]').remove();
-}
+async function delEv(id,btn){btn.disabled=true;await sb.from('events').update({is_active:false}).eq('id',id);loadEvents();}
 
-// ── Billing ───────────────────────────────────────────────────────
-async function loadBilling(){
-  const {data} = await sb.from('billing').select('*, partners(name)').order('activated_at', {ascending:false}).limit(100);
-  const bills = data || [];
-  // Grupiši po month_year
-  const grouped = {};
-  bills.forEach(b => { if(!grouped[b.month_year]) grouped[b.month_year] = []; grouped[b.month_year].push(b); });
-  let html = '';
-  for(const [month, items] of Object.entries(grouped)){
-    const total = items.reduce((s,b) => s + (b.amount_rsd||0), 0);
-    html += `<div style="margin-bottom:20px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-        <span style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.4)">${month}</span>
-        <span style="font-size:14px;font-weight:900;color:#fbbf24">${total.toLocaleString()} RSD</span>
-      </div>
-      ${items.map(b => `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:10px 12px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-size:12px;font-weight:800">${esc(b.partners?.name||'')}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.35)">${b.type} · ${b.plan_tier||''}</div>
-        </div>
-        <span style="font-size:12px;font-weight:900;color:#10b981">${b.amount_rsd||0} RSD</span>
-      </div>`).join('')}
-    </div>`;
-  }
-  document.getElementById('billing-content').innerHTML = html || '<p style="color:rgba(255,255,255,0.35);font-size:13px;font-weight:700">Nema podataka.</p>';
-}
-
-// ── QR Generator ──────────────────────────────────────────────────
 async function loadQR(){
-  const {data} = await sb.from('partners').select('id, name, type, partner_code, access_token').eq('is_active', true).order('type').order('name');
-  const base = location.origin + location.pathname.replace('admin.html','');
-  document.getElementById('qr-partner-list').innerHTML = (data||[]).map(p => {
-    // URL za gosta (apartmani → index, ostali → stamp)
-    const guestUrl = p.type === 'apartment' || p.type === 'hotel'
-      ? `${base}index.html?id=${p.partner_code}`
-      : `${base}stamp.html?code=${p.partner_code}`;
-    const partnerUrl = `${base}partner.html?t=${p.access_token}`;
-    return `
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:1.5rem;padding:16px;margin-bottom:12px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-          <span class="tag ${tagClass(p.type)}">${p.type}</span>
-          <span style="font-size:14px;font-weight:900">${esc(p.name)}</span>
+  const {data}=await sb.from('partners').select('id,name,type,partner_code,access_token').eq('is_active',true).order('partner_code');
+  const base=location.origin+'/';
+  document.getElementById('qr-list').innerHTML=(data||[]).map(p=>{
+    const gUrl=(p.type==='apartment'||p.type==='hotel')?`${base}index.html?id=${p.partner_code}`:`${base}stamp.html?code=${p.partner_code}`;
+    const pUrl=`${base}partner.html?t=${p.access_token}`;
+    return `<div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <span class="p-num">${esc(p.partner_code)}</span>${tb(p.type)}
+        <span style="font-size:14px;font-weight:900">${esc(p.name)}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start">
+        <div>
+          <div style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.3);margin-bottom:8px">QR za goste</div>
+          <div id="qr-${p.id}" style="background:white;border-radius:12px;padding:10px;display:inline-block"></div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:8px;display:block;width:100%" onclick="dlQR('qr-${p.id}','${esc(p.partner_code)}')">⬇ Preuzmi</button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div>
-            <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.35);margin:0 0 8px">QR za goste</p>
-            <div class="qr-box" id="qr-guest-${p.id}"></div>
-            <div class="qr-url">${guestUrl}</div>
-            <button class="btn-ghost" style="margin-top:6px;width:100%" onclick="downloadQR('qr-guest-${p.id}','${esc(p.name)}-gost')">⬇ Preuzmi</button>
-          </div>
-          <div>
-            <p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.35);margin:0 0 8px">URL za partnera</p>
-            <div style="padding:10px;background:rgba(0,0,0,0.3);border-radius:10px;font-family:monospace;font-size:9px;color:rgba(255,255,255,0.45);word-break:break-all">${partnerUrl}</div>
-            <button class="btn-gold" style="margin-top:6px;width:100%;padding:8px;font-size:10px" onclick="copyUrl('${partnerUrl}')">📋 Kopiraj URL</button>
-          </div>
+        <div>
+          <div style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.3);margin-bottom:6px">Partner URL</div>
+          <div style="padding:10px;background:rgba(0,0,0,0.3);border-radius:10px;font-family:monospace;font-size:10px;color:rgba(255,255,255,0.4);word-break:break-all;margin-bottom:8px">${pUrl}</div>
+          <button class="btn btn-gold btn-sm" onclick="cpTxt('${pUrl}')">📋 Kopiraj URL</button>
         </div>
-      </div>`;
+      </div>
+    </div>`;
   }).join('');
-
-  // Render QR kodova
-  (data||[]).forEach(p => {
-    const url = p.type === 'apartment' || p.type === 'hotel'
-      ? `${base}index.html?id=${p.partner_code}`
-      : `${base}stamp.html?code=${p.partner_code}`;
-    QRCode.toCanvas(document.createElement('canvas'), url, {width:120,margin:1}, (err, canvas) => {
-      if(!err){
-        const el = document.getElementById(`qr-guest-${p.id}`);
-        if(el){ el.innerHTML = ''; el.appendChild(canvas); }
-      }
-    });
+  (data||[]).forEach(p=>{
+    const url=(p.type==='apartment'||p.type==='hotel')?`${base}index.html?id=${p.partner_code}`:`${base}stamp.html?code=${p.partner_code}`;
+    QRCode.toCanvas(document.createElement('canvas'),url,{width:110,margin:1},(err,canvas)=>{if(!err){const el=document.getElementById('qr-'+p.id);if(el){el.innerHTML='';el.appendChild(canvas);}}});
   });
 }
 
-function copyUrl(url){
-  navigator.clipboard.writeText(url).then(() => alert('URL kopiran!'));
-}
+function dlQR(cid,name){const c=document.querySelector('#'+cid+' canvas');if(!c){alert('QR nije generisan.');return;}const a=document.createElement('a');a.href=c.toDataURL();a.download=name+'-qr.png';a.click();}
+function cpTxt(t){navigator.clipboard.writeText(t).then(()=>alert('Kopirano!'));}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+function esc(s){return C.escapeHtml(s||'');}
 
-function downloadQR(containerId, filename){
-  const canvas = document.querySelector(`#${containerId} canvas`);
-  if(!canvas){ alert('QR nije generisan.'); return; }
-  const a = document.createElement('a');
-  a.href = canvas.toDataURL();
-  a.download = `${filename}-qr.png`;
-  a.click();
-}
-
-// ── Modal helpers ─────────────────────────────────────────────────
-function openModal(id){ document.getElementById(id).classList.add('open'); }
-function closeModal(id){ document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target === m) m.classList.remove('open'); }));
-
-function esc(s){ return C.escapeHtml(s||''); }
-
-// ── Boot ──────────────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
-  StayVBGuard.requireAdmin(() => {
-    loadDashboard();
-  });
+window.addEventListener('DOMContentLoaded',()=>{
+  StayVBGuard.requireAdmin(()=>{loadDashboard();});
 });
 </script>
 </body>
