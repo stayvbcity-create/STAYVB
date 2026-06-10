@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="sr-Latn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>StayVB — Vodič za partnere</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="icon192.png">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
+*{box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f8fafc;color:#0f172a;min-height:100vh;margin:0}
+.app{max-width:640px;margin:0 auto;padding-bottom:60px}
+
+/* Hero */
+.hero{background:linear-gradient(145deg,#0f172a,#1e293b);padding:64px 28px 56px;text-align:center;color:white;position:relative;border-bottom-left-radius:2.5rem;border-bottom-right-radius:2.5rem}
+.back-btn{position:absolute;top:16px;left:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;color:white;text-decoration:none}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.25);font-size:10px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#fcd34d;margin-bottom:16px}
+
+/* Content */
+.content{padding:0 20px;margin-top:-28px}
+
+/* Step card */
+.step-card{background:white;border:1px solid #e2e8f0;border-radius:2rem;padding:24px 20px;margin-bottom:14px;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.06)}
+.step-num{position:absolute;top:20px;right:20px;width:32px;height:32px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#94a3b8}
+.step-icon{font-size:2rem;margin-bottom:12px;line-height:1}
+.step-title{font-size:1rem;font-weight:900;color:#0f172a;margin:0 0 6px;letter-spacing:-0.02em}
+.step-desc{font-size:13px;color:#475569;font-weight:600;line-height:1.6;margin:0}
+.step-divider{height:1px;background:#f1f5f9;margin:14px 0}
+.step-detail{font-size:12px;color:#64748b;font-weight:600;line-height:1.65}
+
+/* Highlighted steps */
+.step-card.gold::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#d97706,#fbbf24)}
+.step-card.blue::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#2563eb,#60a5fa)}
+.step-card.green::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#059669,#34d399)}
+.step-card.purple::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#7c3aed,#a78bfa)}
+.step-card.orange::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#ea580c,#fb923c)}
+
+/* Tag */
+.tag{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:10px;font-weight:900;margin-right:4px;margin-bottom:4px}
+.tag-gold{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.tag-blue{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+.tag-green{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+.tag-purple{background:#faf5ff;border:1px solid #e9d5ff;color:#6b21a8}
+.tag-orange{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412}
+.tag-gray{background:#f8fafc;border:1px solid #e2e8f0;color:#475569}
+
+/* Section header */
+.section-header{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.16em;color:#94a3b8;margin:28px 0 12px 4px}
+
+/* FAQ */
+.faq-item{background:white;border:1px solid #e2e8f0;border-radius:1.5rem;padding:18px 20px;margin-bottom:8px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.04)}
+.faq-q{font-size:13px;font-weight:900;color:#0f172a;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.faq-a{font-size:12px;color:#475569;font-weight:600;line-height:1.6;margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9;display:none}
+.faq-item.open .faq-a{display:block}
+.faq-item.open .faq-arrow{transform:rotate(180deg)}
+.faq-arrow{transition:transform 0.2s;font-size:10px;color:#94a3b8;flex-shrink:0}
+
+/* CTA */
+.cta-card{background:linear-gradient(135deg,#0f172a,#1e293b);border:1px solid rgba(251,191,36,0.25);border-radius:2rem;padding:28px 24px;text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hero">
+    <a href="javascript:history.back()" class="back-btn">←</a>
+    <div class="hero-badge">📘 Vodič za partnere</div>
+    <h1 style="font-size:1.9rem;font-weight:900;letter-spacing:-0.04em;margin:0 0 10px">Kako koristiti<br>StayVB sistem</h1>
+    <p style="font-size:12px;color:rgba(255,255,255,0.55);font-weight:700;margin:0;line-height:1.6;max-width:380px;margin:0 auto">Sve što treba da znate o vašem partner panelu,<br>QR kodovima i alatima za privlačenje gostiju</p>
+  </div>
+
+  <div class="content">
+
+    <!-- POČETAK -->
+    <p class="section-header">Korak 1 — Vaš jedinstven link</p>
+
+    <div class="step-card gold">
+      <div class="step-num">1</div>
+      <div class="step-icon">🔗</div>
+      <h3 class="step-title">Dobili ste jedinstven URL</h3>
+      <p class="step-desc">Administrator vam je poslao link koji izgleda ovako:</p>
+      <div class="step-divider"></div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;font-family:monospace;font-size:12px;color:#475569;word-break:break-all">
+        https://stayvb.com/<strong style="color:#d97706">partner.html?t=abc123xyz...</strong>
+      </div>
+      <p class="step-detail" style="margin-top:12px">
+        Ovaj link je <strong>samo vaš</strong> — niko drugi nema isti. Sačuvajte ga na sigurnom mestu (bookmarkujte u browseru ili sačuvajte u kontaktima). Ako ga izgubite, administrator može generisati novi.
+      </p>
+    </div>
+
+    <div class="step-card blue">
+      <div class="step-num">2</div>
+      <div class="step-icon">🔐</div>
+      <h3 class="step-title">PIN kod za prijavu</h3>
+      <p class="step-desc">Kada otvorite link, unesite vaš 4–6 cifreni PIN. Sistem blokira pristup nakon 5 pogrešnih pokušaja na 15 minuta.</p>
+      <div class="step-divider"></div>
+      <div class="step-detail">
+        <strong>Zaboravili ste PIN?</strong> Kontaktirajte administratora — on može resetovati PIN za vas.<br><br>
+        <strong>PIN nikada ne napušta bazu podataka</strong> — čak ni administrator ga ne može pročitati, samo resetovati.
+      </div>
+    </div>
+
+    <!-- PANEL -->
+    <p class="section-header">Korak 2 — Partner panel</p>
+
+    <div class="step-card green">
+      <div class="step-num">3</div>
+      <div class="step-icon">🏠</div>
+      <h3 class="step-title">Apartmani i hoteli — tab Smeštaj</h3>
+      <p class="step-desc">Unesite WiFi podatke koje će gosti videti odmah po dolasku. Oni se prikazuju na prvom ekranu aplikacije.</p>
+      <div class="step-divider"></div>
+      <div class="step-detail">
+        <span class="tag tag-gold">⭐ Premium</span> Uz premium plan možete dodati:<br>
+        <span class="tag tag-blue">Posebnu ponudu</span> <span class="tag tag-blue">Cenovnik usluga</span> <span class="tag tag-blue">Kućni red</span> <span class="tag tag-blue">Share kampanju</span>
+        <br><br>
+        Kontaktirajte administratora za aktivaciju premium plana.
+      </div>
+    </div>
+
+    <div class="step-card orange">
+      <div class="step-num">4</div>
+      <div class="step-icon">🔥</div>
+      <h3 class="step-title">Restorani — Happy Hour</h3>
+      <p class="step-desc">Aktivirajte Happy Hour jednim klikom. Odmah se pojavljuje na listi vidljivoj svim gostima u sistemu sa odbrojavanjem.</p>
+      <div class="step-divider"></div>
+      <div class="step-detail">
+        Podesite datum, vreme od–do, i napišite kratki opis ponude (npr. „Pivo 150 RSD, žito 200 RSD"). Happy Hour se automatski isključuje po isteku vremena.
+        <br><br>
+        <span class="tag tag-orange">🔥 Live</span> Gosti vide tajmer koji odbrojava do kraja vaše ponude.
+      </div>
+    </div>
+
+    <div class="step-card purple">
+      <div class="step-num">5</div>
+      <div class="step-icon">🛍</div>
+      <h3 class="step-title">Mali biznisi — Promocije</h3>
+      <p class="step-desc">Aktivirajte promotivne poruke vidljive svim gostima. Na raspolaganju su 3 promocije mesečno.</p>
+      <div class="step-divider"></div>
+      <div class="step-detail">
+        <span class="tag tag-gray">Basic 300 RSD</span> — 1 dan prikazivanja<br>
+        <span class="tag tag-blue">Standard 500 RSD</span> — 3 dana prikazivanja<br>
+        <span class="tag tag-gold">Premium 800 RSD</span> — 7 dana prikazivanja<br><br>
+        Uplata se vrši administratoru. Promocija postaje aktivna odmah po potvrdi.
+      </div>
+    </div>
+
+    <div class="step-card green">
+      <div class="step-num">6</div>
+      <div class="step-icon">📅</div>
+      <h3 class="step-title">Rezervacije (atrakcije)</h3>
+      <p class="step-desc">Ako imate aktiviran booking sistem, gosti mogu direktno rezervisati termine iz aplikacije.</p>
+      <div class="step-divider"></div>
+      <div class="step-detail">
+        U tabu <strong>Rezervacije</strong> vidite sve potvrđene rezervacije za narednih 7 dana, sortirane po datumu i vremenu. Možete otkazati rezervaciju jednim klikom — gost nije automatski obavešten, pa ga kontaktirajte direktno.
+      </div>
+    </div>
+
+    <!-- QR -->
+    <p class="section-header">Korak 3 — QR kodovi</p>
+
+    <div class="step-card gold">
+      <div class="step-num">7</div>
+      <div class="step-icon">📱</div>
+      <h3 class="step-title">Vaš QR kod za goste</h3>
+      <p class="step-desc">Administrator generiše QR kod koji štampate i postavljate u objektu. Gost ga skenira kamerom telefona — aplikacija se otvori automatski, bez instalacije.</p>
+      <div class="step-divider"></div>
+      <div class="step-detail">
+        <strong>Apartmani i hoteli:</strong> QR vodi na vaš ekran u aplikaciji. Čim gost skenira, automatski dobija prvi pečat na loyalty kartici.<br><br>
+        <strong>Restorani, atrakcije, biznisi:</strong> QR vodi na stranicu za skupljanje pečata. Postavite ga na vidljivo mesto — sto, kasu, ulaz.
+      </div>
+    </div>
+
+    <div class="step-card blue">
+      <div class="step-num">8</div>
+      <div class="step-icon">📍</div>
+      <h3 class="step-title">Radar — vi ste na mapi</h3>
+      <p class="step-desc">Vaš objekat je automatski vidljiv na interaktivnoj mapi gostiju sa odgovarajućom ikonom.</p>
+      <div class="step-divider"></div>
+      <div class="step-detail">
+        <span class="tag tag-orange">🍽 Restoran</span> <span class="tag tag-blue">🏨 Hotel</span> <span class="tag tag-green">🎡 Atrakcija</span> <span class="tag tag-purple">🛍 Biznis</span> <span class="tag tag-gray">🏠 Apartman</span><br><br>
+        Ako imate aktivan Happy Hour, na vašoj ikoni se pojavljuje <strong>narančasta HH oznaka</strong> — gosti je odmah primećuju na mapi. Klikom na marker vide vaš opis, radno vreme i dugme za navigaciju ili WhatsApp.
+      </div>
+    </div>
+
+    <!-- LOYALTY -->
+    <p class="section-header">Loyalty sistem — pečati</p>
+
+    <div class="step-card green">
+      <div class="step-num">9</div>
+      <div class="step-icon">⭐</div>
+      <h3 class="step-title">Kako funkcioniše loyalty</h3>
+      <p class="step-desc">Gosti skupljaju pečate skeniranjem QR kodova na partnerskim objektima i javnim lokacijama po Vrnjačkoj Banji.</p>
+      <div class="step-divider"></div>
+      <div class="step-detail">
+        <strong>10 pečata = nagrada.</strong> Kada gost skupi 10 pečata, šalje kontakt podatke i vi (administrator) ste obavešteni. Nagrada se dogovara sa administracijom.<br><br>
+        <span class="tag tag-gold">⭐ Pečat kod vas</span> — gost skenira QR na vašem objektu i dobija pečat. Isti gost može dobiti pečat kod vas samo jednom — duplikati se automatski sprečavaju.<br><br>
+        <span class="tag tag-green">📍 Javne lokacije</span> — vidikovci, česme, parkovi koje je postavio administrator. Gosti ih vide na radaru kao posebnu zlatnu ciodu.
+      </div>
+    </div>
+
+    <!-- STATISTIKE -->
+    <p class="section-header">Korak 4 — Statistike i praćenje</p>
+
+    <div class="step-card purple">
+      <div class="step-num">10</div>
+      <div class="step-icon">📊</div>
+      <h3 class="step-title">Tab Statistike</h3>
+      <p class="step-desc">U poslednjem tabu pratite koliko gostiju interaguje sa vašim objektom.</p>
+      <div class="step-divider"></div>
+      <div class="step-detail">
+        <span class="tag tag-gold">QR skeniranja</span> Koliko puta je skeniran vaš kod<br>
+        <span class="tag tag-green">WhatsApp klikovi</span> Koliko gostiju je kontaktiralo<br>
+        <span class="tag tag-purple">Loyalty pečati</span> Ukupno pečata skupljenih kod vas<br><br>
+        Statistike se ažuriraju u realnom vremenu.
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <p class="section-header">Često postavljana pitanja</p>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Izgubio sam link za partner panel. Šta da radim? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Kontaktirajte administratora sistema. On može regenerisati novi jedinstven link za vas. Stari link prestaje da radi čim se generiše novi, tako da je vaš panel uvek zaštićen.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Mogu li gosti videti moj WiFi ako nisu u mom apartmanu? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">WiFi podaci se prikazuju samo gostima koji otvore vašu stranicu putem QR koda koji ste postavili u sobi. Svaki apartman ima jedinstven QR i jedinstven link — gost iz drugog objekta ne može videti vaše podatke.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Koliko dugo je Happy Hour aktivan? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Happy Hour važi za datum i vremenski period koji ste postavili. Sistem ga automatski uklanja sa liste po isteku vremena. Možete ga aktivirati i deaktivirati ručno u bilo kom trenutku iz partner panela.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Šta je razlika između besplatnog i premium plana? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Besplatni plan uključuje: prikaz na radaru, WiFi podaci (za smeštaj), loyalty pečat, događaji. Premium plan dodaje: posebnu ponudu za goste, cenovnik usluga, kućni red i Instagram share kampanju. Kontaktirajte administratora za više informacija o cenama.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Može li isti gost dobiti pečat kod mene više puta? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Ne. Sistem automatski prepoznaje gostov uređaj i dozvoljava samo jedan pečat po lokaciji. Gost koji skenira QR drugi put vidi poruku da već ima pečat — bez greške i bez frustracije.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Na kom jeziku gosti vide aplikaciju? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Aplikacija podržava 6 jezika: srpski, engleski, nemački, ruski, bugarski i kineski. Gost bira jezik pri prvom otvaranju ili iz menija — izbor se pamti za sve stranice.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Kako mogu dodati ili promeniti događaj? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">U partner panelu idite na tab „Događaji". Tu možete dodati novi događaj (naziv, datum, vreme, lokacija, opis) ili obrisati postojeći. Događaj se odmah pojavljuje na javnoj listi vidljivoj svim gostima.</div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-card">
+      <div style="font-size:2.5rem;margin-bottom:16px">💬</div>
+      <h3 style="font-size:1.1rem;font-weight:900;color:#fbbf24;margin:0 0 8px">Imate pitanje?</h3>
+      <p style="font-size:13px;color:rgba(255,255,255,0.55);font-weight:600;margin:0 0 20px;line-height:1.6">Pišite administratoru sistema.<br>Odgovaramo u roku od 24h.</p>
+      <a href="javascript:history.back()" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#d97706,#f59e0b);color:#0f172a;border-radius:1.2rem;font-size:12px;font-weight:900;text-decoration:none;text-transform:uppercase;letter-spacing:0.10em">← Nazad na panel</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function toggleFaq(el){ el.classList.toggle('open'); }
+</script>
+</body>
+</html>

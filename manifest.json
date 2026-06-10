@@ -1,0 +1,48 @@
+{
+  "name": "StayVB — Vrnjačka Banja",
+  "short_name": "StayVB",
+  "description": "Digitalni vodič kroz Vrnjačku Banju — popusti, atrakcije, događaji",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0f172a",
+  "background_color": "#0f172a",
+  "lang": "sr",
+  "icons": [
+    {
+      "src": "icon192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Happy Hour",
+      "short_name": "Happy Hour",
+      "url": "./happy-hour.html",
+      "icons": [{ "src": "icon192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Radar",
+      "short_name": "Radar",
+      "url": "./radar.html",
+      "icons": [{ "src": "icon192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Atrakcije",
+      "short_name": "Atrakcije",
+      "url": "./atrakcije.html",
+      "icons": [{ "src": "icon192.png", "sizes": "192x192" }]
+    }
+  ],
+  "categories": ["travel", "lifestyle", "entertainment"],
+  "screenshots": []
+}

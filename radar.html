@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="sr-Latn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>StayVB — Radar</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="icon192.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="lang-init.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
+*{box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f8fafc;color:#0f172a;margin:0;height:100dvh;display:flex;flex-direction:column;max-width:430px;margin:0 auto}
+#google_translate_element{display:none!important}
+.goog-te-banner-frame,.skiptranslate{display:none!important}
+body{top:0!important}
+
+/* Header */
+.header{background:linear-gradient(145deg,#0f172a,#1e293b);padding:52px 16px 14px;color:white;position:relative;flex-shrink:0}
+.back-btn{position:absolute;top:14px;left:14px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;color:white;text-decoration:none}
+.lang-pills-bar{position:absolute;top:12px;right:12px;display:flex;flex-wrap:wrap;gap:4px;max-width:170px;justify-content:flex-end}
+.lang-pill{padding:3px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);cursor:pointer;line-height:0}
+.lang-pill img{width:26px;height:17px;object-fit:cover;border-radius:3px;display:block;opacity:0.75}
+.lang-pill.active{border-color:rgba(251,191,36,0.50);background:rgba(251,191,36,0.18)}
+.lang-pill.active img{opacity:1}
+
+/* Filter chips */
+.filter-bar{display:flex;gap:8px;overflow-x:auto;padding:10px 16px 4px;flex-shrink:0;background:white;border-bottom:1px solid #e2e8f0;scrollbar-width:none}
+.filter-bar::-webkit-scrollbar{display:none}
+.chip{padding:7px 14px;border-radius:999px;font-size:11px;font-weight:900;cursor:pointer;transition:all 0.18s;white-space:nowrap;border:1.5px solid transparent;background:#f1f5f9;color:#64748b}
+.chip.active{background:#0f172a;color:white;border-color:#0f172a}
+.chip.active.hh{background:#f97316;border-color:#f97316}
+.chip.active.stamp{background:#f59e0b;border-color:#f59e0b;color:#0f172a}
+
+/* Map */
+#map{flex:1;min-height:0;z-index:1}
+
+/* Bottom sheet */
+.bottom-sheet{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:white;border-top-left-radius:2rem;border-top-right-radius:2rem;box-shadow:0 -8px 32px rgba(0,0,0,0.18);z-index:1000;transition:transform 0.3s ease;transform:translateX(-50%) translateY(100%)}
+.bottom-sheet.open{transform:translateX(-50%) translateY(0)}
+.sheet-handle{width:40px;height:4px;border-radius:2px;background:#e2e8f0;margin:12px auto 0}
+.sheet-content{padding:14px 20px 32px}
+.sheet-name{font-size:1.2rem;font-weight:900;color:#0f172a;margin:0 0 4px;letter-spacing:-0.02em}
+.sheet-type{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:#94a3b8;margin:0 0 10px}
+.sheet-info{font-size:13px;color:#475569;font-weight:600;line-height:1.55;margin:0 0 14px}
+.sheet-btn{display:block;width:100%;padding:14px;text-align:center;background:#0f172a;color:white;border-radius:1.2rem;font-size:12px;font-weight:900;text-decoration:none;text-transform:uppercase;letter-spacing:0.10em;margin-bottom:8px}
+.sheet-btn.wa{background:linear-gradient(135deg,#10b981,#059669)}
+.sheet-btn.stamp-btn{background:linear-gradient(135deg,#f59e0b,#d97706);color:#0f172a}
+.sheet-close{position:absolute;top:14px;right:16px;width:32px;height:32px;border-radius:50%;background:#f1f5f9;border:none;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* Leaflet custom icons */
+.marker-pin{width:32px;height:40px;position:relative;display:flex;align-items:center;justify-content:center}
+.marker-pin svg{position:absolute;top:0;left:0;width:32px;height:40px}
+.marker-pin span{position:relative;z-index:1;font-size:14px;margin-top:-6px}
+
+.stamp-pin-wrap{position:relative;display:flex;flex-direction:column;align-items:center}
+.stamp-pin-icon{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 12px rgba(0,0,0,0.25);border:2px solid white}
+.stamp-pin-needle{width:3px;height:14px;background:#f59e0b;margin-top:-2px;border-radius:0 0 3px 3px}
+.stamp-pulse{position:absolute;top:-4px;left:-4px;right:-4px;bottom:-4px;border-radius:50%;border:2px solid rgba(245,158,11,0.5);animation:stampRadar 1.8s infinite}
+@keyframes stampRadar{0%{transform:scale(1);opacity:0.8}100%{transform:scale(1.6);opacity:0}}
+</style>
+</head>
+<body>
+<div id="google_translate_element" style="display:none"></div>
+
+<div class="header">
+  <a href="javascript:history.back()" class="back-btn">←</a>
+  <div class="lang-pills-bar" id="lang-pills"></div>
+  <h1 style="font-size:1.3rem;font-weight:900;margin:0 0 2px;letter-spacing:-0.03em" id="txt-title">Radar Popusta</h1>
+  <p style="font-size:11px;color:rgba(255,255,255,0.55);font-weight:800;margin:0;text-transform:uppercase;letter-spacing:0.10em" id="txt-sub">Klikni na marker za detalje</p>
+</div>
+
+<div class="filter-bar">
+  <button class="chip active" data-filter="all" onclick="setFilter('all')" id="chip-all">Sve</button>
+  <button class="chip hh"     data-filter="hh"  onclick="setFilter('hh')"  id="chip-hh">🔥 Happy Hour</button>
+  <button class="chip stamp"  data-filter="stamp" onclick="setFilter('stamp')" id="chip-stamp">⭐ Pečati</button>
+  <button class="chip"        data-filter="restaurant" onclick="setFilter('restaurant')" id="chip-restaurant">🍽 Restorani</button>
+  <button class="chip"        data-filter="attraction"  onclick="setFilter('attraction')"  id="chip-attraction">🎡 Atrakcije</button>
+  <button class="chip"        data-filter="hotel"  onclick="setFilter('hotel')"  id="chip-hotel">🏨 Hoteli</button>
+</div>
+
+<div id="map"></div>
+
+<!-- Bottom Sheet -->
+<div id="sheet" class="bottom-sheet">
+  <button class="sheet-close" onclick="closeSheet()">✕</button>
+  <div class="sheet-handle"></div>
+  <div class="sheet-content" id="sheet-content"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const sb = C.db();
+const LANG = localStorage.getItem('stayvb_lang') || 'sr';
+
+const T = {
+  sr:{title:'Radar Popusta',sub:'Klikni na marker za detalje',all:'Sve',hh:'Happy Hour',stamps:'Pečati',restaurants:'Restorani',attractions:'Atrakcije',hotels:'Hoteli',wa:'WhatsApp rezervacija',directions:'Navigacija',stamp_loc:'Lokacija pečata',collect_stamp:'Skupi pečat ovde',hh_active:'Happy Hour aktivan'},
+  en:{title:'Discount Radar',sub:'Tap a marker for details',all:'All',hh:'Happy Hour',stamps:'Stamps',restaurants:'Restaurants',attractions:'Attractions',hotels:'Hotels',wa:'WhatsApp booking',directions:'Directions',stamp_loc:'Stamp location',collect_stamp:'Collect stamp here',hh_active:'Happy Hour active'},
+  de:{title:'Rabatt-Radar',sub:'Marker antippen für Details',all:'Alle',hh:'Happy Hour',stamps:'Stempel',restaurants:'Restaurants',attractions:'Attraktionen',hotels:'Hotels',wa:'WhatsApp Buchung',directions:'Navigation',stamp_loc:'Stempel-Standort',collect_stamp:'Hier Stempel sammeln',hh_active:'Happy Hour aktiv'},
+  ru:{title:'Радар скидок',sub:'Нажмите на маркер для деталей',all:'Всё',hh:'Happy Hour',stamps:'Штампы',restaurants:'Рестораны',attractions:'Аттракционы',hotels:'Отели',wa:'WhatsApp бронирование',directions:'Маршрут',stamp_loc:'Место штампа',collect_stamp:'Получить штамп здесь',hh_active:'Happy Hour активен'},
+  bg:{title:'Радар на отстъпките',sub:'Натисни маркер за детайли',all:'Всички',hh:'Happy Hour',stamps:'Печати',restaurants:'Ресторанти',attractions:'Атракции',hotels:'Хотели',wa:'WhatsApp резервация',directions:'Навигация',stamp_loc:'Локация за печат',collect_stamp:'Вземи печат тук',hh_active:'Happy Hour активен'},
+  'zh-CN':{title:'折扣雷达',sub:'点击标记查看详情',all:'全部',hh:'欢乐时光',stamps:'印章',restaurants:'餐厅',attractions:'景点',hotels:'酒店',wa:'WhatsApp预订',directions:'导航',stamp_loc:'集章地点',collect_stamp:'在此集章',hh_active:'欢乐时光进行中'}
+};
+function t(k){return (T[LANG]||T['sr'])[k]||k;}
+
+// Flags (inline base64, iste kao u index.html)
+const FLAGS = {'':['rs','data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIHk9IjAiIGZpbGw9IiNDNjM2M0MiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzBDNDA3NiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGRkZGRiIvPjwvc3ZnPg=='],'en':['gb','data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDEyMTY5Ii8+PHBhdGggZD0iTTAsMCBMMzAsMjAgTTMwLDAgTDAsMjAiIHN0cm9rZT0iI0ZGRkZGRiIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTAsMCBMMzAsMjAgTTMwLDAgTDAsMjAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSIyLjUiLz48cGF0aCBkPSJNMTUsMCBMMTUsMjAgTTAsMTAgTDMwLDEwIiBzdHJva2U9IiNGRkZGRkYiIHN0cm9rZS13aWR0aD0iNiIvPjxwYXRoIGQ9Ik0xNSwwIEwxNSwyMCBNMCwxMCBMMzAsMTAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSI0Ii8+PC9zdmc+'],'de':['de','data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIHk9IjAiIGZpbGw9IiMwMDAwMDAiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iI0REMDAwMCIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGQ0UwMCIvPjwvc3ZnPg=='],'ru':['ru','data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIHk9IjAiIGZpbGw9IiNGRkZGRkYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzAwMzlBNiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0Q1MkIxRSIvPjwvc3ZnPg=='],'bg':['bg','data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIHk9IjAiIGZpbGw9IiNGRkZGRkYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzAwOTY2RSIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0Q2MjYxMiIvPjwvc3ZnPg=='],'zh-CN':['cn','data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjREUyOTEwIi8+PHBvbHlnb24gcG9pbnRzPSI3LDMgOC4yLDYuOCAxMiw2LjggOSw5IDEwLjIsMTIuOCA3LDEwLjUgMy44LDEyLjggNSw5IDIsMy44LDYuOCIgZmlsbD0iI0ZGREUwMCIvPjwvc3ZnPg==']};
+
+function buildLangPills(){
+  const el = document.getElementById('lang-pills');
+  if(!el) return;
+  el.innerHTML = Object.keys(FLAGS).map(code => {
+    const [,src] = FLAGS[code];
+    return `<button class="lang-pill${code===LANG?' active':''}" onclick="stayvbSetLang('${code}')"><img src="${src}" alt="${code||'sr'}"></button>`;
+  }).join('');
+}
+
+let map, allMarkers = [], activeFilter = 'all';
+const ICONS = {restaurant:'🍽',hotel:'🏨',attraction:'🎡',business:'🛍',apartment:'🏠'};
+const COLORS = {restaurant:'#f97316',hotel:'#3b82f6',attraction:'#10b981',business:'#8b5cf6',apartment:'#64748b'};
+
+function makePartnerIcon(type, isHH){
+  const emoji = ICONS[type] || '📍';
+  const color = isHH ? '#f97316' : (COLORS[type] || '#64748b');
+  const html = `<div style="position:relative">
+    <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M16 0C9.37 0 4 5.37 4 12c0 9 12 28 12 28S28 21 28 12C28 5.37 22.63 0 16 0z" fill="${color}" stroke="white" stroke-width="1.5"/>
+      <circle cx="16" cy="12" r="8" fill="white" opacity="0.95"/>
+    </svg>
+    <span style="position:absolute;top:4px;left:50%;transform:translateX(-50%);font-size:13px">${emoji}</span>
+    ${isHH ? '<div style="position:absolute;top:-6px;right:-6px;background:#f97316;color:white;font-size:8px;font-weight:900;padding:2px 5px;border-radius:999px;border:1.5px solid white">HH</div>' : ''}
+  </div>`;
+  return L.divIcon({html, className:'', iconSize:[32,40], iconAnchor:[16,40], popupAnchor:[0,-40]});
+}
+
+function makeStampIcon(color){
+  const c = color || '#f59e0b';
+  const html = `<div class="stamp-pin-wrap">
+    <div style="position:relative">
+      <div class="stamp-pulse" style="border-color:${c}66"></div>
+      <div class="stamp-pin-icon" style="background:${c}22;border-color:${c}">⭐</div>
+    </div>
+    <div class="stamp-pin-needle" style="background:${c}"></div>
+  </div>`;
+  return L.divIcon({html, className:'', iconSize:[38,52], iconAnchor:[19,52], popupAnchor:[0,-52]});
+}
+
+function setFilter(f){
+  activeFilter = f;
+  document.querySelectorAll('.chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.filter === f);
+  });
+  allMarkers.forEach(({marker, data}) => {
+    const show = f === 'all'
+      || (f === 'hh' && data.hh_active)
+      || (f === 'stamp' && data.isStamp)
+      || (f === data.type);
+    if(show) marker.addTo(map);
+    else map.removeLayer(marker);
+  });
+}
+
+function openSheet(data){
+  const wa = data.whatsapp || data.phone || '';
+  const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${data.lat},${data.lng}`;
+  const isStamp = data.isStamp;
+  const stampCode = data.location_code || '';
+
+  let btns = '';
+  if(wa) btns += `<a href="https://wa.me/${wa.replace(/\D/g,'')}" class="sheet-btn wa" target="_blank">💬 ${t('wa')}</a>`;
+  if(isStamp) btns += `<a href="stamp.html?code=${encodeURIComponent(stampCode)}&lang=${LANG}" class="sheet-btn stamp-btn">⭐ ${t('collect_stamp')}</a>`;
+  btns += `<a href="${mapsUrl}" class="sheet-btn" target="_blank">📍 ${t('directions')}</a>`;
+
+  document.getElementById('sheet-content').innerHTML = `
+    ${data.hh_active ? `<div style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:#fff7ed;border:1px solid #fed7aa;font-size:10px;font-weight:900;color:#c2410c;margin-bottom:10px">🔥 ${t('hh_active')}</div>` : ''}
+    ${isStamp ? `<div style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:#fffbeb;border:1px solid #fde68a;font-size:10px;font-weight:900;color:#92400e;margin-bottom:10px">⭐ ${t('stamp_loc')}</div>` : ''}
+    <h3 class="sheet-name">${C.escapeHtml(data.name)}</h3>
+    <p class="sheet-type">${isStamp ? t('stamp_loc') : (data.type||'')}</p>
+    ${data.description ? `<p class="sheet-info">${C.escapeHtml(data.description)}</p>` : ''}
+    ${btns}`;
+
+  document.getElementById('sheet').classList.add('open');
+}
+
+function closeSheet(){
+  document.getElementById('sheet').classList.remove('open');
+}
+
+async function init(){
+  buildLangPills();
+  document.getElementById('txt-title').textContent = t('title');
+  document.getElementById('txt-sub').textContent = t('sub');
+
+  // Init mapa - centar Vrnjačke Banje
+  map = L.map('map', {zoomControl:true}).setView([43.6208, 20.8973], 15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:'© OpenStreetMap', maxZoom:19
+  }).addTo(map);
+
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const nowMins = now.getHours()*60 + now.getMinutes();
+
+  // Učitaj partnere
+  const { data:partners } = await sb
+    .from('partners')
+    .select('id, name, type, lat, lng, hh_active, hh_start, hh_end, hh_date, phone, whatsapp, partner_content(short_desc)')
+    .eq('is_active', true)
+    .not('lat', 'is', null);
+
+  (partners||[]).forEach(p => {
+    if(!p.lat || !p.lng) return;
+    const isHHNow = p.hh_active && p.hh_date === todayStr && (() => {
+      const s = toMins(p.hh_start), e = toMins(p.hh_end);
+      return s < e ? nowMins >= s && nowMins <= e : nowMins >= s || nowMins <= e;
+    })();
+
+    const marker = L.marker([p.lat, p.lng], {icon: makePartnerIcon(p.type, isHHNow)})
+      .on('click', () => openSheet({
+        ...p,
+        hh_active: isHHNow,
+        description: p.partner_content?.[0]?.short_desc || '',
+        isStamp: false
+      }));
+
+    allMarkers.push({ marker, data: {...p, hh_active:isHHNow, isStamp:false} });
+    marker.addTo(map);
+  });
+
+  // Učitaj stamp lokacije
+  const { data:stampLocs } = await sb.rpc('get_radar_stamps');
+  (stampLocs||[]).forEach(loc => {
+    if(!loc.lat || !loc.lng) return;
+    const marker = L.marker([loc.lat, loc.lng], {icon: makeStampIcon(loc.icon_color)})
+      .on('click', () => openSheet({
+        ...loc,
+        type: 'stamp',
+        hh_active: false,
+        isStamp: true
+      }));
+
+    allMarkers.push({ marker, data: {...loc, type:'stamp', hh_active:false, isStamp:true} });
+    marker.addTo(map);
+  });
+
+  // Pokušaj geolokacija korisnika
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(pos => {
+      const userIcon = L.divIcon({
+        html:'<div style="width:16px;height:16px;border-radius:50%;background:#3b82f6;border:3px solid white;box-shadow:0 2px 8px rgba(59,130,246,0.6)"></div>',
+        className:'', iconSize:[16,16], iconAnchor:[8,8]
+      });
+      L.marker([pos.coords.latitude, pos.coords.longitude], {icon:userIcon}).addTo(map);
+      map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+    }, () => {});
+  }
+}
+
+function toMins(t){ if(!t)return 0; const[h,m]=t.split(':').map(Number); return h*60+(m||0); }
+
+init();
+</script>
+<script>
+  function googleTranslateElementInit(){
+    new google.translate.TranslateElement({pageLanguage:'sr',includedLanguages:'en,de,ru,bg,zh-CN',autoDisplay:false},'google_translate_element');
+    STAYVB_LANG.onWidgetReady();
+  }
+</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>

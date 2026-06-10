@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="sr-Latn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>StayVB — Partner Panel</title>
+<meta name="robots" content="noindex,nofollow">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="security-guard.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
+*{box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#020617,#0f172a);color:white;min-height:100vh;margin:0}
+#google_translate_element{display:none!important}
+.goog-te-banner-frame,.skiptranslate{display:none!important}
+body{top:0!important}
+.app{max-width:430px;margin:0 auto;min-height:100vh;padding-bottom:40px}
+
+/* Header */
+.header{background:linear-gradient(135deg,rgba(251,191,36,0.12),transparent),linear-gradient(180deg,#0f172a,#111827);padding:52px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.06);position:relative}
+.logout-btn{position:absolute;top:14px;right:14px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);font-size:10px;font-weight:900;color:rgba(255,255,255,0.5);cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:0.08em}
+
+/* PIN screen */
+#pin-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center}
+.pin-input{width:100%;max-width:260px;padding:18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:1.5rem;color:white;font-size:1.8rem;font-weight:900;text-align:center;font-family:inherit;letter-spacing:0.3em;outline:none}
+.pin-input:focus{border-color:rgba(251,191,36,0.40);background:rgba(255,255,255,0.08)}
+
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.08);overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:12px 16px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;color:rgba(255,255,255,0.4);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all 0.18s}
+.tab.active{color:#fbbf24;border-bottom-color:#fbbf24}
+
+/* Content area */
+.tab-content{display:none;padding:20px}
+.tab-content.active{display:block}
+
+/* Form elements */
+.field-group{margin-bottom:16px}
+.field-label{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.4);margin-bottom:6px;display:block}
+.field-input{width:100%;padding:13px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:14px;color:white;font-size:13px;font-weight:700;font-family:inherit;outline:none;transition:border-color 0.18s}
+.field-input:focus{border-color:rgba(251,191,36,0.40);background:rgba(255,255,255,0.08)}
+.field-input::placeholder{color:rgba(255,255,255,0.25)}
+textarea.field-input{resize:vertical;min-height:90px}
+
+/* Cards */
+.panel-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:1.5rem;padding:16px;margin-bottom:12px}
+.panel-card-title{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.4);margin:0 0 12px}
+
+/* Toggle switch */
+.toggle-wrap{display:flex;align-items:center;justify-content:space-between;padding:12px 0}
+.toggle-label{font-size:13px;font-weight:800;color:rgba(255,255,255,0.85)}
+.toggle-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px}
+.toggle{position:relative;width:48px;height:26px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:rgba(255,255,255,0.12);border-radius:999px;cursor:pointer;transition:0.3s}
+.toggle-slider:before{content:"";position:absolute;height:20px;width:20px;left:3px;top:3px;background:white;border-radius:50%;transition:0.3s}
+.toggle input:checked + .toggle-slider{background:#10b981}
+.toggle input:checked + .toggle-slider:before{transform:translateX(22px)}
+
+/* Buttons */
+.btn-primary{width:100%;padding:15px;background:linear-gradient(135deg,#d97706,#f59e0b);color:#0f172a;border:none;border-radius:1.2rem;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;cursor:pointer;font-family:inherit;transition:transform 0.18s;margin-top:8px}
+.btn-primary:active{transform:scale(0.97)}
+.btn-danger{width:100%;padding:14px;background:rgba(239,68,68,0.12);color:#fca5a5;border:1px solid rgba(239,68,68,0.25);border-radius:1.2rem;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;cursor:pointer;font-family:inherit;margin-top:8px}
+
+/* Booking table */
+.booking-row{padding:12px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.booking-time{font-size:1rem;font-weight:900;color:#fbbf24;min-width:52px}
+.booking-info{flex:1;font-size:12px;font-weight:700}
+.booking-qty{font-size:10px;font-weight:900;color:#10b981;background:rgba(16,185,129,0.12);padding:3px 8px;border-radius:999px}
+.cancel-btn{padding:6px 12px;border-radius:999px;background:rgba(239,68,68,0.12);color:#fca5a5;border:1px solid rgba(239,68,68,0.20);font-size:9px;font-weight:900;cursor:pointer;font-family:inherit;text-transform:uppercase}
+
+/* Billing counter */
+.billing-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:900}
+.bc-ok{background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);color:#6ee7b7}
+.bc-warn{background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);color:#fcd34d}
+.bc-full{background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25);color:#fca5a5}
+
+.save-msg{text-align:center;font-size:11px;font-weight:800;min-height:18px;color:#6ee7b7;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="google_translate_element" style="display:none"></div>
+
+<!-- PIN Screen -->
+<div id="pin-screen">
+  <img src="icon192.png" style="width:72px;height:72px;border-radius:22px;margin-bottom:20px;border:1px solid rgba(251,191,36,0.30)">
+  <h1 style="font-size:1.5rem;font-weight:900;color:#fbbf24;margin:0 0 4px;letter-spacing:-0.03em">Partner Panel</h1>
+  <p style="font-size:10px;color:rgba(255,255,255,0.35);font-weight:900;text-transform:uppercase;letter-spacing:0.18em;margin:0 0 40px">StayVB</p>
+  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+    id="pin-input" class="pin-input" placeholder="••••" autocomplete="off">
+  <p id="pin-error" style="min-height:16px;font-size:11px;font-weight:800;color:#f87171;margin:10px 0 0"></p>
+  <button onclick="doLogin()" style="margin-top:20px;width:100%;max-width:260px;padding:16px;background:linear-gradient(135deg,#d97706,#f59e0b);color:#0f172a;border:none;border-radius:1.5rem;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:0.12em">
+    Prijavi se →
+  </button>
+</div>
+
+<!-- Main App -->
+<div id="main-app" class="app hidden">
+  <div class="header">
+    <button class="logout-btn" onclick="doLogout()">Odjavi se</button>
+    <p style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.35);margin:0 0 4px" id="partner-type-label">Partner</p>
+    <h1 style="font-size:1.4rem;font-weight:900;margin:0;letter-spacing:-0.03em;color:white" id="partner-name-header">Partner</h1>
+  </div>
+
+  <div class="tabs" id="tabs-bar"></div>
+
+  <div id="tabs-content"></div>
+</div>
+
+<script>
+const sb = C.db();
+const token = C.getPartnerToken();
+let partner = null, partnerContent = null;
+
+// ── PIN Login ─────────────────────────────────────────────────────
+document.getElementById('pin-input').addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
+
+async function doLogin(){
+  const pin = document.getElementById('pin-input').value.trim();
+  const errEl = document.getElementById('pin-error');
+  if(!pin){ errEl.textContent = 'Unesi PIN.'; return; }
+
+  const result = await C.partnerLogin(token, pin);
+  if(!result.ok){ errEl.textContent = result.error || 'Pogrešan PIN.'; return; }
+
+  partner = result.partner;
+  document.getElementById('pin-screen').classList.add('hidden');
+  document.getElementById('main-app').classList.remove('hidden');
+  initApp();
+}
+
+function doLogout(){
+  C.clearPartnerSession();
+  location.reload();
+}
+
+// ── Init App ──────────────────────────────────────────────────────
+async function initApp(){
+  document.getElementById('partner-name-header').textContent = partner.name;
+  document.getElementById('partner-type-label').textContent = getTypeLabel(partner.type);
+
+  // Učitaj sadržaj
+  const { data:pc } = await sb.from('partner_content').select('*').eq('partner_id', partner.id).maybeSingle();
+  partnerContent = pc || {};
+
+  buildTabs();
+}
+
+function getTypeLabel(type){
+  return {apartment:'Apartman',hotel:'Hotel',restaurant:'Restoran',attraction:'Atrakcija',business:'Mali biznis'}[type] || type;
+}
+
+// ── Tabs po tipu ──────────────────────────────────────────────────
+function buildTabs(){
+  const type = partner.type;
+  const tabs = [];
+
+  if(type === 'apartment' || type === 'hotel') tabs.push({id:'stay', label:'Smeštaj', render: renderStay});
+  if(type === 'restaurant') tabs.push({id:'hh', label:'Happy Hour', render: renderHH});
+  if(type === 'business') tabs.push({id:'promo', label:'Promocije', render: renderPromo});
+  if(type === 'attraction') tabs.push({id:'info', label:'Info', render: renderInfo});
+  if(partner.has_booking) tabs.push({id:'bookings', label:'Rezervacije', render: renderBookings});
+  tabs.push({id:'events', label:'Događaji', render: renderEvents});
+  tabs.push({id:'stats', label:'Statistike', render: renderStats});
+
+  const tabsBar = document.getElementById('tabs-bar');
+  tabsBar.innerHTML = tabs.map((t,i) => `<button class="tab${i===0?' active':''}" onclick="switchTab('${t.id}',this)">${t.label}</button>`).join('');
+
+  const tabsContent = document.getElementById('tabs-content');
+  tabsContent.innerHTML = tabs.map((t,i) => `<div id="tab-${t.id}" class="tab-content${i===0?' active':''}"></div>`).join('');
+
+  // Render prvog taba
+  tabs[0].render();
+  // Lazy render ostalih
+  tabs.forEach((t,i) => { if(i>0) t._render = t.render; });
+
+  window._tabs = tabs;
+}
+
+function switchTab(id, btn){
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+  const tab = window._tabs?.find(t => t.id === id);
+  if(tab && !document.getElementById('tab-'+id).children.length) tab.render();
+}
+
+// ── Stay Tab (apartman + hotel) ───────────────────────────────────
+function renderStay(){
+  const el = document.getElementById('tab-stay');
+  const pc = partnerContent;
+  const isPremium = partner.is_premium;
+  el.innerHTML = `
+    <div class="panel-card">
+      <p class="panel-card-title">WiFi podaci</p>
+      <div class="field-group"><label class="field-label">Naziv mreže</label><input class="field-input" id="s-wifi-name" value="${esc(pc.wifi_name||'')}"></div>
+      <div class="field-group"><label class="field-label">Lozinka</label><input class="field-input" id="s-wifi-pass" value="${esc(pc.wifi_pass||'')}"></div>
+    </div>
+    ${isPremium ? `
+    <div class="panel-card">
+      <p class="panel-card-title">Posebna ponuda gostima</p>
+      <div class="field-group"><textarea class="field-input" id="s-extra-offer" placeholder="npr. Besplatan doručak prvog dana...">${esc(pc.extra_offer||'')}</textarea></div>
+    </div>
+    <div class="panel-card">
+      <p class="panel-card-title">Cenovnik usluga</p>
+      <div class="field-group"><textarea class="field-input" id="s-services" placeholder="npr. Doručak 500 RSD&#10;Transfer 2000 RSD">${esc(pc.service_prices||'')}</textarea></div>
+    </div>
+    <div class="panel-card">
+      <p class="panel-card-title">Kućni red</p>
+      <div class="field-group"><textarea class="field-input" id="s-rules" placeholder="Pravila boravka...">${esc(pc.house_rules||'')}</textarea></div>
+    </div>
+    <div class="panel-card">
+      <p class="panel-card-title">Instagram Share kampanja</p>
+      <div class="toggle-wrap">
+        <div><div class="toggle-label">Aktivna kampanja</div><div class="toggle-sub">Gosti vide Share dugme</div></div>
+        <label class="toggle"><input type="checkbox" id="s-share-active" ${pc.share_campaign_active?'checked':''}><span class="toggle-slider"></span></label>
+      </div>
+      <div class="field-group"><label class="field-label">Instagram Reel URL</label><input class="field-input" id="s-reel-url" value="${esc(pc.instagram_reel_url||'')}" placeholder="https://www.instagram.com/reel/..."></div>
+      <div class="field-group"><label class="field-label">Poklon opis</label><input class="field-input" id="s-gift" value="${esc(pc.share_gift_text||'')}" placeholder="npr. čaša lokalnog vina"></div>
+    </div>` : `
+    <div class="panel-card" style="border-color:rgba(251,191,36,0.20);background:rgba(251,191,36,0.05)">
+      <p class="panel-card-title" style="color:#fbbf24">Upgrade na Premium</p>
+      <p style="font-size:13px;color:rgba(255,255,255,0.6);font-weight:600;margin:0 0 12px;line-height:1.5">Premium plan omogućava: posebnu ponudu, cenovnik, kućni red, share kampanju i više.</p>
+      <p style="font-size:12px;color:#fbbf24;font-weight:800">Kontaktiraj administratora za aktivaciju.</p>
+    </div>`}
+    <button class="btn-primary" onclick="saveStay()">💾 Sačuvaj izmene</button>
+    <p class="save-msg" id="stay-msg"></p>`;
+}
+
+async function saveStay(){
+  const updates = {
+    wifi_name: document.getElementById('s-wifi-name')?.value || '',
+    wifi_pass: document.getElementById('s-wifi-pass')?.value || '',
+  };
+  if(partner.is_premium){
+    updates.extra_offer = document.getElementById('s-extra-offer')?.value || '';
+    updates.service_prices = document.getElementById('s-services')?.value || '';
+    updates.house_rules = document.getElementById('s-rules')?.value || '';
+    updates.share_campaign_active = document.getElementById('s-share-active')?.checked || false;
+    updates.instagram_reel_url = document.getElementById('s-reel-url')?.value || '';
+    updates.share_gift_text = document.getElementById('s-gift')?.value || '';
+    updates.updated_at = new Date().toISOString();
+  }
+  await sb.from('partner_content').update(updates).eq('partner_id', partner.id);
+  document.getElementById('stay-msg').textContent = '✓ Sačuvano!';
+  setTimeout(() => document.getElementById('stay-msg').textContent = '', 2500);
+}
+
+// ── Happy Hour Tab ────────────────────────────────────────────────
+function renderHH(){
+  const el = document.getElementById('tab-hh');
+  const today = new Date().toISOString().split('T')[0];
+  const pc = partnerContent;
+  el.innerHTML = `
+    <div class="panel-card">
+      <div class="toggle-wrap">
+        <div><div class="toggle-label">Happy Hour aktivan</div><div class="toggle-sub">Vidljiv gostima odmah</div></div>
+        <label class="toggle"><input type="checkbox" id="hh-active" ${partner.hh_active?'checked':''}><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+    <div class="panel-card">
+      <p class="panel-card-title">Podešavanje</p>
+      <div class="field-group"><label class="field-label">Datum</label><input type="date" class="field-input" id="hh-date" value="${partner.hh_date||today}" min="${today}"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field-group"><label class="field-label">Od</label><input type="time" class="field-input" id="hh-start" value="${partner.hh_start?.slice(0,5)||'17:00'}"></div>
+        <div class="field-group"><label class="field-label">Do</label><input type="time" class="field-input" id="hh-end" value="${partner.hh_end?.slice(0,5)||'19:00'}"></div>
+      </div>
+    </div>
+    <div class="panel-card">
+      <p class="panel-card-title">Opis ponude</p>
+      <div class="field-group"><textarea class="field-input" id="hh-info" placeholder="Šta nudite gostima u HH?">${esc(pc.hh_info||'')}</textarea></div>
+    </div>
+    <button class="btn-primary" onclick="saveHH()">💾 Sačuvaj i aktiviraj</button>
+    <p class="save-msg" id="hh-msg"></p>`;
+}
+
+async function saveHH(){
+  const active = document.getElementById('hh-active').checked;
+  const date   = document.getElementById('hh-date').value;
+  const start  = document.getElementById('hh-start').value;
+  const end    = document.getElementById('hh-end').value;
+  const info   = document.getElementById('hh-info').value;
+  await sb.from('partners').update({hh_active:active, hh_date:date, hh_start:start, hh_end:end}).eq('id', partner.id);
+  await sb.from('partner_content').update({hh_info:info, updated_at: new Date().toISOString()}).eq('partner_id', partner.id);
+  partner.hh_active = active;
+  document.getElementById('hh-msg').textContent = '✓ Sačuvano!';
+  setTimeout(() => document.getElementById('hh-msg').textContent = '', 2500);
+}
+
+// ── Promo Tab (mali biznisi) ──────────────────────────────────────
+async function renderPromo(){
+  const el = document.getElementById('tab-promo');
+  const now = new Date();
+  const monthYear = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const { data:bills } = await sb.from('billing').select('*').eq('partner_id', partner.id).eq('month_year', monthYear).eq('type','promotion');
+  const usedCount = bills?.length || 0;
+  const chipClass = usedCount >= 3 ? 'bc-full' : usedCount >= 2 ? 'bc-warn' : 'bc-ok';
+  const pc = partnerContent;
+  el.innerHTML = `
+    <div class="panel-card">
+      <p class="panel-card-title">Mesečni limit promocija</p>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="billing-chip ${chipClass}">${usedCount}/3 iskorišćeno</span>
+        ${usedCount >= 3 ? '<span style="font-size:11px;color:#fca5a5;font-weight:700">Limit dostignut</span>' : ''}
+      </div>
+    </div>
+    ${usedCount < 3 ? `
+    <div class="panel-card">
+      <p class="panel-card-title">Nova promocija</p>
+      <div class="field-group"><label class="field-label">Cenovni plan</label>
+        <select class="field-input" id="p-plan">
+          <option value="basic">Basic — 300 RSD (1 dan)</option>
+          <option value="standard">Standard — 500 RSD (3 dana)</option>
+          <option value="premium">Premium — 800 RSD (7 dana)</option>
+        </select>
+      </div>
+      <div class="field-group"><label class="field-label">Tekst promocije</label><textarea class="field-input" id="p-offer" placeholder="npr. 20% popust na sve tretmane ovog vikenda">${esc(pc.current_offer||'')}</textarea></div>
+      <button class="btn-primary" onclick="activatePromo()">🚀 Aktiviraj promociju</button>
+    </div>` : ''}
+    <p class="save-msg" id="promo-msg"></p>`;
+}
+
+async function activatePromo(){
+  const plan = document.getElementById('p-plan').value;
+  const offer = document.getElementById('p-offer').value.trim();
+  if(!offer){ document.getElementById('promo-msg').textContent = '⚠️ Upiši tekst promocije.'; return; }
+  const prices = {basic:300, standard:500, premium:800};
+  const days   = {basic:1, standard:3, premium:7};
+  const now = new Date();
+  const monthYear = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const expiresAt = new Date(now.getTime() + days[plan]*24*60*60*1000).toISOString();
+  await sb.from('billing').insert({partner_id:partner.id, type:'promotion', plan_tier:plan, amount_rsd:prices[plan], offer_text:offer, duration_days:days[plan], month_year:monthYear, expires_at:expiresAt});
+  await sb.from('partner_content').update({current_offer:offer, offer_expires_at:expiresAt, updated_at:new Date().toISOString()}).eq('partner_id', partner.id);
+  document.getElementById('promo-msg').textContent = '✓ Promocija aktivirana!';
+  setTimeout(() => renderPromo(), 1500);
+}
+
+// ── Info Tab (atrakcije + ostali) ─────────────────────────────────
+function renderInfo(){
+  const el = document.getElementById('tab-info');
+  const pc = partnerContent;
+  el.innerHTML = `
+    <div class="panel-card">
+      <p class="panel-card-title">Opis</p>
+      <div class="field-group"><label class="field-label">Kratki opis (za karticu)</label><input class="field-input" id="i-short" value="${esc(pc.short_desc||'')}" maxlength="120"></div>
+      <div class="field-group"><label class="field-label">Duži opis</label><textarea class="field-input" id="i-desc">${esc(pc.description||'')}</textarea></div>
+    </div>
+    <div class="panel-card">
+      <p class="panel-card-title">Radno vreme i kontakt</p>
+      <div class="field-group"><label class="field-label">Radno vreme</label><input class="field-input" id="i-hours" value="${esc(pc.working_hours||'')}" placeholder="npr. Svaki dan 09:00–19:00"></div>
+      <div class="field-group"><label class="field-label">Adresa</label><input class="field-input" id="i-addr" value="${esc(pc.address||'')}"></div>
+    </div>
+    <button class="btn-primary" onclick="saveInfo()">💾 Sačuvaj</button>
+    <p class="save-msg" id="info-msg"></p>`;
+}
+
+async function saveInfo(){
+  await sb.from('partner_content').update({
+    short_desc: document.getElementById('i-short')?.value||'',
+    description: document.getElementById('i-desc')?.value||'',
+    working_hours: document.getElementById('i-hours')?.value||'',
+    address: document.getElementById('i-addr')?.value||'',
+    updated_at: new Date().toISOString()
+  }).eq('partner_id', partner.id);
+  document.getElementById('info-msg').textContent = '✓ Sačuvano!';
+  setTimeout(() => document.getElementById('info-msg').textContent = '', 2500);
+}
+
+// ── Bookings Tab ──────────────────────────────────────────────────
+async function renderBookings(){
+  const el = document.getElementById('tab-bookings');
+  el.innerHTML = '<p style="font-size:12px;color:rgba(255,255,255,0.4);font-weight:700">Učitavanje...</p>';
+
+  const today = new Date().toISOString().split('T')[0];
+  const { data:resources } = await sb.from('bookable_resources').select('*').eq('partner_id', partner.id).eq('is_active', true).order('sort_order');
+
+  if(!resources?.length){
+    el.innerHTML = '<p style="font-size:13px;color:rgba(255,255,255,0.4);font-weight:700">Nemate definisane resurse za booking. Kontaktirajte administratora.</p>';
+    return;
+  }
+
+  // Uzmi sve potvrđene rezervacije za danas i narednih 7 dana
+  const in7 = new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0];
+  const { data:bookings } = await sb.from('bookings').select('*').in('resource_id', resources.map(r=>r.id)).gte('booking_date', today).lte('booking_date', in7).eq('status','confirmed').order('booking_date').order('slot_time');
+
+  // Grupiši po datumu + resursu
+  let html = `<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    ${resources.map(r => `<span style="padding:6px 12px;border-radius:999px;background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.25);font-size:10px;font-weight:900;color:#fcd34d">${esc(r.name)} (${r.total_qty} kom)</span>`).join('')}
+  </div>`;
+
+  if(!bookings?.length){
+    html += '<div class="panel-card" style="text-align:center"><p style="font-size:13px;color:rgba(255,255,255,0.4);font-weight:700;margin:8px 0">Nema rezervacija u narednih 7 dana</p></div>';
+  } else {
+    const grouped = {};
+    bookings.forEach(b => {
+      if(!grouped[b.booking_date]) grouped[b.booking_date] = [];
+      grouped[b.booking_date].push(b);
+    });
+    for(const [date, bks] of Object.entries(grouped)){
+      const isToday = date === today;
+      html += `<p style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:${isToday?'#fbbf24':'rgba(255,255,255,0.4)'};margin:14px 0 8px">${isToday?'🔥 Danas':'📅'} ${date}</p>`;
+      html += bks.map(b => {
+        const res = resources.find(r => r.id === b.resource_id);
+        return `<div class="booking-row">
+          <div class="booking-time">${b.slot_time.slice(0,5)}</div>
+          <div class="booking-info">
+            <div style="font-weight:900;color:white">${esc(b.guest_name)}</div>
+            <div style="color:rgba(255,255,255,0.5)">${esc(b.guest_phone)} · ${esc(res?.name||'')}</div>
+          </div>
+          <span class="booking-qty">${b.qty}</span>
+          <button class="cancel-btn" onclick="cancelBooking('${b.id}', this)">✕</button>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  el.innerHTML = html;
+}
+
+async function cancelBooking(bookingId, btn){
+  if(!confirm('Otkazati rezervaciju?')) return;
+  await sb.from('bookings').update({status:'cancelled'}).eq('id', bookingId);
+  btn.closest('.booking-row').remove();
+}
+
+// ── Events Tab ────────────────────────────────────────────────────
+async function renderEvents(){
+  const el = document.getElementById('tab-events');
+  const today = new Date().toISOString().split('T')[0];
+  const { data:events } = await sb.from('events').select('*').eq('partner_id', partner.id).gte('event_date', today).order('event_date').limit(10);
+
+  let eventsHtml = '';
+  if(events?.length){
+    eventsHtml = events.map(e => `
+      <div class="booking-row">
+        <div style="flex:1">
+          <div style="font-weight:900">${esc(e.title)}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.45)">${e.event_date} ${e.event_time?'u '+e.event_time.slice(0,5):''}</div>
+        </div>
+        <button class="cancel-btn" onclick="deleteEvent('${e.id}', this)">✕</button>
+      </div>`).join('');
+  } else {
+    eventsHtml = '<p style="font-size:12px;color:rgba(255,255,255,0.35);font-weight:700">Nema najavljenih događaja.</p>';
+  }
+
+  el.innerHTML = `
+    <div class="panel-card">${eventsHtml}</div>
+    <div class="panel-card" style="margin-top:16px">
+      <p class="panel-card-title">Dodaj novi događaj</p>
+      <div class="field-group"><label class="field-label">Naziv</label><input class="field-input" id="ev-title" placeholder="npr. Živa muzika"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field-group"><label class="field-label">Datum</label><input type="date" class="field-input" id="ev-date" min="${today}"></div>
+        <div class="field-group"><label class="field-label">Vreme</label><input type="time" class="field-input" id="ev-time"></div>
+      </div>
+      <div class="field-group"><label class="field-label">Lokacija</label><input class="field-input" id="ev-loc" placeholder="Gde se događa?"></div>
+      <div class="field-group"><label class="field-label">Opis (opciono)</label><textarea class="field-input" id="ev-desc" placeholder="Kratak opis..."></textarea></div>
+      <button class="btn-primary" onclick="addEvent()">+ Dodaj događaj</button>
+      <p class="save-msg" id="ev-msg"></p>
+    </div>`;
+}
+
+async function addEvent(){
+  const title = document.getElementById('ev-title').value.trim();
+  const date  = document.getElementById('ev-date').value;
+  const time  = document.getElementById('ev-time').value;
+  const loc   = document.getElementById('ev-loc').value.trim();
+  const desc  = document.getElementById('ev-desc').value.trim();
+  if(!title || !date){ document.getElementById('ev-msg').textContent = '⚠️ Naziv i datum su obavezni.'; return; }
+  await sb.from('events').insert({partner_id: partner.id, title, event_date:date, event_time:time||null, location:loc||null, description:desc||null, is_active:true});
+  document.getElementById('ev-msg').textContent = '✓ Događaj dodat!';
+  setTimeout(() => renderEvents(), 1000);
+}
+
+async function deleteEvent(id, btn){
+  if(!confirm('Obrisati događaj?')) return;
+  await sb.from('events').delete().eq('id', id);
+  btn.closest('.booking-row').remove();
+}
+
+// ── Stats Tab ─────────────────────────────────────────────────────
+async function renderStats(){
+  const el = document.getElementById('tab-stats');
+  const { count:scanCount } = await sb.from('analytics_clicks').select('*', {count:'exact', head:true}).eq('partner_id', partner.id).eq('action','qr_scan');
+  const { count:waCount } = await sb.from('analytics_clicks').select('*', {count:'exact', head:true}).eq('partner_id', partner.id).eq('action','wa_click');
+  const { count:stampCount } = await sb.from('stamps').select('*', {count:'exact', head:true}).eq('location_id', partner.id);
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div class="panel-card" style="text-align:center"><p class="panel-card-title">QR skeniranja</p><p style="font-size:2rem;font-weight:900;color:#fbbf24;margin:0">${scanCount||0}</p></div>
+      <div class="panel-card" style="text-align:center"><p class="panel-card-title">WhatsApp klikovi</p><p style="font-size:2rem;font-weight:900;color:#10b981;margin:0">${waCount||0}</p></div>
+      <div class="panel-card" style="text-align:center"><p class="panel-card-title">Loyalty pečati</p><p style="font-size:2rem;font-weight:900;color:#a78bfa;margin:0">${stampCount||0}</p></div>
+      <div class="panel-card" style="text-align:center"><p class="panel-card-title">Status</p><p style="font-size:1rem;font-weight:900;color:#6ee7b7;margin:0">${partner.is_active?'Aktivan':'Neaktivan'}</p></div>
+    </div>
+    <div class="panel-card">
+      <p class="panel-card-title">Moj partner URL</p>
+      <div style="padding:10px 12px;background:rgba(0,0,0,0.3);border-radius:10px;font-family:monospace;font-size:10px;color:rgba(255,255,255,0.5);word-break:break-all">${location.href}</div>
+    </div>`;
+}
+
+function esc(s){ return C.escapeHtml(s); }
+
+// ── Boot ──────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const guard = StayVBGuard.requirePartner();
+  if(!guard) return;
+  // Provjeri sačuvanu sesiju
+  const saved = C.getPartnerSession();
+  if(saved && saved.token === guard){
+    partner = saved;
+    document.getElementById('pin-screen').classList.add('hidden');
+    document.getElementById('main-app').classList.remove('hidden');
+    initApp();
+  }
+});
+</script>
+</body>
+</html>

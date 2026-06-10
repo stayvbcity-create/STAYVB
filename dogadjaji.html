@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="sr-Latn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>StayVB — Događaji</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="icon192.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="lang-init.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
+*{box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#f5f3ff 0%,#ede9fe 100%);color:#0f172a;min-height:100vh;margin:0}
+#google_translate_element{display:none!important}
+.goog-te-banner-frame,.skiptranslate{display:none!important}
+body{top:0!important}
+.app{max-width:430px;margin:0 auto;min-height:100vh;padding-bottom:32px}
+.hero{background:radial-gradient(circle at 20% 20%,rgba(139,92,246,0.25),transparent 30%),linear-gradient(145deg,#1e1b4b,#312e81);padding:64px 24px 80px;text-align:center;border-bottom-left-radius:2.5rem;border-bottom-right-radius:2.5rem;color:white;position:relative}
+.back-btn{position:absolute;top:16px;left:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;color:white;text-decoration:none}
+.lang-pills-bar{position:absolute;top:14px;right:14px;display:flex;flex-wrap:wrap;gap:4px;max-width:170px;justify-content:flex-end}
+.lang-pill{padding:3px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);cursor:pointer;line-height:0}
+.lang-pill img{width:26px;height:17px;object-fit:cover;border-radius:3px;display:block;opacity:0.75}
+.lang-pill.active{border-color:rgba(167,139,250,0.60);background:rgba(139,92,246,0.22)}
+.lang-pill.active img{opacity:1}
+.content{padding:0 16px;margin-top:-48px}
+.day-group{margin-bottom:20px}
+.day-label{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:#7c3aed;margin:0 0 10px 4px;display:flex;align-items:center;gap:8px}
+.day-badge{padding:3px 8px;border-radius:999px;background:#7c3aed;color:white;font-size:9px;font-weight:900}
+.event-card{background:white;border:1px solid #ede9fe;border-radius:1.5rem;padding:16px;margin-bottom:8px;box-shadow:0 6px 18px rgba(109,40,217,0.08);position:relative;overflow:hidden}
+.event-card::before{content:"";position:absolute;top:0;left:0;bottom:0;width:3px;background:linear-gradient(180deg,#7c3aed,#a78bfa)}
+.event-time{font-size:10px;font-weight:900;color:#a78bfa;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:4px}
+.event-title{font-size:14px;font-weight:900;color:#1e1b4b;margin:0 0 4px;letter-spacing:-0.02em}
+.event-loc{font-size:12px;color:#64748b;font-weight:700;display:flex;align-items:center;gap:5px}
+.event-desc{font-size:12px;color:#475569;font-weight:600;line-height:1.5;margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9}
+.event-partner{display:inline-flex;align-items:center;gap:5px;margin-top:8px;padding:5px 10px;border-radius:999px;background:#f5f3ff;border:1px solid #ddd6fe;font-size:10px;font-weight:900;color:#7c3aed}
+.empty-card{background:white;border:1px solid #ede9fe;border-radius:2rem;padding:40px 20px;text-align:center;margin-top:12px}
+</style>
+</head>
+<body>
+<div id="google_translate_element" style="display:none"></div>
+<div class="app">
+  <div class="hero">
+    <a href="javascript:history.back()" class="back-btn">←</a>
+    <div class="lang-pills-bar" id="lang-pills"></div>
+    <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:rgba(139,92,246,0.20);border:1px solid rgba(139,92,246,0.30);font-size:10px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#c4b5fd;margin-bottom:14px">
+      🎸 <span id="txt-badge">Banja Live</span>
+    </div>
+    <h1 style="font-size:2rem;font-weight:900;letter-spacing:-0.04em;margin:0 0 6px" id="txt-title">Događaji</h1>
+    <p style="font-size:12px;color:rgba(255,255,255,0.55);font-weight:800;text-transform:uppercase;letter-spacing:0.10em;margin:0" id="txt-sub">Vrnjačka Banja · 14 dana</p>
+    <div id="hero-count" style="margin-top:14px;font-size:2rem;font-weight:900;color:#a78bfa"></div>
+  </div>
+  <div class="content" id="events-list">
+    <div style="text-align:center;padding:48px 20px">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"></div>
+    </div>
+  </div>
+</div>
+<script>
+const sb = C.db();
+const LANG = localStorage.getItem('stayvb_lang') || 'sr';
+const T = {
+  sr:{badge:'Banja Live',title:'Događaji',sub:'Vrnjačka Banja · 14 dana',today:'Danas',tomorrow:'Sutra',events_count:'događaja u narednih 14 dana',none:'Nema najavljenih događaja',none_sub:'Proveri ponovo uskoro'},
+  en:{badge:'Banja Live',title:'Events',sub:'Vrnjačka Banja · 14 days',today:'Today',tomorrow:'Tomorrow',events_count:'events in the next 14 days',none:'No upcoming events',none_sub:'Check back soon'},
+  de:{badge:'Banja Live',title:'Veranstaltungen',sub:'Vrnjačka Banja · 14 Tage',today:'Heute',tomorrow:'Morgen',events_count:'Veranstaltungen in 14 Tagen',none:'Keine Veranstaltungen',none_sub:'Bald wieder nachschauen'},
+  ru:{badge:'Banja Live',title:'События',sub:'Врняцка Баня · 14 дней',today:'Сегодня',tomorrow:'Завтра',events_count:'событий в ближайшие 14 дней',none:'Нет мероприятий',none_sub:'Проверьте позже'},
+  bg:{badge:'Banja Live',title:'Събития',sub:'Враячка Баня · 14 дни',today:'Днес',tomorrow:'Утре',events_count:'събития за 14 дни',none:'Няма обявени събития',none_sub:'Провери скоро'},
+  'zh-CN':{badge:'巴尼亚直播',title:'活动',sub:'弗尔尼亚奇卡 · 14天',today:'今天',tomorrow:'明天',events_count:'个活动（未来14天）',none:'暂无活动',none_sub:'请稍后再查看'}
+};
+function t(k){return (T[LANG]||T['sr'])[k]||k;}
+
+const FLAGS_B64 = {'':['rs','PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIHk9IjAiIGZpbGw9IiNDNjM2M0MiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzBDNDA3NiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGRkZGRiIvPjwvc3ZnPg==']};
+
+function buildLangPills(){
+  const LANGS = {'':'rs','en':'gb','de':'de','ru':'ru','bg':'bg','zh-CN':'cn'};
+  const SVGS = {rs:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNDNjM2M0MiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzBDNDA3NiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGRkZGRiIvPjwvc3ZnPg==',gb:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDEyMTY5Ii8+PHBhdGggZD0iTTAsMCBMMzAsMjAgTTMwLDAgTDAsMjAiIHN0cm9rZT0iI0ZGRiIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTAsMCBMMzAsMjAgTTMwLDAgTDAsMjAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSIyLjUiLz48cGF0aCBkPSJNMTUsMCBMMTUsMjAgTTAsMTAgTDMwLDEwIiBzdHJva2U9IiNGRkYiIHN0cm9rZS13aWR0aD0iNiIvPjxwYXRoIGQ9Ik0xNSwwIEwxNSwyMCBNMCwxMCBMMzAsMTAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSI0Ii8+PC9zdmc+',de:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiMwMDAiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iI0REMDAwMCIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGQ0UwMCIvPjwvc3ZnPg==',ru:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNGRkYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzAwMzlBNiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0Q1MkIxRSIvPjwvc3ZnPg==',bg:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNGRkYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzAwOTY2RSIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0Q2MjYxMiIvPjwvc3ZnPg==',cn:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjREUyOTEwIi8+PHBvbHlnb24gcG9pbnRzPSI3LDMgOC4yLDYuOCAxMiw2LjggOSw5IDEwLjIsMTIuOCA3LDEwLjUgMy44LDEyLjggNSw5IDIsMy44LDYuOCIgZmlsbD0iI0ZGREUwMCIvPjwvc3ZnPg=='};
+  const el = document.getElementById('lang-pills');
+  if(!el) return;
+  el.innerHTML = Object.keys(LANGS).map(code => {
+    const fc = LANGS[code];
+    const src = 'data:image/svg+xml;base64,' + (SVGS[fc]||'');
+    return `<button class="lang-pill${code===LANG?' active':''}" onclick="stayvbSetLang('${code}')"><img src="${src}" alt="${code||'sr'}"></button>`;
+  }).join('');
+}
+
+async function load(){
+  buildLangPills();
+  document.getElementById('txt-badge').textContent = t('badge');
+  document.getElementById('txt-title').textContent = t('title');
+  document.getElementById('txt-sub').textContent = t('sub');
+
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const in14 = new Date(now.getTime() + 14*24*60*60*1000).toISOString().split('T')[0];
+  const tomorrowStr = new Date(now.getTime() + 24*60*60*1000).toISOString().split('T')[0];
+
+  const { data:events } = await sb
+    .from('events')
+    .select('*, partners(name, type)')
+    .gte('event_date', todayStr)
+    .lte('event_date', in14)
+    .eq('is_active', true)
+    .order('event_date', {ascending:true})
+    .order('event_time', {ascending:true});
+
+  const all = events || [];
+  document.getElementById('hero-count').textContent = all.length + ' ' + t('events_count');
+
+  if(all.length === 0){
+    document.getElementById('events-list').innerHTML = `
+      <div class="empty-card">
+        <div style="font-size:2.5rem;margin-bottom:12px">🎸</div>
+        <h3 style="font-size:14px;font-weight:900;margin:0 0 6px">${t('none')}</h3>
+        <p style="font-size:12px;color:#94a3b8;font-weight:600;margin:0">${t('none_sub')}</p>
+      </div>`;
+    return;
+  }
+
+  // Grupiši po datumu
+  const grouped = {};
+  all.forEach(e => {
+    if(!grouped[e.event_date]) grouped[e.event_date] = [];
+    grouped[e.event_date].push(e);
+  });
+
+  let html = '';
+  for(const [date, evts] of Object.entries(grouped)){
+    let label = date;
+    if(date === todayStr) label = `<span class="day-badge">🔥 ${t('today')}</span>`;
+    else if(date === tomorrowStr) label = `<span class="day-badge" style="background:#7c3aed">${t('tomorrow')}</span>`;
+    else label = new Date(date).toLocaleDateString(LANG==='sr'?'sr-RS':LANG==='en'?'en-GB':LANG, {weekday:'short',day:'numeric',month:'short'});
+
+    html += `<div class="day-group"><p class="day-label">${label}</p>`;
+    html += evts.map(e => `
+      <div class="event-card">
+        ${e.event_time ? `<div class="event-time">🕐 ${C.escapeHtml(e.event_time.slice(0,5))}</div>` : ''}
+        <h3 class="event-title">${C.escapeHtml(e.title)}</h3>
+        ${e.location ? `<p class="event-loc">📍 ${C.escapeHtml(e.location)}</p>` : ''}
+        ${e.description ? `<p class="event-desc">${C.escapeHtml(e.description)}</p>` : ''}
+        ${e.partners ? `<div class="event-partner">🏢 ${C.escapeHtml(e.partners.name)}</div>` : ''}
+      </div>`).join('');
+    html += '</div>';
+  }
+
+  document.getElementById('events-list').innerHTML = html;
+}
+
+load();
+</script>
+<script>
+  function googleTranslateElementInit(){
+    new google.translate.TranslateElement({pageLanguage:'sr',includedLanguages:'en,de,ru,bg,zh-CN',autoDisplay:false},'google_translate_element');
+    STAYVB_LANG.onWidgetReady();
+  }
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>

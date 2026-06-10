@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="sr-Latn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>StayVB — Atrakcije</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="icon192.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="lang-init.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
+*{box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#f0fdfa 0%,#ecfdf5 100%);color:#0f172a;min-height:100vh;margin:0}
+#google_translate_element{display:none!important}
+.goog-te-banner-frame,.skiptranslate{display:none!important}
+body{top:0!important}
+.app{max-width:430px;margin:0 auto;min-height:100vh;padding-bottom:32px}
+.hero{background:radial-gradient(circle at 20% 20%,rgba(16,185,129,0.20),transparent 28%),linear-gradient(145deg,#0f172a,#1a2e2a);padding:64px 24px 80px;text-align:center;border-bottom-left-radius:2.5rem;border-bottom-right-radius:2.5rem;color:white;position:relative}
+.back-btn{position:absolute;top:16px;left:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;color:white;text-decoration:none}
+.lang-pills-bar{position:absolute;top:14px;right:14px;display:flex;flex-wrap:wrap;gap:4px;max-width:170px;justify-content:flex-end}
+.lang-pill{padding:3px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);cursor:pointer;line-height:0}
+.lang-pill img{width:26px;height:17px;object-fit:cover;border-radius:3px;display:block;opacity:0.75}
+.lang-pill.active{border-color:rgba(52,211,153,0.60);background:rgba(16,185,129,0.20)}
+.lang-pill.active img{opacity:1}
+.content{padding:0 16px;margin-top:-48px}
+
+/* Filter chips */
+.filter-bar{display:flex;gap:8px;overflow-x:auto;padding:12px 0 4px;scrollbar-width:none;margin-bottom:12px}
+.filter-bar::-webkit-scrollbar{display:none}
+.fchip{padding:7px 14px;border-radius:999px;font-size:11px;font-weight:900;cursor:pointer;transition:all 0.18s;white-space:nowrap;border:1.5px solid #d1fae5;background:white;color:#065f46}
+.fchip.active{background:#10b981;color:white;border-color:#10b981}
+
+/* Attr card */
+.attr-card{background:white;border:1px solid #ccfbf1;border-radius:2rem;padding:18px;margin-bottom:12px;box-shadow:0 8px 20px rgba(16,185,129,0.09);position:relative;overflow:hidden}
+.attr-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#10b981,#34d399)}
+.attr-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.attr-icon{width:52px;height:52px;border-radius:16px;background:#ecfdf5;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;border:1px solid #d1fae5}
+.attr-name{font-size:1.05rem;font-weight:900;color:#0f172a;letter-spacing:-0.02em;margin:0 0 3px}
+.attr-cat{font-size:9px;font-weight:900;color:#6ee7b7;text-transform:uppercase;letter-spacing:0.12em;margin:0}
+.attr-desc{font-size:13px;color:#475569;font-weight:600;line-height:1.55;margin:0 0 12px}
+.attr-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.attr-tag{padding:5px 10px;border-radius:999px;background:#f0fdfa;border:1px solid #d1fae5;font-size:10px;font-weight:800;color:#065f46}
+.attr-btns{display:flex;gap:8px}
+.btn-sm{flex:1;padding:12px 8px;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;font-family:inherit;border:none;transition:transform 0.18s;text-decoration:none;display:flex;align-items:center;justify-content:center}
+.btn-sm:active{transform:scale(0.97)}
+.btn-book{background:linear-gradient(135deg,#10b981,#059669);color:white}
+.btn-wa{background:#f0fdfa;color:#065f46;border:1px solid #d1fae5}
+
+/* Booking Modal */
+#booking-modal{display:none;position:fixed;inset:0;z-index:999;background:rgba(15,23,42,0.90);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;padding:0}
+#booking-modal.open{display:flex}
+.modal-sheet{background:white;border-top-left-radius:2.5rem;border-top-right-radius:2.5rem;width:100%;max-width:430px;max-height:92vh;overflow-y:auto;padding:0 0 40px}
+.modal-handle{width:40px;height:4px;border-radius:2px;background:#e2e8f0;margin:14px auto 0}
+.modal-head{padding:14px 20px 12px;border-bottom:1px solid #f1f5f9}
+.modal-title{font-size:1.1rem;font-weight:900;color:#0f172a;margin:0 0 2px;letter-spacing:-0.02em}
+.modal-close{position:absolute;top:14px;right:16px;width:32px;height:32px;border-radius:50%;background:#f1f5f9;border:none;font-size:14px;cursor:pointer}
+.modal-body{padding:16px 20px}
+.form-group{margin-bottom:14px}
+.form-label{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:#94a3b8;margin-bottom:6px;display:block}
+.form-input{width:100%;padding:13px 16px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;color:#0f172a;font-size:14px;font-weight:700;font-family:inherit;outline:none;transition:border-color 0.18s}
+.form-input:focus{border-color:#10b981;background:white}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.slot-option{padding:11px 14px;border-radius:12px;border:1.5px solid #e2e8f0;background:#f8fafc;font-size:13px;font-weight:700;color:#0f172a;cursor:pointer;transition:all 0.15s;margin-bottom:6px}
+.slot-option:hover,.slot-option.selected{border-color:#10b981;background:#f0fdfa;color:#065f46}
+.slot-option.full{opacity:0.4;cursor:not-allowed;background:#f8fafc}
+.spots-badge{float:right;font-size:10px;font-weight:900;color:#10b981;background:#ecfdf5;padding:2px 8px;border-radius:999px}
+.btn-confirm{width:100%;padding:16px;background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;border-radius:1.2rem;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;cursor:pointer;font-family:inherit;margin-top:8px}
+.btn-confirm:disabled{opacity:0.5;cursor:not-allowed}
+
+/* Resource tabs */
+.res-tabs{display:flex;gap:8px;overflow-x:auto;padding:0 0 8px;scrollbar-width:none;margin-bottom:16px}
+.res-tabs::-webkit-scrollbar{display:none}
+.res-tab{padding:8px 14px;border-radius:999px;font-size:12px;font-weight:900;cursor:pointer;border:1.5px solid #e2e8f0;background:#f8fafc;color:#64748b;white-space:nowrap;transition:all 0.15s}
+.res-tab.active{background:#0f172a;color:white;border-color:#0f172a}
+</style>
+</head>
+<body>
+<div id="google_translate_element" style="display:none"></div>
+<div class="app">
+  <div class="hero">
+    <a href="javascript:history.back()" class="back-btn">←</a>
+    <div class="lang-pills-bar" id="lang-pills"></div>
+    <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:rgba(16,185,129,0.18);border:1px solid rgba(16,185,129,0.28);font-size:10px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#6ee7b7;margin-bottom:14px">
+      🎡 <span id="txt-badge">Atrakcije i zabava</span>
+    </div>
+    <h1 style="font-size:2rem;font-weight:900;letter-spacing:-0.04em;margin:0 0 6px" id="txt-title">Atrakcije</h1>
+    <p style="font-size:12px;color:rgba(255,255,255,0.55);font-weight:800;text-transform:uppercase;letter-spacing:0.10em;margin:0" id="txt-sub">Vrnjačka Banja</p>
+  </div>
+  <div class="content">
+    <div class="filter-bar">
+      <button class="fchip active" data-cat="" onclick="filterCat('')" id="fc-all">Sve</button>
+      <button class="fchip" data-cat="outdoor" onclick="filterCat('outdoor')" id="fc-outdoor">🏕 Outdoor</button>
+      <button class="fchip" data-cat="sport" onclick="filterCat('sport')" id="fc-sport">⚽ Sport</button>
+      <button class="fchip" data-cat="voda" onclick="filterCat('voda')" id="fc-voda">💧 Voda</button>
+      <button class="fchip" data-cat="kultura" onclick="filterCat('kultura')" id="fc-kultura">🎭 Kultura</button>
+    </div>
+    <div id="attr-list"></div>
+  </div>
+</div>
+
+<!-- Booking Modal -->
+<div id="booking-modal">
+  <div class="modal-sheet" style="position:relative">
+    <button class="modal-close" onclick="closeBooking()">✕</button>
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <h2 class="modal-title" id="modal-title">Rezervacija</h2>
+      <p style="font-size:11px;color:#94a3b8;font-weight:700;margin:0" id="modal-partner-name"></p>
+    </div>
+    <div class="modal-body">
+      <!-- Resource tabs (ako ima više resursa) -->
+      <div class="res-tabs" id="res-tabs"></div>
+
+      <!-- Datum -->
+      <div class="form-group">
+        <label class="form-label" id="lbl-date">Datum</label>
+        <input type="date" class="form-input" id="book-date" onchange="loadSlots()">
+      </div>
+
+      <!-- Broj osoba -->
+      <div class="form-group">
+        <label class="form-label" id="lbl-qty">Broj osoba / vozila</label>
+        <select class="form-input form-select" id="book-qty" onchange="loadSlots()">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+      </div>
+
+      <!-- Termini -->
+      <div class="form-group">
+        <label class="form-label" id="lbl-slot">Slobodni termini</label>
+        <div id="slots-list"><p style="font-size:12px;color:#94a3b8;font-weight:700">Izaberi datum</p></div>
+      </div>
+
+      <!-- Kontakt -->
+      <div class="form-group">
+        <label class="form-label" id="lbl-name">Tvoje ime</label>
+        <input type="text" class="form-input" id="book-name" placeholder="Ime i prezime">
+      </div>
+      <div class="form-group">
+        <label class="form-label" id="lbl-phone">Telefon</label>
+        <input type="tel" class="form-input" id="book-phone" placeholder="+381...">
+      </div>
+
+      <button class="btn-confirm" id="btn-confirm" onclick="confirmBooking()" disabled>Potvrdi rezervaciju</button>
+      <p id="booking-msg" style="text-align:center;font-size:12px;font-weight:800;margin-top:10px;min-height:18px"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+const sb = C.db();
+const LANG = localStorage.getItem('stayvb_lang') || 'sr';
+let allAttr = [], activeFilter = '', currentPartner = null, currentResources = [], selectedResource = null, selectedSlot = null;
+
+const CAT_ICONS = {outdoor:'🏕',sport:'⚽',voda:'💧',kultura:'🎭',default:'🎡'};
+
+const LANGS_MAP = {'':'rs','en':'gb','de':'de','ru':'ru','bg':'bg','zh-CN':'cn'};
+const FLAG_SVGS = {rs:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNDNjM2M0MiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzBDNDA3NiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGRkZGRiIvPjwvc3ZnPg==',gb:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDEyMTY5Ii8+PHBhdGggZD0iTTAsMCBMMzAsMjAgTTMwLDAgTDAsMjAiIHN0cm9rZT0iI0ZGRiIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTAsMCBMMzAsMjAgTTMwLDAgTDAsMjAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSIyLjUiLz48cGF0aCBkPSJNMTUsMCBMMTUsMjAgTTAsMTAgTDMwLDEwIiBzdHJva2U9IiNGRkYiIHN0cm9rZS13aWR0aD0iNiIvPjxwYXRoIGQ9Ik0xNSwwIEwxNSwyMCBNMCwxMCBMMzAsMTAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSI0Ii8+PC9zdmc+',de:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiMwMDAiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iI0REMDAwMCIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGQ0UwMCIvPjwvc3ZnPg==',ru:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNGRkYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzAwMzlBNiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0Q1MkIxRSIvPjwvc3ZnPg==',bg:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNGRkYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzAwOTY2RSIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0Q2MjYxMiIvPjwvc3ZnPg==',cn:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjREUyOTEwIi8+PHBvbHlnb24gcG9pbnRzPSI3LDMgOC4yLDYuOCAxMiw2LjggOSw5IDEwLjIsMTIuOCA3LDEwLjUgMy44LDEyLjggNSw5IDIsMy44LDYuOCIgZmlsbD0iI0ZGREUwMCIvPjwvc3ZnPg=='};
+
+function buildLangPills(){
+  const el = document.getElementById('lang-pills');
+  if(!el) return;
+  el.innerHTML = Object.keys(LANGS_MAP).map(code => {
+    const fc = LANGS_MAP[code];
+    const src = 'data:image/svg+xml;base64,' + (FLAG_SVGS[fc]||'');
+    return `<button class="lang-pill${code===LANG?' active':''}" onclick="stayvbSetLang('${code}')"><img src="${src}" alt="${code||'sr'}"></button>`;
+  }).join('');
+}
+
+function filterCat(cat){
+  activeFilter = cat;
+  document.querySelectorAll('.fchip').forEach(c => c.classList.toggle('active', c.dataset.cat === cat));
+  renderList();
+}
+
+function renderList(){
+  const filtered = activeFilter ? allAttr.filter(a => a.partner_content?.[0]?.category === activeFilter) : allAttr;
+  if(!filtered.length){
+    document.getElementById('attr-list').innerHTML = `<div style="text-align:center;padding:40px 20px;background:white;border:1px solid #ccfbf1;border-radius:2rem;margin-top:8px"><div style="font-size:2.5rem;margin-bottom:10px">🎡</div><p style="font-size:14px;font-weight:900;margin:0">Nema atrakcija u ovoj kategoriji</p></div>`;
+    return;
+  }
+  document.getElementById('attr-list').innerHTML = filtered.map(p => {
+    const pc = p.partner_content?.[0] || {};
+    const icon = CAT_ICONS[pc.category] || CAT_ICONS.default;
+    const wa = p.whatsapp || p.phone || '';
+    return `
+      <div class="attr-card">
+        <div class="attr-head">
+          <div style="flex:1">
+            <h3 class="attr-name">${C.escapeHtml(p.name)}</h3>
+            <p class="attr-cat">${C.escapeHtml(pc.category||'atrakcija')}</p>
+          </div>
+          <div class="attr-icon">${icon}</div>
+        </div>
+        ${pc.short_desc ? `<p class="attr-desc">${C.escapeHtml(pc.short_desc)}</p>` : ''}
+        <div class="attr-meta">
+          ${pc.working_hours ? `<span class="attr-tag">🕐 ${C.escapeHtml(pc.working_hours)}</span>` : ''}
+          ${p.loyalty_enabled ? '<span class="attr-tag">⭐ Pečat</span>' : ''}
+          ${p.has_booking ? '<span class="attr-tag" style="background:#ecfdf5;border-color:#10b981;color:#065f46">📅 Rezervacija</span>' : ''}
+        </div>
+        <div class="attr-btns">
+          ${p.has_booking ? `<button class="btn-sm btn-book" onclick="openBooking('${p.id}','${C.escapeHtml(p.name)}')">📅 Rezerviši</button>` : ''}
+          ${wa ? `<a href="${wa.startsWith('+')?'https://wa.me/'+wa.replace(/\D/g,''):'tel:'+wa}" class="btn-sm btn-wa">💬 Kontakt</a>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function openBooking(partnerId, partnerName){
+  currentPartner = {id: partnerId, name: partnerName};
+  selectedSlot = null;
+  document.getElementById('modal-title').textContent = 'Rezervacija';
+  document.getElementById('modal-partner-name').textContent = partnerName;
+  document.getElementById('booking-msg').textContent = '';
+  document.getElementById('btn-confirm').disabled = true;
+
+  // Set min date = danas
+  const today = new Date().toISOString().split('T')[0];
+  const dateEl = document.getElementById('book-date');
+  dateEl.min = today;
+  dateEl.value = today;
+
+  // Učitaj resurse za ovog partnera
+  const { data:resources } = await sb
+    .from('bookable_resources')
+    .select('*')
+    .eq('partner_id', partnerId)
+    .eq('is_active', true)
+    .order('sort_order');
+
+  currentResources = resources || [];
+  selectedResource = currentResources[0] || null;
+
+  // Render resource tabs
+  const tabsEl = document.getElementById('res-tabs');
+  if(currentResources.length > 1){
+    tabsEl.innerHTML = currentResources.map(r => `
+      <button class="res-tab${r.id === selectedResource?.id ? ' active' : ''}"
+        onclick="selectResource('${r.id}')">${C.escapeHtml(r.name)}</button>`).join('');
+  } else {
+    tabsEl.innerHTML = '';
+  }
+
+  document.getElementById('booking-modal').classList.add('open');
+  await loadSlots();
+}
+
+function selectResource(resId){
+  selectedResource = currentResources.find(r => r.id === resId) || null;
+  selectedSlot = null;
+  document.getElementById('btn-confirm').disabled = true;
+  document.querySelectorAll('.res-tab').forEach(t => t.classList.toggle('active', t.textContent === (selectedResource?.name||'')));
+  loadSlots();
+}
+
+async function loadSlots(){
+  if(!selectedResource) return;
+  const date = document.getElementById('book-date').value;
+  const qty  = parseInt(document.getElementById('book-qty').value) || 1;
+  if(!date) return;
+
+  document.getElementById('slots-list').innerHTML = '<p style="font-size:12px;color:#94a3b8;font-weight:700">Učitavanje...</p>';
+  selectedSlot = null;
+  document.getElementById('btn-confirm').disabled = true;
+
+  const { data:slots } = await sb.rpc('get_free_slots', {
+    p_resource_id: selectedResource.id,
+    p_date: date,
+    p_min_qty: qty
+  });
+
+  if(!slots || slots.length === 0){
+    document.getElementById('slots-list').innerHTML = '<p style="font-size:12px;color:#94a3b8;font-weight:700;padding:12px 0">Nema slobodnih termina za izabrani datum.</p>';
+    return;
+  }
+
+  document.getElementById('slots-list').innerHTML = slots.map(s => `
+    <div class="slot-option" onclick="selectSlot('${s.slot_time}', this)">
+      🕐 ${s.slot_time.slice(0,5)}
+      <span class="spots-badge">${s.free_spots} slobodnih</span>
+    </div>`).join('');
+}
+
+function selectSlot(time, el){
+  selectedSlot = time;
+  document.querySelectorAll('.slot-option').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('btn-confirm').disabled = false;
+}
+
+async function confirmBooking(){
+  const name  = document.getElementById('book-name').value.trim();
+  const phone = document.getElementById('book-phone').value.trim();
+  const date  = document.getElementById('book-date').value;
+  const qty   = parseInt(document.getElementById('book-qty').value) || 1;
+
+  if(!name || !phone){ document.getElementById('booking-msg').textContent = '⚠️ Popuni ime i telefon.'; return; }
+  if(!selectedSlot)  { document.getElementById('booking-msg').textContent = '⚠️ Izaberi termin.'; return; }
+
+  const btn = document.getElementById('btn-confirm');
+  btn.disabled = true;
+  btn.textContent = 'Slanje...';
+
+  const guestToken = C.getOrCreateGuestToken();
+  let guestId = null;
+  const { data:g } = await sb.from('guests').select('id').eq('token', guestToken).maybeSingle();
+  if(g) guestId = g.id;
+
+  const { error } = await sb.from('bookings').insert({
+    resource_id:  selectedResource.id,
+    guest_id:     guestId,
+    booking_date: date,
+    slot_time:    selectedSlot,
+    qty,
+    guest_name:   name,
+    guest_phone:  phone,
+    status:       'confirmed'
+  });
+
+  if(error){
+    document.getElementById('booking-msg').textContent = error.code === '23505' ? '⚠️ Taj termin je već zauzet.' : '⚠️ Greška. Pokušaj ponovo.';
+    btn.disabled = false;
+    btn.textContent = 'Potvrdi rezervaciju';
+    return;
+  }
+
+  document.getElementById('booking-modal').innerHTML = `
+    <div style="display:flex;align-items:flex-end;justify-content:center;width:100%;max-width:430px">
+      <div style="background:white;border-top-left-radius:2.5rem;border-top-right-radius:2.5rem;width:100%;padding:48px 28px 60px;text-align:center">
+        <div style="font-size:3rem;margin-bottom:16px">✅</div>
+        <h2 style="font-size:1.3rem;font-weight:900;color:#065f46;margin:0 0 8px">Rezervacija potvrđena!</h2>
+        <p style="font-size:13px;color:#475569;font-weight:600;margin:0 0 6px">${C.escapeHtml(currentPartner.name)}</p>
+        <p style="font-size:13px;color:#10b981;font-weight:900;margin:0 0 24px">📅 ${date} u ${selectedSlot.slice(0,5)} · ${qty} ${qty===1?'osoba':'osoba'}</p>
+        <button onclick="closeBooking()" style="width:100%;padding:16px;background:#0f172a;color:white;border:none;border-radius:1.2rem;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit">Zatvori</button>
+      </div>
+    </div>`;
+  document.getElementById('booking-modal').classList.add('open');
+  C.trackAction(currentPartner.id, guestId, 'booking_made');
+}
+
+function closeBooking(){
+  document.getElementById('booking-modal').classList.remove('open');
+}
+
+async function init(){
+  buildLangPills();
+  const { data:partners } = await sb
+    .from('partners')
+    .select('id, name, type, hh_active, loyalty_enabled, has_booking, phone, whatsapp, partner_content(short_desc, category, working_hours)')
+    .eq('type', 'attraction')
+    .eq('is_active', true)
+    .order('name');
+
+  allAttr = partners || [];
+  renderList();
+}
+
+init();
+</script>
+<script>
+  function googleTranslateElementInit(){
+    new google.translate.TranslateElement({pageLanguage:'sr',includedLanguages:'en,de,ru,bg,zh-CN',autoDisplay:false},'google_translate_element');
+    STAYVB_LANG.onWidgetReady();
+  }
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>

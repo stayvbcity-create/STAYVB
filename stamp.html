@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="sr-Latn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>StayVB — Pečat</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="icon192.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="lang-init.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
+*{box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:linear-gradient(145deg,#0f172a 0%,#1e293b 100%);color:white;min-height:100vh;margin:0}
+.app{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px}
+#google_translate_element{display:none!important}
+.goog-te-banner-frame,.skiptranslate{display:none!important}
+body{top:0!important}
+body.translated-ltr,body.translated-rtl{margin-top:0!important}
+
+/* Stamp grid */
+.stamps-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;width:100%;max-width:320px;margin:0 auto}
+.stamp-cell{aspect-ratio:1;border-radius:16px;border:2px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;font-size:1.4rem;position:relative;transition:all 0.3s ease}
+.stamp-cell.filled{border-color:rgba(251,191,36,0.50);background:rgba(251,191,36,0.12)}
+.stamp-cell.new-stamp{animation:stampPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards}
+@keyframes stampPop{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+
+/* State screens */
+.state-screen{text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;width:100%}
+.state-icon{font-size:4rem;line-height:1}
+.state-title{font-size:1.4rem;font-weight:900;letter-spacing:-0.03em}
+.state-sub{font-size:13px;color:rgba(255,255,255,0.6);font-weight:600;line-height:1.5;max-width:280px}
+
+/* Gold card */
+.gold-card{background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid rgba(251,191,36,0.30);border-radius:2rem;padding:24px 20px;width:100%;box-shadow:0 20px 40px rgba(0,0,0,0.4)}
+.gold-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(251,191,36,0.3),transparent);margin:16px 0}
+
+/* Progress bar */
+.progress-track{height:8px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden;width:100%}
+.progress-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#f59e0b,#fbbf24);transition:width 0.6s ease}
+
+/* Buttons */
+.btn-gold{width:100%;padding:16px;background:linear-gradient(135deg,#d97706,#f59e0b);color:#0f172a;border:none;border-radius:1.2rem;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;cursor:pointer;font-family:inherit;transition:transform 0.18s;box-shadow:0 10px 24px rgba(245,158,11,0.30)}
+.btn-gold:active{transform:scale(0.97)}
+.btn-ghost{width:100%;padding:14px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.10);border-radius:1.2rem;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:all 0.18s;text-transform:uppercase;letter-spacing:0.08em}
+.btn-ghost:active{background:rgba(255,255,255,0.10)}
+
+/* Reward form */
+.form-input{width:100%;padding:14px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:14px;color:white;font-size:14px;font-weight:700;font-family:inherit;outline:none}
+.form-input::placeholder{color:rgba(255,255,255,0.3)}
+.form-input:focus{border-color:rgba(251,191,36,0.40);background:rgba(255,255,255,0.08)}
+.form-label{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.45);margin-bottom:6px;display:block}
+
+/* Location name badge */
+.loc-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.8)}
+.loc-dot{width:7px;height:7px;border-radius:50%;background:#10b981;animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:0.7}}
+</style>
+</head>
+<body>
+<div id="google_translate_element" style="display:none"></div>
+
+<div class="app">
+  <div id="screen" class="w-full flex flex-col items-center gap-5">
+    <!-- Dinamički sadržaj -->
+    <div class="state-screen">
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-400"></div>
+      <p style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.16em">Učitavanje...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const sb = C.db();
+const params = new URLSearchParams(location.search);
+const LOCATION_CODE = params.get('code') || '';
+const LANG = localStorage.getItem('stayvb_lang') || 'sr';
+const GOAL = C.LOYALTY_GOAL;
+
+// i18n mini
+const T = {
+  sr:{ new_stamp:'Novi pečat!', already:'Već imaš pečat ovde', progress:'pečata od', goal_title:'Čestitamo!', goal_sub:'Skupio/la si 10 pečata! Unesi kontakt da preuzmeš nagradu.', claim_btn:'Preuzmi nagradu 🎁', name_ph:'Tvoje ime', phone_ph:'Broj telefona', send_btn:'Pošalji zahtev', sent_title:'Zahtev poslat!', sent_sub:'Kontaktiraćemo te uskoro sa nagradom.', err_code:'Nevažeći QR kod. Kontaktiraj osoblje.', err_db:'Greška. Pokušaj ponovo.', back:'← Nazad', location_label:'Lokacija', stamp_label:'Pečat', collecting:'Skupljaj pečate po Vrnjačkoj Banji' },
+  en:{ new_stamp:'New stamp!', already:"You've already stamped here", progress:'stamps out of', goal_title:'Congratulations!', goal_sub:"You've collected 10 stamps! Enter your contact to claim your reward.", claim_btn:'Claim reward 🎁', name_ph:'Your name', phone_ph:'Phone number', send_btn:'Send request', sent_title:'Request sent!', sent_sub:"We'll contact you soon with your reward.", err_code:'Invalid QR code. Contact staff.', err_db:'Error. Please try again.', back:'← Back', location_label:'Location', stamp_label:'Stamp', collecting:'Collect stamps across Vrnjačka Banja' },
+  de:{ new_stamp:'Neuer Stempel!', already:'Hier bereits gestempelt', progress:'Stempel von', goal_title:'Glückwunsch!', goal_sub:'Du hast 10 Stempel gesammelt! Gib deine Kontaktdaten ein.', claim_btn:'Preis abholen 🎁', name_ph:'Dein Name', phone_ph:'Telefonnummer', send_btn:'Anfrage senden', sent_title:'Anfrage gesendet!', sent_sub:'Wir melden uns bald.', err_code:'Ungültiger QR-Code.', err_db:'Fehler. Bitte nochmals versuchen.', back:'← Zurück', location_label:'Standort', stamp_label:'Stempel', collecting:'Sammle Stempel in Vrnjačka Banja' },
+  ru:{ new_stamp:'Новый штамп!', already:'Штамп здесь уже получен', progress:'штампов из', goal_title:'Поздравляем!', goal_sub:'Вы собрали 10 штампов! Введите контакт для получения приза.', claim_btn:'Получить приз 🎁', name_ph:'Ваше имя', phone_ph:'Номер телефона', send_btn:'Отправить заявку', sent_title:'Заявка отправлена!', sent_sub:'Мы свяжемся с вами.', err_code:'Неверный QR-код.', err_db:'Ошибка. Попробуйте снова.', back:'← Назад', location_label:'Локация', stamp_label:'Штамп', collecting:'Собирайте штампы по всей Врняцкой Бане' },
+  bg:{ new_stamp:'Нов печат!', already:'Вече имаш печат тук', progress:'печата от', goal_title:'Честито!', goal_sub:'Събра 10 печата! Въведи контакт за наградата.', claim_btn:'Вземи наградата 🎁', name_ph:'Твоето име', phone_ph:'Телефонен номер', send_btn:'Изпрати заявка', sent_title:'Заявката е изпратена!', sent_sub:'Ще се свържем с теб скоро.', err_code:'Невалиден QR код.', err_db:'Грешка. Опитай отново.', back:'← Назад', location_label:'Локация', stamp_label:'Печат', collecting:'Събирай печати из Враячка Баня' },
+  'zh-CN':{ new_stamp:'新印章！', already:'已在此处盖章', progress:'个印章，共', goal_title:'恭喜！', goal_sub:'您已集满10个印章！请输入联系方式领取奖励。', claim_btn:'领取奖励 🎁', name_ph:'您的姓名', phone_ph:'电话号码', send_btn:'发送申请', sent_title:'申请已发送！', sent_sub:'我们将很快联系您。', err_code:'无效的二维码。', err_db:'错误，请重试。', back:'← 返回', location_label:'地点', stamp_label:'印章', collecting:'在弗尔尼亚奇卡温泉城集章' }
+};
+function t(k){ return (T[LANG]||T['sr'])[k]||k; }
+
+function showError(msg){
+  document.getElementById('screen').innerHTML = `
+    <div class="state-screen">
+      <div class="state-icon">❌</div>
+      <h2 class="state-title">${C.escapeHtml(msg)}</h2>
+      <a href="index.html" style="margin-top:8px;font-size:12px;font-weight:800;color:rgba(255,255,255,0.5);text-decoration:none">${t('back')}</a>
+    </div>`;
+}
+
+function renderStamps(count, newOne){
+  const cells = [];
+  for(let i=0;i<GOAL;i++){
+    const filled = i < count;
+    const isNew  = filled && i === count-1 && newOne;
+    cells.push(`<div class="stamp-cell ${filled?'filled':''} ${isNew?'new-stamp':''}">${filled?'⭐':''}</div>`);
+  }
+  return cells.join('');
+}
+
+function showStampScreen(locationName, count, isNew, isDuplicate){
+  const pct = Math.round((count/GOAL)*100);
+  document.getElementById('screen').innerHTML = `
+    <div class="state-screen">
+      ${isDuplicate
+        ? `<div class="state-icon">✅</div><h2 class="state-title">${t('already')}</h2>`
+        : `<div class="state-icon" style="animation:stampPop 0.5s ease">${isNew?'🌟':'⭐'}</div>
+           <h2 class="state-title" style="color:#fbbf24">${isNew?t('new_stamp'):t('stamp_label')}</h2>`
+      }
+
+      <div class="loc-badge"><span class="loc-dot"></span>${C.escapeHtml(locationName)}</div>
+
+      <div class="gold-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.45)">${t('collecting')}</span>
+          <span style="font-size:13px;font-weight:900;color:#fbbf24">${count}/${GOAL}</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+        <div class="gold-divider"></div>
+        <div class="stamps-grid">${renderStamps(count, isNew && !isDuplicate)}</div>
+        ${count >= GOAL && !document.getElementById('reward-form')
+          ? `<div class="gold-divider"></div>
+             <button class="btn-gold" onclick="showRewardForm()">${t('claim_btn')}</button>`
+          : ''}
+      </div>
+
+      <a href="index.html?lang=${LANG}" style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.35);text-decoration:none;margin-top:4px">${t('back')}</a>
+    </div>`;
+}
+
+function showRewardForm(){
+  const formHtml = `
+    <div class="gold-divider"></div>
+    <div id="reward-form" style="display:flex;flex-direction:column;gap:12px;text-align:left">
+      <h3 style="font-size:14px;font-weight:900;color:#fbbf24;text-align:center;margin:0">${t('goal_title')}</h3>
+      <p style="font-size:12px;color:rgba(255,255,255,0.6);text-align:center;margin:0">${t('goal_sub')}</p>
+      <div>
+        <label class="form-label">${t('name_ph')}</label>
+        <input id="r-name" class="form-input" type="text" placeholder="${t('name_ph')}">
+      </div>
+      <div>
+        <label class="form-label">${t('phone_ph')}</label>
+        <input id="r-phone" class="form-input" type="tel" placeholder="${t('phone_ph')}">
+      </div>
+      <button class="btn-gold" onclick="submitReward()">${t('send_btn')}</button>
+    </div>`;
+
+  const card = document.querySelector('.gold-card');
+  if(card) card.insertAdjacentHTML('beforeend', formHtml);
+}
+
+async function submitReward(){
+  const name  = (document.getElementById('r-name')?.value||'').trim();
+  const phone = (document.getElementById('r-phone')?.value||'').trim();
+  if(!name||!phone){ alert('Popuni sva polja.'); return; }
+
+  const token = C.getOrCreateGuestToken();
+  const { error } = await sb.from('guests')
+    .update({ reward_status:'pending', reward_phone:phone, reward_claimed:true })
+    .eq('token', token);
+
+  if(error){ alert(t('err_db')); return; }
+
+  document.getElementById('screen').innerHTML = `
+    <div class="state-screen">
+      <div class="state-icon">🎁</div>
+      <h2 class="state-title" style="color:#fbbf24">${t('sent_title')}</h2>
+      <p class="state-sub">${t('sent_sub')}</p>
+      <a href="index.html?lang=${LANG}" class="btn-ghost" style="max-width:260px;display:inline-block;text-align:center;text-decoration:none;padding:14px">${t('back')}</a>
+    </div>`;
+}
+
+async function init(){
+  if(!LOCATION_CODE){ showError(t('err_code')); return; }
+
+  // 1. Nađi stamp lokaciju po kodu
+  const { data:loc } = await sb
+    .from('stamp_locations')
+    .select('id, name, type, partner_id, is_active')
+    .eq('location_code', LOCATION_CODE)
+    .maybeSingle();
+
+  if(!loc || !loc.is_active){ showError(t('err_code')); return; }
+
+  // 2. Gost token
+  const token = C.getOrCreateGuestToken();
+
+  // 3. Upsert gosta
+  let guestId;
+  const { data:guest } = await sb
+    .from('guests')
+    .select('id, stamp_count, reward_status')
+    .eq('token', token)
+    .maybeSingle();
+
+  if(!guest){
+    const { data:ng } = await sb
+      .from('guests')
+      .insert({ token, lang:LANG })
+      .select('id, stamp_count, reward_status')
+      .single();
+    if(!ng){ showError(t('err_db')); return; }
+    guestId = ng.id;
+  } else {
+    guestId = guest.id;
+  }
+
+  // 4. Pokušaj insert pečata (unique constraint hvata duplikate)
+  const { error:stampErr } = await sb
+    .from('stamps')
+    .insert({ guest_id:guestId, location_id:loc.id });
+
+  const isDuplicate = stampErr?.code === '23505'; // unique violation
+  if(stampErr && !isDuplicate){ showError(t('err_db')); return; }
+
+  // 5. Uzmi ažurirani broj pečata
+  const { data:updated } = await sb
+    .from('guests')
+    .select('stamp_count, reward_status')
+    .eq('id', guestId)
+    .single();
+
+  const count = updated?.stamp_count || 0;
+  showStampScreen(loc.name, count, !isDuplicate, isDuplicate);
+
+  // 6. Analytics (tih)
+  C.trackAction(loc.partner_id||null, guestId, 'qr_scan');
+}
+
+init();
+</script>
+<script>
+  function googleTranslateElementInit(){
+    new google.translate.TranslateElement({pageLanguage:'sr',includedLanguages:'en,de,ru,bg,zh-CN',autoDisplay:false},'google_translate_element');
+    STAYVB_LANG.onWidgetReady();
+  }
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>
