@@ -16,112 +16,80 @@
     <script src="config.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        var STAYVB_LANGS = {
-            '':     { flag: '🇷🇸', label: 'Srpski'    },
-            'en':   { flag: '🇬🇧', label: 'English'   },
-            'de':   { flag: '🇩🇪', label: 'Deutsch'   },
-            'ru':   { flag: '🇷🇺', label: 'Русский'   },
-            'bg':   { flag: '🇧🇬', label: 'Български' },
-            'zh-CN':{ flag: '🇨🇳', label: '中文'      }
-        };
+        // ── Google Translate sistem ───────────────────────────────────
+        // Jedini pouzdan način: GT select element direktno
 
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({
                 pageLanguage: 'sr',
                 includedLanguages: 'en,de,ru,bg,zh-CN',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
                 autoDisplay: false
             }, 'google_translate_element');
 
-            var savedLang = localStorage.getItem('stayvb_lang') || '';
+            // Čekaj GT widget i primeni sačuvani jezik
+            var saved = localStorage.getItem('stayvb_lang') || '';
+            if(saved) _gtApply(saved);
+        }
 
-            // Pokušaj da primenimo jezik čim GT bude spreman
+        // Primeni jezik kroz GT select element
+        function _gtApply(code) {
             var attempts = 0;
-            var applyInterval = setInterval(function(){
+            var iv = setInterval(function(){
                 var sel = document.querySelector('.goog-te-combo');
-                attempts++;
-                if(sel && savedLang){
-                    sel.value = savedLang;
+                if(sel) {
+                    sel.value = code || 'sr';
                     sel.dispatchEvent(new Event('change', {bubbles:true}));
-                    clearInterval(applyInterval);
+                    clearInterval(iv);
                 }
-                if(attempts > 30) clearInterval(applyInterval);
-            }, 200);
+                if(++attempts > 40) clearInterval(iv);
+            }, 150);
         }
 
-        function stayvbApplyLang(langCode) {
-            if (!langCode) {
-                document.cookie = 'googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
-                document.cookie = 'googtrans=; path=/; domain=' + location.hostname + '; expires=Thu, 01 Jan 1970 00:00:00 UTC';
-                return;
-            }
-            var cookieVal = '/sr/' + langCode;
-            document.cookie = 'googtrans=' + cookieVal + '; path=/';
-            document.cookie = 'googtrans=' + cookieVal + '; path=/; domain=' + location.hostname;
+        // Vrati na srpski
+        function _gtReset() {
+            var sel = document.querySelector('.goog-te-combo');
+            if(sel){ sel.value = ''; sel.dispatchEvent(new Event('change',{bubbles:true})); return; }
+            // Fallback — iframe reload
+            var f = document.querySelector('.goog-te-menu-frame');
+            if(f) f.src = f.src;
         }
 
+        // Poziva se sa zastavica
         function stayvbSetLang(langCode) {
             localStorage.setItem('stayvb_lang', langCode);
-            stayvbApplyLang(langCode);
+            updateLangPills(langCode);
 
             var ls = document.getElementById('lang-screen');
-            var appStarted = ls === null || ls.style.display === 'none' || getComputedStyle(ls).display === 'none';
+            var isLangScreen = ls && ls.style.display !== 'none';
 
-            if(ls && ls.style.display !== 'none'){
-                // Lang screen je vidljiv — prvi odabir jezika
-                // Animiraj izlaz i pokreni app bez reload-a
+            if(isLangScreen) {
+                // Prvo otvaranje — animiraj van i pokreni app
                 ls.style.transition = 'opacity 0.3s ease';
                 ls.style.opacity = '0';
                 ls.style.pointerEvents = 'none';
-                setTimeout(function(){ ls.remove(); }, 300);
-
+                setTimeout(function(){ ls.style.display = 'none'; }, 300);
                 var ld = document.getElementById('loader');
-                if(ld){ ld.style.display = 'flex'; }
-
+                if(ld) ld.style.display = 'flex';
                 setTimeout(function(){
                     if(typeof startApp === 'function') startApp(langCode);
-                }, 150);
+                }, 200);
             } else {
-                // Promena jezika kroz pilule
-                // Postavi cookie, sačekaj da se upiše, pa reload
-                var ld = document.getElementById('loader');
-                if(ld){ ld.style.display = 'flex'; }
-                var cont = document.getElementById('content');
-                if(cont){ cont.style.display = 'none'; }
-
-                // Forsiraj cookie upis na oba načina
-                if(langCode){
-                    var cv = '/sr/' + langCode;
-                    document.cookie = 'googtrans=' + cv + '; path=/; domain=' + location.hostname;
-                    document.cookie = 'googtrans=' + cv + '; path=/';
+                // Promena kroz pilule — primeni direktno bez reload-a
+                if(langCode) {
+                    _gtApply(langCode);
                 } else {
-                    document.cookie = 'googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
-                    document.cookie = 'googtrans=; path=/; domain=' + location.hostname + '; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+                    _gtReset();
                 }
-
-                // Delay 300ms da cookie sigurno bude upisan pre reload-a
-                setTimeout(function(){ window.location.reload(); }, 300);
             }
         }
 
         function updateLangPills(activeLang) {
             ['', 'en', 'de', 'ru', 'bg', 'zh-CN'].forEach(function(code) {
                 var el = document.getElementById('langpill-' + (code === '' ? 'sr' : code));
-                if (el) el.classList.toggle('active', code === activeLang);
+                if(el) el.classList.toggle('active', code === activeLang);
             });
         }
-
-        (function() {
-            var saved = localStorage.getItem('stayvb_lang') || '';
-            if (saved) {
-                // Postavi cookie odmah, pre GT inicijalizacije
-                var cv = '/sr/' + saved;
-                document.cookie = 'googtrans=' + cv + '; path=/';
-                document.cookie = 'googtrans=' + cv + '; path=/; domain=' + location.hostname;
-            }
-        })();
     </script>
-    <!-- Google Translate se učitava async da ne blokira rendering -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
         :root{--bg:#f8fafc;--card:rgba(255,255,255,0.92);--slate-1:#0f172a;--amber-1:#f59e0b;--amber-2:#fbbf24;--shadow-card:0 12px 28px rgba(15,23,42,0.10);--radius-xl:2rem;}
@@ -966,9 +934,12 @@ async function startApp(lang){
 
     updateLangPills(lang || '');
 
-    // Ukloni lang screen ako još postoji
+    // Ukloni lang screen
     const ls = document.getElementById('lang-screen');
     if(ls) ls.style.display = 'none';
+
+    // Primeni prevod odmah čim GT bude spreman
+    if(lang) _gtApply(lang);
 
     // Prikaži loader, sakrij content dok se učitava
     document.getElementById('loader').style.display = 'flex';
