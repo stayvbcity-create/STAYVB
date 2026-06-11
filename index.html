@@ -694,29 +694,36 @@ async function loadLoyalty(isPremium){
     document.getElementById('treasure-strip-wrap').style.display = 'block';
 }
 
-async function autoStamp(partnerId, partnerCode){
+async function autoStamp(partnerId, isPremium){
     if(!partnerId) return;
     const token = C.getOrCreateGuestToken();
 
     let guestId;
-    const { data: existing } = await sb.from('guests').select('id').eq('token', token).maybeSingle();
-    if(existing){
-        guestId = existing.id;
-    } else {
-        const { data: ng } = await sb.from('guests').insert({ token, lang: localStorage.getItem('stayvb_lang')||'sr' }).select('id').single();
-        if(ng) guestId = ng.id;
+    try {
+        const { data: existing } = await sb.from('guests').select('id').eq('token', token).maybeSingle();
+        if(existing){
+            guestId = existing.id;
+        } else {
+            const { data: ng } = await sb.from('guests').insert({ token, lang: localStorage.getItem('stayvb_lang')||'sr' }).select('id').single();
+            if(ng) guestId = ng.id;
+        }
+        if(!guestId) return;
+
+        const { data: loc } = await sb.from('stamp_locations')
+            .select('id')
+            .eq('partner_id', partnerId)
+            .eq('is_active', true)
+            .maybeSingle();
+
+        // Nema stamp lokacije za ovog partnera - preskoči tihо
+        if(!loc) return;
+
+        await sb.from('stamps').insert({ guest_id: guestId, location_id: loc.id });
+        // Osveži loyalty prikaz sa ispravnim isPremium parametrom
+        await loadLoyalty(isPremium);
+    } catch(e) {
+        console.log('autoStamp skip:', e.message);
     }
-    if(!guestId) return;
-
-    const { data: loc } = await sb.from('stamp_locations')
-        .select('id')
-        .eq('partner_id', partnerId)
-        .eq('is_active', true)
-        .maybeSingle();
-    if(!loc) return;
-
-    await sb.from('stamps').insert({ guest_id: guestId, location_id: loc.id });
-    await loadLoyalty();
 }
 
 async function loadPartnerData(){
@@ -782,7 +789,7 @@ async function loadPartnerData(){
 
     // Auto stamp pri dolasku
     if(isPremiumApplicable){
-        await autoStamp(partner.id, currentUnitId);
+        await autoStamp(partner.id, isPremiumApplicable);
     }
 
     // Posebne pogodnosti i Room service - sakrij ako nije premium apartment/hotel
