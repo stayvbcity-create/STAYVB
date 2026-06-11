@@ -67,14 +67,11 @@
         function stayvbSetLang(langCode) {
             localStorage.setItem('stayvb_lang', langCode);
             stayvbApplyLang(langCode);
-            // Ukloni lang screen potpuno iz DOM-a
+            // Ukloni overlay lang screen iz DOM-a
             var ls = document.getElementById('lang-screen');
             if(ls) ls.remove();
-            // Prikaži loader
-            var ld = document.getElementById('loader');
-            if(ld){ ld.classList.remove('hidden'); ld.style.display='flex'; }
-            // Reload posle kratkog delay-a da loader bude vidljiv
-            setTimeout(function(){ window.location.reload(); }, 100);
+            // Pokreni app inicijalizaciju
+            if(typeof startApp === 'function') startApp(langCode);
         }
 
         function updateLangPills(activeLang) {
@@ -100,8 +97,8 @@
         .goog-te-banner-frame,.skiptranslate,#goog-gt-tt{display:none!important;}
         body.translated-ltr,body.translated-rtl{margin-top:0!important;}
 
-        /* Lang screen */
-        #lang-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;background:radial-gradient(circle at 20% 20%,rgba(251,191,36,0.18),transparent 30%),linear-gradient(145deg,#0f172a 0%,#162235 55%,#1f2937 100%);}
+        /* Lang screen - fixed overlay, pokriva sve */
+        #lang-screen{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;background:radial-gradient(circle at 20% 20%,rgba(251,191,36,0.18),transparent 30%),linear-gradient(145deg,#0f172a 0%,#162235 55%,#1f2937 100%);overflow-y:auto;}
         .lang-logo-img{width:96px;height:96px;border-radius:28px;object-fit:cover;margin-bottom:20px;box-shadow:0 20px 40px rgba(0,0,0,0.35);border:1px solid rgba(251,191,36,0.30);}
         .lang-title{font-size:2.2rem;font-weight:900;color:white;letter-spacing:-0.04em;margin:0 0 6px;text-align:center;}
         .lang-sub-text{font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.18em;font-weight:800;text-align:center;margin-bottom:40px;}
@@ -916,31 +913,18 @@ function closeCityModal(){
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; showInstallBanner('android-install'); });
 window.addEventListener('appinstalled', () => { deferredPrompt = null; closeInstallPrompt(); });
 
-window.addEventListener('load', async () => {
-    await registerSW();
-    const savedLang = localStorage.getItem('stayvb_lang');
-
-    // Čitaj partner_code iz URL-a
+// startApp — poziva se ili direktno (ako je jezik već izabran)
+// ili iz stayvbSetLang (kad korisnik klikne zastavu)
+async function startApp(lang){
     const params = new URLSearchParams(window.location.search);
     currentUnitId = (params.get('id') || '').toUpperCase();
 
-    if(savedLang === null){
-        // Prvo otvaranje — prikaži lang screen
-        document.getElementById('lang-screen').classList.remove('hidden');
-        document.getElementById('loader').classList.add('hidden');
-        return;
-    }
+    updateLangPills(lang || '');
 
-    // Jezik je izabran — ukloni lang screen potpuno iz DOM-a
-    var ls = document.getElementById('lang-screen');
-    if(ls) ls.remove();
-
-    updateLangPills(savedLang);
-    document.getElementById('lang-screen').classList.add('hidden');
+    // Sakrij loader, prikaži content skeleton
     document.getElementById('loader').classList.remove('hidden');
 
     try{
-        // Paralelno učitaj sve
         await Promise.all([
             loadPartnerData(),
             loadHH(),
@@ -952,12 +936,13 @@ window.addEventListener('load', async () => {
     document.getElementById('loader').classList.add('hidden');
     document.getElementById('content').classList.remove('hidden');
 
-    // VIP pointer animacija
+    // PWA install prompt
     if(isIOS) showInstallBanner('ios');
     else if(isAndroid && !deferredPrompt){
         setTimeout(() => { if(!deferredPrompt && !isStandalone()) showInstallBanner('android-install'); }, 2500);
     }
 
+    // VIP pointer animacija
     const pointer = document.getElementById('vipPointer');
     if(pointer){
         setTimeout(() => {
@@ -969,6 +954,26 @@ window.addEventListener('load', async () => {
             }, 3400);
         }, 2200);
     }
+}
+
+window.addEventListener('load', async () => {
+    await registerSW();
+    const savedLang = localStorage.getItem('stayvb_lang');
+
+    if(savedLang === null){
+        // Prvo otvaranje — prikaži lang screen overlay, sakrij loader i content
+        document.getElementById('lang-screen').classList.remove('hidden');
+        document.getElementById('loader').classList.add('hidden');
+        // Lang screen je fixed overlay — content ispod može da postoji
+        // ali ga korisnik ne vidi dok overlay ne nestane
+        return;
+    }
+
+    // Jezik već izabran — ukloni lang screen odmah i pokreni app
+    const ls = document.getElementById('lang-screen');
+    if(ls) ls.remove();
+
+    await startApp(savedLang);
 });
 </script>
 </body>
