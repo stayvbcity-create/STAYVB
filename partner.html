@@ -221,15 +221,22 @@ function renderStay(){
       <p class="panel-card-title">Kućni red</p>
       <div class="field-group"><textarea class="field-input" id="s-rules" placeholder="Pravila boravka...">${esc(pc.house_rules||'')}</textarea></div>
     </div>
-    <div class="panel-card">
-      <p class="panel-card-title">Instagram Share kampanja</p>
+    ${isPremium ? `
+    <div class="panel-card" style="border-color:rgba(236,72,153,0.20);background:rgba(236,72,153,0.04)">
+      <p class="panel-card-title" style="color:#f9a8d4">📸 Instagram Share kampanja</p>
       <div class="toggle-wrap">
-        <div><div class="toggle-label">Aktivna kampanja</div><div class="toggle-sub">Gosti vide Share dugme</div></div>
-        <label class="toggle"><input type="checkbox" id="s-share-active" ${pc.share_campaign_active?'checked':''}><span class="toggle-slider"></span></label>
+        <div><div class="toggle-label">Aktivna kampanja</div><div class="toggle-sub">Gosti vide Share dugme na početnoj</div></div>
+        <label class="toggle"><input type="checkbox" id="s-share-active" ${pc.share_campaign_active?'checked':''}>\n        <span class="toggle-slider"></span></label>
       </div>
       <div class="field-group"><label class="field-label">Instagram Reel URL</label><input class="field-input" id="s-reel-url" value="${esc(pc.instagram_reel_url||'')}" placeholder="https://www.instagram.com/reel/..."></div>
-      <div class="field-group"><label class="field-label">Poklon opis</label><input class="field-input" id="s-gift" value="${esc(pc.share_gift_text||'')}" placeholder="npr. čaša lokalnog vina"></div>
-    </div>` : `
+      <div class="field-group"><label class="field-label">Poklon opis (šta gost dobija)</label><input class="field-input" id="s-gift" value="${esc(pc.share_gift_text||'')}" placeholder="npr. čaša lokalnog vina"></div>
+    </div>
+    ` : `
+    <div class="panel-card" style="border-color:rgba(236,72,153,0.12);background:rgba(236,72,153,0.03)">
+      <p class="panel-card-title" style="color:#f9a8d4">📸 Instagram Share kampanja</p>
+      <p style="font-size:12px;color:rgba(255,255,255,0.5);font-weight:600;line-height:1.5;margin:0">Dostupno samo za <strong style="color:#fbbf24">Premium partnere</strong>. Kontaktirajte administratora.</p>
+    </div>
+    `}` : `
     <div class="panel-card" style="border-color:rgba(251,191,36,0.20);background:rgba(251,191,36,0.05)">
       <p class="panel-card-title" style="color:#fbbf24">Upgrade na Premium</p>
       <p style="font-size:13px;color:rgba(255,255,255,0.6);font-weight:600;margin:0 0 12px;line-height:1.5">Premium plan omogućava: posebnu ponudu, cenovnik, kućni red, share kampanju i više.</p>
