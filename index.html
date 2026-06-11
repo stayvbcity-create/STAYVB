@@ -384,7 +384,7 @@
                         <p id="wifi-name" class="wifi-name">...</p>
                         <p id="wifi-pass" class="wifi-pass">...</p>
                     </div>
-                    <div class="vip-pointer-wrap">
+                    <div class="vip-pointer-wrap" id="vip-btn-wrap">
                         <span id="vipPointer" class="vip-pointer">👉</span>
                         <button onclick="toggleVIP(true)" class="vip-gold-btn" type="button">
                             <span class="text-lg">🏆</span>
@@ -667,11 +667,21 @@ function confirmCheckout(){
 }
 
 async function loadLoyalty(isPremium){
+    const vipWrap = document.getElementById('vip-btn-wrap');
+    const vipPointer = document.getElementById('vipPointer');
+
     if(!isPremium){
         document.getElementById('loyalty-section').style.display = 'none';
         document.getElementById('treasure-strip-wrap').style.display = 'none';
+        if(vipWrap) vipWrap.style.display = 'none';
+        if(vipPointer) vipPointer.style.display = 'none';
         return;
     }
+
+    // Premium aktivan — prikaži VIP
+    if(vipWrap) vipWrap.style.display = '';
+    if(vipPointer) vipPointer.style.display = '';
+
     const token = C.getOrCreateGuestToken();
     const { data: guest } = await sb.from('guests').select('stamp_count, reward_status').eq('token', token).maybeSingle();
     if(!guest) return;
