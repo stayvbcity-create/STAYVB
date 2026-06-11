@@ -127,7 +127,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 /* ── Form fields ── */
 .field{margin-bottom:14px}
 .field label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.14em;color:var(--muted);display:block;margin-bottom:5px}
-.field input,.field select,.field textarea{width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:13px;font-weight:600;font-family:inherit;outline:none;transition:border-color 0.15s}
+.field input,.field select,.field textarea,.field.select{width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:13px;font-weight:600;font-family:inherit;outline:none;transition:border-color 0.15s}
 .field input:focus,.field select:focus{border-color:rgba(251,191,36,0.40);background:rgba(255,255,255,0.07)}
 .field input::placeholder{color:var(--faint)}
 .field textarea{resize:vertical;min-height:70px}
@@ -187,6 +187,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="nav-section">Upravljanje</div>
     <div class="nav-item" onclick="nav('partners',this)"><span class="nav-icon">🏢</span>Partneri</div>
     <div class="nav-item" onclick="nav('stamps',this)"><span class="nav-icon">⭐</span>Stamp mape</div>
+    <div class="nav-item" onclick="nav('cityinfo',this)"><span class="nav-icon">🏙️</span>City Info</div>
     <div class="nav-item" onclick="nav('loyalty',this)"><span class="nav-icon">🎁</span>Loyalty<span class="nav-badge" id="nb-rewards">0</span></div>
     <div class="nav-item" onclick="nav('events',this)"><span class="nav-icon">🎸</span>Događaji</div>
     <div class="nav-section">Finansije</div>
@@ -308,6 +309,32 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <button class="btn btn-gold" onclick="openNewStamp()">+ Nova lokacija</button>
       </div>
       <div class="tbl-card"><div class="tbl-wrap" id="stamps-tbl"></div></div>
+    </div>
+
+    <!-- ═══ CITY INFO ═══ -->
+    <div id="page-cityinfo" class="page">
+      <div class="sec-header">
+        <div><div class="sec-title">City Info</div><div class="sec-sub">Kategorije i mali biznisi vidljivi gostima</div></div>
+        <button class="btn btn-gold" onclick="openNewCategory()">+ Nova kategorija</button>
+      </div>
+
+      <!-- Kategorije -->
+      <div class="tbl-card" style="margin-bottom:20px">
+        <div class="tbl-header"><div class="tbl-title">Kategorije</div></div>
+        <div class="tbl-wrap" id="city-cats-tbl"></div>
+      </div>
+
+      <!-- Partneri u City Info -->
+      <div class="sec-header" style="margin-top:0">
+        <div><div style="font-size:1rem;font-weight:900">Mali biznisi u City Info</div><div class="sec-sub">Aktiviraj "City Info" za partnera i dodeli kategoriju</div></div>
+      </div>
+      <div class="search-row">
+        <input class="search-input" id="ci-search" placeholder="🔍  Pretraži..." oninput="filterCityPartners()" style="max-width:300px">
+        <select class="filter-select" id="ci-filter-cat" onchange="filterCityPartners()">
+          <option value="">Sve kategorije</option>
+        </select>
+      </div>
+      <div class="tbl-card"><div class="tbl-wrap" id="city-partners-tbl"></div></div>
     </div>
 
     <!-- ═══ LOYALTY ═══ -->
@@ -476,6 +503,48 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
 </div>
 
+<!-- Modal nova kategorija -->
+<div id="modal-category" class="modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-category')">✕</button>
+    <div class="modal-title" id="cat-modal-title">🏙️ Nova kategorija</div>
+    <input type="hidden" id="cat-edit-id">
+    <div class="field-row">
+      <div class="field"><label>Ikona (emoji)</label><input id="cat-icon" placeholder="npr. 🚕" maxlength="4"></div>
+      <div class="field"><label>Naziv</label><input id="cat-name" placeholder="npr. Taksi"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Boja (hex)</label><input id="cat-color" type="color" value="#f59e0b" style="height:44px;padding:4px 8px"></div>
+      <div class="field"><label>Redosled</label><input id="cat-order" type="number" placeholder="1" min="0"></div>
+    </div>
+    <button class="btn btn-gold" style="width:100%;padding:13px;font-size:12px;justify-content:center" onclick="saveCategory()">Sačuvaj kategoriju</button>
+    <div class="form-msg" id="cat-msg"></div>
+  </div>
+</div>
+
+<!-- Modal dodeli kategoriju partneru -->
+<div id="modal-assign-cat" class="modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-assign-cat')">✕</button>
+    <div class="modal-title" id="assign-title">Podesi City Info</div>
+    <input type="hidden" id="assign-partner-id">
+    <div class="field"><label>Kategorija</label>
+      <select id="assign-cat-id" class="field select">
+        <option value="">— Bez kategorije —</option>
+      </select>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:14px">
+      <label class="tog"><input type="checkbox" id="assign-show"><span class="tog-s"></span></label>
+      <div>
+        <div style="font-size:12px;font-weight:800">Prikaži u City Info</div>
+        <div style="font-size:10px;color:var(--muted)">Gosti će videti ovaj biznis</div>
+      </div>
+    </div>
+    <button class="btn btn-gold" style="width:100%;padding:13px;font-size:12px;justify-content:center" onclick="saveAssignment()">Sačuvaj</button>
+    <div class="form-msg" id="assign-msg"></div>
+  </div>
+</div>
+
 <script>
 const sb = C.db();
 let allPartners = [];
@@ -518,7 +587,8 @@ const PAGE_META = {
   events:['Gradski događaji','Javni kalendar'],
   billing:['Naplata','Mesečna pretplata po partneru'],
   revenue:['Prihodi','Istorija naplate'],
-  qr:['QR Generator','QR kodovi i partner URL-ovi']
+  qr:['QR Generator','QR kodovi i partner URL-ovi'],
+  cityinfo:['City Info','Kategorije i mali biznisi']
 };
 
 const LOADERS = {
@@ -1000,6 +1070,160 @@ async function saveEvent(){
   closeModal('modal-event');loadEvents();
 }
 async function delEv(id,btn){btn.disabled=true;await sb.from('events').update({is_active:false}).eq('id',id);loadEvents();}
+
+// ── City Info ─────────────────────────────────────────────────────
+let allCityPartners = [];
+let allCityCategories = [];
+
+async function loadCityInfo(){
+    // Učitaj kategorije
+    const {data:cats} = await sb.from('city_categories').select('*').order('sort_order');
+    allCityCategories = cats||[];
+
+    // Popuni select u filter i modal
+    const filterSel = document.getElementById('ci-filter-cat');
+    const assignSel = document.getElementById('assign-cat-id');
+    if(filterSel){
+        filterSel.innerHTML = '<option value="">Sve kategorije</option>' +
+            allCityCategories.map(c=>`<option value="${c.id}">${esc(c.icon)} ${esc(c.name)}</option>`).join('');
+    }
+    if(assignSel){
+        assignSel.innerHTML = '<option value="">— Bez kategorije —</option>' +
+            allCityCategories.map(c=>`<option value="${c.id}">${esc(c.icon)} ${esc(c.name)}</option>`).join('');
+    }
+
+    // Render kategorije tabela
+    renderCatsTable();
+
+    // Učitaj partnere tipa business
+    const {data:partners} = await sb.from('partners')
+        .select('id,name,type,partner_code,is_active,show_in_city_info,city_category_id,partner_content(short_desc,working_hours)')
+        .eq('type','business')
+        .order('name');
+    allCityPartners = partners||[];
+    renderCityPartnersTable(allCityPartners);
+}
+
+function renderCatsTable(){
+    const el = document.getElementById('city-cats-tbl');
+    if(!el) return;
+    el.innerHTML = `<table class="tbl">
+        <thead><tr><th>Ikona</th><th>Naziv</th><th>Boja</th><th>Redosled</th><th>Aktivna</th><th>Biznisa</th><th>Akcije</th></tr></thead>
+        <tbody>${allCityCategories.map(cat=>{
+            const count = allCityPartners.filter(p=>p.city_category_id===cat.id&&p.show_in_city_info).length;
+            return `<tr>
+                <td style="font-size:1.4rem">${esc(cat.icon)}</td>
+                <td style="font-weight:800">${esc(cat.name)}</td>
+                <td><div style="width:24px;height:24px;border-radius:6px;background:${esc(cat.color)};border:1px solid rgba(255,255,255,0.15)"></div></td>
+                <td style="color:var(--muted)">${cat.sort_order}</td>
+                <td><label class="tog"><input type="checkbox" ${cat.is_active?'checked':''} onchange="togCat('${cat.id}',this.checked)"><span class="tog-s"></span></label></td>
+                <td><span class="badge b-on">${count}</span></td>
+                <td><div style="display:flex;gap:5px">
+                    <button class="btn btn-ghost btn-sm" onclick="editCategory('${cat.id}')">✏️</button>
+                    <button class="btn btn-red btn-sm" onclick="delCategory('${cat.id}')">✕</button>
+                </div></td>
+            </tr>`;
+        }).join('')}</tbody>
+    </table>`;
+}
+
+function filterCityPartners(){
+    const q = document.getElementById('ci-search')?.value.toLowerCase()||'';
+    const cat = document.getElementById('ci-filter-cat')?.value||'';
+    renderCityPartnersTable(allCityPartners.filter(p=>
+        (!q || p.name.toLowerCase().includes(q)) &&
+        (!cat || p.city_category_id===cat)
+    ));
+}
+
+function renderCityPartnersTable(list){
+    const el = document.getElementById('city-partners-tbl');
+    if(!el) return;
+    el.innerHTML = `<table class="tbl">
+        <thead><tr><th>Naziv</th><th>Opis</th><th>Radno vreme</th><th>Kategorija</th><th>City Info</th><th>Akcije</th></tr></thead>
+        <tbody>${list.map(p=>{
+            const pc = p.partner_content?.[0]||{};
+            const cat = allCityCategories.find(c=>c.id===p.city_category_id);
+            return `<tr>
+                <td style="font-weight:800">${esc(p.name)}</td>
+                <td style="font-size:11px;color:var(--muted);max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(pc.short_desc||'—')}</td>
+                <td style="font-size:11px;color:var(--muted)">${esc(pc.working_hours||'—')}</td>
+                <td>${cat?`<span class="badge" style="background:${cat.color}22;color:${cat.color};border:1px solid ${cat.color}44">${esc(cat.icon)} ${esc(cat.name)}</span>`:'<span class="badge b-off">Bez kategorije</span>'}</td>
+                <td><label class="tog"><input type="checkbox" ${p.show_in_city_info?'checked':''} onchange="togCityShow('${p.id}',this.checked)"><span class="tog-s"></span></label></td>
+                <td><button class="btn btn-blue btn-sm" onclick="openAssign('${p.id}')">⚙️ Podesi</button></td>
+            </tr>`;
+        }).join('')}</tbody>
+    </table>`;
+}
+
+async function togCat(id,val){ await sb.from('city_categories').update({is_active:val}).eq('id',id); }
+async function togCityShow(id,val){ await sb.from('partners').update({show_in_city_info:val}).eq('id',id); }
+
+function openNewCategory(){
+    document.getElementById('cat-edit-id').value='';
+    document.getElementById('cat-modal-title').textContent='🏙️ Nova kategorija';
+    document.getElementById('cat-icon').value='';
+    document.getElementById('cat-name').value='';
+    document.getElementById('cat-color').value='#f59e0b';
+    document.getElementById('cat-order').value=allCityCategories.length+1;
+    document.getElementById('cat-msg').textContent='';
+    openModal('modal-category');
+}
+
+function editCategory(id){
+    const cat = allCityCategories.find(c=>c.id===id); if(!cat) return;
+    document.getElementById('cat-edit-id').value=cat.id;
+    document.getElementById('cat-modal-title').textContent='✏️ Uredi: '+cat.name;
+    document.getElementById('cat-icon').value=cat.icon;
+    document.getElementById('cat-name').value=cat.name;
+    document.getElementById('cat-color').value=cat.color||'#f59e0b';
+    document.getElementById('cat-order').value=cat.sort_order;
+    document.getElementById('cat-msg').textContent='';
+    openModal('modal-category');
+}
+
+async function saveCategory(){
+    const editId = document.getElementById('cat-edit-id').value;
+    const icon = document.getElementById('cat-icon').value.trim();
+    const name = document.getElementById('cat-name').value.trim();
+    const color = document.getElementById('cat-color').value;
+    const order = parseInt(document.getElementById('cat-order').value)||0;
+    const msg = document.getElementById('cat-msg');
+    if(!icon||!name){ msg.textContent='⚠️ Ikona i naziv su obavezni.'; msg.className='form-msg err'; return; }
+    if(editId){
+        await sb.from('city_categories').update({icon,name,color,sort_order:order}).eq('id',editId);
+    } else {
+        await sb.from('city_categories').insert({icon,name,color,sort_order:order,is_active:true});
+    }
+    closeModal('modal-category');
+    loadCityInfo();
+}
+
+async function delCategory(id){
+    if(!confirm('Obrisati kategoriju? Biznisi ostaju ali bez kategorije.')) return;
+    await sb.from('city_categories').delete().eq('id',id);
+    loadCityInfo();
+}
+
+function openAssign(partnerId){
+    const p = allCityPartners.find(x=>x.id===partnerId); if(!p) return;
+    document.getElementById('assign-partner-id').value=partnerId;
+    document.getElementById('assign-title').textContent='⚙️ City Info: '+p.name;
+    document.getElementById('assign-cat-id').value=p.city_category_id||'';
+    document.getElementById('assign-show').checked=!!p.show_in_city_info;
+    document.getElementById('assign-msg').textContent='';
+    openModal('modal-assign-cat');
+}
+
+async function saveAssignment(){
+    const partnerId = document.getElementById('assign-partner-id').value;
+    const catId = document.getElementById('assign-cat-id').value||null;
+    const show = document.getElementById('assign-show').checked;
+    const msg = document.getElementById('assign-msg');
+    await sb.from('partners').update({city_category_id:catId, show_in_city_info:show}).eq('id',partnerId);
+    msg.textContent='✓ Sačuvano!'; msg.className='form-msg ok';
+    setTimeout(()=>{ closeModal('modal-assign-cat'); loadCityInfo(); }, 800);
+}
 
 // ── QR ────────────────────────────────────────────────────────────
 async function loadQR(){
