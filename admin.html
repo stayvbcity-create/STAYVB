@@ -525,6 +525,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         </div>
       </label>
     </div>
+
+    <!-- Referral sekcija - samo za premium apartment/hotel -->
+    <div id="edit-referral-wrap" style="display:none;margin-bottom:14px">
+      <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.14em;color:var(--muted);margin-bottom:10px">🎁 Referral — Pozovi prijatelja</div>
+      <label style="display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;cursor:pointer;padding:12px;background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.18);border-radius:var(--radius);margin-bottom:10px">
+        <label class="tog"><input type="checkbox" id="edit-referral-active"><span class="tog-s"></span></label>
+        <div>
+          <div style="font-weight:900;color:#6ee7b7">Referral aktivan</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:2px">Gosti vide dugme "Pozovi prijatelja"</div>
+        </div>
+      </label>
+      <div class="field-row">
+        <div class="field"><label>Kod za popust</label><input id="edit-referral-code" placeholder="npr. FONTANA2026" style="text-transform:uppercase"></div>
+        <div class="field"><label>Popust (%)</label><input id="edit-referral-discount" type="number" min="1" max="50" placeholder="10"></div>
+      </div>
+    </div>
+
     <button class="btn btn-gold" style="width:100%;padding:13px;font-size:12px;justify-content:center" onclick="saveEdit()">Sačuvaj izmene</button>
     <div class="form-msg" id="edit-msg"></div>
   </div>
@@ -1157,6 +1174,17 @@ function openEdit(id){
   document.getElementById('edit-booking').checked=!!p.has_booking;
   document.getElementById('edit-msg').textContent='';
 
+  // Referral - prikaži samo za premium apartment/hotel
+  const refWrap = document.getElementById('edit-referral-wrap');
+  if((p.type==='apartment'||p.type==='hotel') && p.is_premium){
+    refWrap.style.display='block';
+    document.getElementById('edit-referral-active').checked=!!p.referral_active;
+    document.getElementById('edit-referral-code').value=p.referral_code||'';
+    document.getElementById('edit-referral-discount').value=p.referral_discount||10;
+  } else {
+    refWrap.style.display='none';
+  }
+
   // Prikaži Premium toggle samo za apartment i hotel
   const premWrap = document.getElementById('edit-premium-wrap');
   const premDesc = document.getElementById('edit-premium-desc');
@@ -1192,6 +1220,9 @@ async function saveEdit(){
     is_premium:document.getElementById('edit-premium').checked,
     loyalty_enabled:document.getElementById('edit-premium').checked,
     has_booking:document.getElementById('edit-booking').checked,
+    referral_active:document.getElementById('edit-referral-active')?.checked||false,
+    referral_code:(document.getElementById('edit-referral-code')?.value||'').trim().toUpperCase()||null,
+    referral_discount:parseInt(document.getElementById('edit-referral-discount')?.value)||10,
   };
   if(pin && pin.length===4) u.pin=pin;
   else if(pin && pin.length!==4){ const m=document.getElementById('edit-msg'); m.textContent='⚠️ PIN mora biti tačno 4 cifre.'; m.className='form-msg err'; return; }
