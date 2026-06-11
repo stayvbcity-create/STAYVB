@@ -264,15 +264,65 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
     <!-- ═══ STATISTIKE ═══ -->
     <div id="page-stats" class="page">
+
+      <!-- KPI kartice -->
       <div class="stats-row" id="stats-grid"></div>
+
+      <!-- Glavni grafikon prihoda - puna sirina -->
+      <div class="chart-card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+          <div>
+            <div class="chart-title" style="margin:0 0 2px">Prihodi i naplata</div>
+            <div style="font-size:11px;color:var(--muted)">Dnevni i mesečni trendovi</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" id="stat-range-7"  onclick="setStatRange(7)"  style="opacity:0.5">7 dana</button>
+            <button class="btn btn-ghost btn-sm" id="stat-range-30" onclick="setStatRange(30)">30 dana</button>
+            <button class="btn btn-ghost btn-sm" id="stat-range-90" onclick="setStatRange(90)" style="opacity:0.5">3 meseca</button>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:260px"><canvas id="chart-revenue-stats"></canvas></div>
+        <!-- Legenda -->
+        <div style="display:flex;gap:20px;margin-top:12px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--muted)">
+            <div style="width:12px;height:3px;background:#10b981;border-radius:2px"></div> Naplaćeno
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--muted)">
+            <div style="width:12px;height:3px;background:#f59e0b;border-radius:2px;opacity:0.6"></div> Na čekanju
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--muted)">
+            <div style="width:12px;height:3px;background:#8b5cf6;border-radius:2px"></div> Novi gosti
+          </div>
+        </div>
+      </div>
+
+      <!-- Drugi red: aktivnost i gosti -->
+      <div class="charts-grid" style="margin-bottom:16px">
+        <div class="chart-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div class="chart-title" style="margin:0">Gosti — dnevni rast</div>
+            <span id="guests-total-badge" style="font-size:11px;font-weight:900;color:#8b5cf6"></span>
+          </div>
+          <div class="chart-wrap" style="height:180px"><canvas id="chart-guests-stats"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div class="chart-title" style="margin:0">Pečati — dnevna aktivnost</div>
+            <span id="stamps-total-badge" style="font-size:11px;font-weight:900;color:#fbbf24"></span>
+          </div>
+          <div class="chart-wrap" style="height:180px"><canvas id="chart-stamps-stats"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Treći red: tip partnera + top lista -->
       <div class="charts-grid">
         <div class="chart-card">
           <div class="chart-title">Partneri po tipu</div>
           <div id="type-bars"></div>
         </div>
         <div class="chart-card">
-          <div class="chart-title">Aktivnost — skeniranja po partnerima</div>
-          <div class="chart-wrap"><canvas id="chart-activity"></canvas></div>
+          <div class="chart-title">Top 10 partnera — skeniranja</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="chart-activity"></canvas></div>
         </div>
       </div>
     </div>
@@ -458,13 +508,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <label style="display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;cursor:pointer;padding:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius)">
-        <label class="tog"><input type="checkbox" id="edit-premium"><span class="tog-s"></span></label>
-        <div>
-          <div style="font-weight:900">Premium partner</div>
-          <div style="font-size:9px;color:var(--muted);margin-top:2px">Loyalty traka + nagradna igra vidljivi gostu</div>
-        </div>
-      </label>
+      <div id="edit-premium-wrap" style="display:none">
+        <label style="display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;cursor:pointer;padding:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius)">
+          <label class="tog"><input type="checkbox" id="edit-premium"><span class="tog-s"></span></label>
+          <div>
+            <div style="font-weight:900">Premium partner</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:2px" id="edit-premium-desc">Loyalty + nagradna igra + VIP karta + posebne pogodnosti + Instagram kampanja</div>
+          </div>
+        </label>
+      </div>
       <label style="display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;cursor:pointer;padding:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius)">
         <label class="tog"><input type="checkbox" id="edit-booking"><span class="tog-s"></span></label>
         <div>
@@ -752,47 +804,255 @@ function renderChart(id, type, labels, datasets, extraOpts={}){
 }
 
 // ── Statistike ────────────────────────────────────────────────────
+let currentStatRange = 30;
+
+function setStatRange(days){
+  currentStatRange = days;
+  [7,30,90].forEach(d => {
+    const btn = document.getElementById('stat-range-'+d);
+    if(btn) btn.style.opacity = d===days ? '1' : '0.45';
+  });
+  loadStatsCharts();
+}
+
 async function loadStats(){
   const {data:s} = await sb.rpc('get_system_stats');
   if(!s) return;
+
+  const paidPct = s.total_partners ? Math.round((s.partners_paid||0)/s.total_partners*100) : 0;
+  const avgRev = s.partners_paid ? Math.round((s.revenue_month||0)/(s.partners_paid||1)) : 0;
+
   document.getElementById('stats-grid').innerHTML=`
-    <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,#d97706,#fbbf24)"></div><div class="stat-num" style="color:var(--gold)">${s.total_partners||0}</div><div class="stat-label">Ukupno partnera</div></div>
-    <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,#059669,#34d399)"></div><div class="stat-num" style="color:#6ee7b7">${s.premium_partners||0}</div><div class="stat-label">Premium partnera</div></div>
-    <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,#2563eb,#60a5fa)"></div><div class="stat-num" style="color:#93c5fd">${s.total_guests||0}</div><div class="stat-label">Gostiju</div></div>
-    <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div><div class="stat-num" style="color:#c4b5fd">${s.total_stamps||0}</div><div class="stat-label">Pečata</div></div>
-    <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,#ea580c,#fb923c)"></div><div class="stat-num" style="color:#fdba74">${s.total_bookings||0}</div><div class="stat-label">Rezervacija</div></div>
-    <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,#d97706,#fbbf24)"></div><div class="stat-num" style="color:var(--gold)">${fmtRsd(s.revenue_month)}</div><div class="stat-label">Prihod ovaj mesec</div></div>`;
+    <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,#d97706,#fbbf24)"></div>
+      <div class="stat-num" style="color:var(--gold)">${s.total_partners||0}</div>
+      <div class="stat-label">Ukupno partnera</div>
+      <div class="stat-delta" style="color:#6ee7b7">${s.premium_partners||0} premium</div></div>
+    <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,#059669,#34d399)"></div>
+      <div class="stat-num" style="color:#6ee7b7">${fmtRsd(s.revenue_month||0)}</div>
+      <div class="stat-label">Prihod ovaj mesec</div>
+      <div class="stat-delta" style="color:#6ee7b7">${paidPct}% naplaćeno</div></div>
+    <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,#2563eb,#60a5fa)"></div>
+      <div class="stat-num" style="color:#93c5fd">${s.total_guests||0}</div>
+      <div class="stat-label">Ukupno gostiju</div>
+      <div class="stat-delta" style="color:#93c5fd">+${s.guests_today||0} danas</div></div>
+    <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div>
+      <div class="stat-num" style="color:#c4b5fd">${s.total_stamps||0}</div>
+      <div class="stat-label">Skupljenih pečata</div>
+      <div class="stat-delta" style="color:#c4b5fd">${s.pending_rewards||0} nagrada čeka</div></div>
+    <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,#dc2626,#f87171)"></div>
+      <div class="stat-num" style="color:#fca5a5">${s.partners_pending||0}</div>
+      <div class="stat-label">Nisu platili</div>
+      <div class="stat-delta" style="color:#fca5a5">${fmtRsd(s.revenue_pending||0)}</div></div>
+    <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,#ea580c,#fb923c)"></div>
+      <div class="stat-num" style="color:#fdba74">${fmtRsd(avgRev)}</div>
+      <div class="stat-label">Prosek po partneru</div>
+      <div class="stat-delta" style="color:#fdba74">${s.total_bookings||0} rezervacija</div></div>`;
 
   const {data:byType} = await sb.from('partners').select('type').eq('is_active',true);
   const tc={};(byType||[]).forEach(p=>{tc[p.type]=(tc[p.type]||0)+1;});
   const te={apartment:'🏠',hotel:'🏨',restaurant:'🍽',attraction:'🎡',business:'🛍'};
   const tot=(byType||[]).length||1;
-  document.getElementById('type-bars').innerHTML = Object.entries(tc).map(([t,c])=>`
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-      <span style="font-size:14px;width:20px">${te[t]||'📍'}</span>
+  const typeColors={apartment:'#3b82f6',hotel:'#8b5cf6',restaurant:'#f97316',attraction:'#10b981',business:'#ec4899'};
+  document.getElementById('type-bars').innerHTML = Object.entries(tc).sort((a,b)=>b[1]-a[1]).map(([t,c])=>`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:11px">
+      <span style="font-size:15px;width:22px">${te[t]||'📍'}</span>
       <div style="flex:1">
-        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-bottom:4px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-bottom:5px">
           <span style="text-transform:capitalize;color:var(--muted)">${t}</span>
-          <span style="color:var(--gold)">${c} (${Math.round(c/tot*100)}%)</span>
+          <span style="color:${typeColors[t]||'var(--gold)'}">${c} (${Math.round(c/tot*100)}%)</span>
         </div>
-        <div style="height:6px;background:rgba(255,255,255,0.07);border-radius:999px;overflow:hidden">
-          <div style="height:100%;background:linear-gradient(90deg,#d97706,#fbbf24);border-radius:999px;width:${Math.round(c/tot*100)}%"></div>
+        <div style="height:5px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden">
+          <div style="height:100%;background:${typeColors[t]||'#fbbf24'};border-radius:999px;width:${Math.round(c/tot*100)}%;opacity:0.85"></div>
         </div>
       </div>
     </div>`).join('');
 
   const {data:clicks} = await sb.from('analytics_clicks')
     .select('partner_id, partners(name)')
-    .not('partner_id','is',null).limit(200);
+    .not('partner_id','is',null).limit(500);
   const clickMap={};
   (clicks||[]).forEach(c=>{
     const name=c.partners?.name||c.partner_id;
     clickMap[name]=(clickMap[name]||0)+1;
   });
-  const sorted=Object.entries(clickMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const sorted=Object.entries(clickMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
   renderChart('chart-activity','bar',sorted.map(x=>x[0]),
-    [{label:'Skeniranja',data:sorted.map(x=>x[1]),backgroundColor:'rgba(251,191,36,0.65)'}]
+    [{label:'Skeniranja',data:sorted.map(x=>x[1]),
+      backgroundColor:sorted.map((_,i)=>`hsla(${40+i*28},90%,${60-i*2}%,0.75)`),
+      borderRadius:6}],
+    {plugins:{legend:{display:false}},scales:{
+      x:{ticks:{color:'rgba(255,255,255,0.4)',font:{size:10}},grid:{display:false}},
+      y:{ticks:{color:'rgba(255,255,255,0.4)',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}}}}
   );
+
+  await loadStatsCharts();
+}
+
+async function loadStatsCharts(){
+  const days = currentStatRange;
+  const from = new Date(Date.now() - days*24*60*60*1000);
+  const fromStr = from.toISOString();
+
+  const labels = [];
+  const labelsFull = [];
+  for(let i=days-1;i>=0;i--){
+    const d = new Date(Date.now()-i*24*60*60*1000);
+    const short = d.toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit'});
+    const full = d.toISOString().split('T')[0];
+    labels.push(short);
+    labelsFull.push(full);
+  }
+
+  // Prihodi po danima (iz billing paid_at)
+  const {data:billData} = await sb.from('partner_billing')
+    .select('paid_at,amount_rsd,status')
+    .gte('paid_at', fromStr)
+    .eq('status','paid');
+
+  const revenueByDay = {};
+  const pendingByDay = {};
+  labelsFull.forEach(d=>{ revenueByDay[d]=0; pendingByDay[d]=0; });
+  (billData||[]).forEach(b=>{
+    if(!b.paid_at) return;
+    const d = b.paid_at.split('T')[0];
+    if(revenueByDay[d]!==undefined) revenueByDay[d]+=b.amount_rsd;
+  });
+
+  // Gosti po danima
+  const {data:guestData} = await sb.from('guests')
+    .select('created_at').gte('created_at', fromStr);
+  const guestsByDay = {};
+  labelsFull.forEach(d=>{ guestsByDay[d]=0; });
+  (guestData||[]).forEach(g=>{
+    const d = g.created_at?.split('T')[0];
+    if(d && guestsByDay[d]!==undefined) guestsByDay[d]++;
+  });
+
+  // Pečati po danima
+  const {data:stampData} = await sb.from('stamps')
+    .select('created_at').gte('created_at', fromStr);
+  const stampsByDay = {};
+  labelsFull.forEach(d=>{ stampsByDay[d]=0; });
+  (stampData||[]).forEach(s=>{
+    const d = s.created_at?.split('T')[0];
+    if(d && stampsByDay[d]!==undefined) stampsByDay[d]++;
+  });
+
+  const revArr = labelsFull.map(d=>revenueByDay[d]||0);
+  const guestArr = labelsFull.map(d=>guestsByDay[d]||0);
+  const stampArr = labelsFull.map(d=>stampsByDay[d]||0);
+
+  // Ukupni badges
+  const totalGuests = guestArr.reduce((a,b)=>a+b,0);
+  const totalStamps = stampArr.reduce((a,b)=>a+b,0);
+  const gBadge = document.getElementById('guests-total-badge');
+  const sBadge = document.getElementById('stamps-total-badge');
+  if(gBadge) gBadge.textContent = '+'+totalGuests+' za period';
+  if(sBadge) sBadge.textContent = totalStamps+' pečata';
+
+  // Glavni grafikon - prihodi combo
+  const pointRadius = days <= 14 ? 4 : days <= 30 ? 2 : 0;
+  renderChart('chart-revenue-stats','line',labels,[
+    {
+      label:'Naplaćeno (RSD)',
+      data:revArr,
+      borderColor:'#10b981',
+      backgroundColor:'rgba(16,185,129,0.08)',
+      borderWidth:2.5,
+      pointRadius,
+      pointHoverRadius:6,
+      pointBackgroundColor:'#10b981',
+      tension:0.4,
+      fill:true,
+      yAxisID:'yRev'
+    },
+    {
+      label:'Novi gosti',
+      data:guestArr,
+      borderColor:'#8b5cf6',
+      backgroundColor:'rgba(139,92,246,0.06)',
+      borderWidth:2,
+      pointRadius,
+      pointHoverRadius:5,
+      pointBackgroundColor:'#8b5cf6',
+      tension:0.4,
+      fill:true,
+      yAxisID:'yGuest'
+    }
+  ], {
+    interaction:{mode:'index',intersect:false},
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        backgroundColor:'rgba(13,24,41,0.95)',
+        titleColor:'rgba(255,255,255,0.9)',
+        bodyColor:'rgba(255,255,255,0.7)',
+        padding:12,
+        callbacks:{
+          label:function(ctx){
+            if(ctx.datasetIndex===0) return ' Naplaćeno: '+ctx.parsed.y.toLocaleString('sr-RS')+' RSD';
+            return ' Novi gosti: '+ctx.parsed.y;
+          }
+        }
+      }
+    },
+    scales:{
+      x:{
+        ticks:{color:'rgba(255,255,255,0.35)',font:{size:10},maxTicksLimit:days<=14?days:12},
+        grid:{color:'rgba(255,255,255,0.04)'},
+        border:{color:'rgba(255,255,255,0.08)'}
+      },
+      yRev:{
+        position:'left',
+        ticks:{color:'#10b981',font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v},
+        grid:{color:'rgba(255,255,255,0.05)'},
+        border:{color:'rgba(255,255,255,0.08)'}
+      },
+      yGuest:{
+        position:'right',
+        ticks:{color:'#8b5cf6',font:{size:10}},
+        grid:{display:false},
+        border:{color:'rgba(255,255,255,0.08)'}
+      }
+    }
+  });
+
+  // Gosti grafikon
+  renderChart('chart-guests-stats','line',labels,[{
+    label:'Gosti',
+    data:guestArr,
+    borderColor:'#8b5cf6',
+    backgroundColor:'rgba(139,92,246,0.12)',
+    borderWidth:2.5,
+    pointRadius:pointRadius,
+    pointHoverRadius:5,
+    pointBackgroundColor:'#8b5cf6',
+    tension:0.4,
+    fill:true
+  }],{
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'rgba(255,255,255,0.35)',font:{size:9},maxTicksLimit:8},grid:{color:'rgba(255,255,255,0.04)'}},
+      y:{ticks:{color:'rgba(255,255,255,0.35)',font:{size:9},precision:0},grid:{color:'rgba(255,255,255,0.05)'}}
+    }
+  });
+
+  // Pečati grafikon
+  renderChart('chart-stamps-stats','bar',labels,[{
+    label:'Pečati',
+    data:stampArr,
+    backgroundColor:'rgba(251,191,36,0.5)',
+    borderColor:'rgba(251,191,36,0.8)',
+    borderWidth:1,
+    borderRadius:4,
+    hoverBackgroundColor:'rgba(251,191,36,0.75)'
+  }],{
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'rgba(255,255,255,0.35)',font:{size:9},maxTicksLimit:8},grid:{display:false}},
+      y:{ticks:{color:'rgba(255,255,255,0.35)',font:{size:9},precision:0},grid:{color:'rgba(255,255,255,0.05)'}}
+    }
+  });
 }
 
 // ── Partneri ──────────────────────────────────────────────────────
@@ -819,7 +1079,7 @@ function renderPartners(list){
       <thead><tr>
         <th>Kod</th><th>Naziv</th><th>Tip</th><th>PIN</th>
         <th>Cena/mes</th><th>Plaćanje</th><th>Ističe</th>
-        <th>Aktivan</th><th>Premium partner</th><th>Akcije</th>
+        <th>Aktivan</th><th title="Samo za apartmane i hotele">Premium ⓘ</th><th>Akcije</th>
       </tr></thead>
       <tbody>${list.map(p=>`<tr>
         <td><span class="p-code">${esc(p.partner_code||'')}</span></td>
@@ -833,7 +1093,11 @@ function renderPartners(list){
         <td>${payBadge(p.payment_status)}</td>
         <td>${expiryBadge(p.subscription_expires)}<div style="font-size:9px;color:var(--muted);margin-top:3px">${fmtDate(p.subscription_expires)}</div></td>
         <td><label class="tog"><input type="checkbox" ${p.is_active?'checked':''} onchange="tog('${p.id}','is_active',this.checked)"><span class="tog-s"></span></label></td>
-        <td><label class="tog"><input type="checkbox" ${p.loyalty_enabled?'checked':''} onchange="togPremium('${p.id}',this.checked)"><span class="tog-s"></span></label></td>
+        <td>
+          ${(p.type==='apartment'||p.type==='hotel') ? `
+          <label class="tog"><input type="checkbox" ${p.is_premium?'checked':''} onchange="togPremium('${p.id}',this.checked)"><span class="tog-s"></span></label>
+          ` : `<span style="font-size:10px;color:var(--muted);font-weight:700">N/A</span>`}
+        </td>
         <td><div style="display:flex;gap:5px;flex-wrap:wrap">
           <button class="btn btn-ghost btn-sm" onclick="openEdit('${p.id}')">✏️ Edit</button>
           <button class="btn btn-blue btn-sm" onclick="regenToken('${p.id}')">🔄 URL</button>
@@ -843,7 +1107,15 @@ function renderPartners(list){
     </table>`;
 }
 
-async function tog(id,field,val){ await sb.from('partners').update({[field]:val}).eq('id',id); }
+async function tog(id,field,val){
+  await sb.from('partners').update({[field]:val}).eq('id',id);
+  loadPartners();
+}
+
+async function togPremium(id,val){
+  await sb.from('partners').update({is_premium:val, loyalty_enabled:val}).eq('id',id);
+  loadPartners();
+}
 
 async function regenToken(id){
   if(!confirm('Regenerisati URL? Stari link prestaje da radi.')) return;
@@ -875,6 +1147,21 @@ function openEdit(id){
   document.getElementById('edit-premium').checked=!!p.is_premium;
   document.getElementById('edit-booking').checked=!!p.has_booking;
   document.getElementById('edit-msg').textContent='';
+
+  // Prikaži Premium toggle samo za apartment i hotel
+  const premWrap = document.getElementById('edit-premium-wrap');
+  const premDesc = document.getElementById('edit-premium-desc');
+  if(p.type==='apartment' || p.type==='hotel'){
+    premWrap.style.display='block';
+    premDesc.textContent = p.type==='apartment'
+      ? 'Nagradna igra · VIP karta · Posebne pogodnosti · Room service · Instagram kampanja'
+      : 'Nagradna igra · VIP karta · Posebne pogodnosti · Room service · Instagram kampanja';
+  } else {
+    premWrap.style.display='none';
+    // Za atrakcije i biznise - uvek isključi premium
+    document.getElementById('edit-premium').checked=false;
+  }
+
   openModal('modal-edit');
 }
 
