@@ -307,6 +307,30 @@
         .city-btn-wa{flex:1;padding:10px;background:#10b981;color:white;border:none;border-radius:12px;font-size:11px;font-weight:900;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px}
         .city-empty{text-align:center;padding:32px 20px;color:#94a3b8;font-size:13px;font-weight:700}
 
+        /* Referral kartica */
+        .referral-card{position:relative;overflow:hidden;padding:18px;border-radius:2rem;
+            background:linear-gradient(135deg,#064e3b 0%,#065f46 40%,#047857 100%);
+            border:1px solid rgba(16,185,129,0.30);color:white;
+            box-shadow:0 14px 28px rgba(5,150,105,0.20);}
+        .referral-card::before{content:"";position:absolute;inset:0;
+            background:radial-gradient(circle at top right,rgba(52,211,153,0.18),transparent 30%);
+            pointer-events:none;}
+        .referral-shine{position:absolute;top:-8%;left:-120%;width:55%;height:128%;
+            transform:skewX(-24deg);
+            background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);
+            animation:sweepShine 6s ease-in-out infinite;pointer-events:none;}
+        .referral-code-box{background:rgba(0,0,0,0.25);border:1px solid rgba(52,211,153,0.30);
+            border-radius:12px;padding:10px 16px;margin:12px 0;
+            font-family:monospace;font-size:1.2rem;font-weight:900;
+            letter-spacing:0.18em;color:#6ee7b7;text-align:center;}
+        .referral-btn{width:100%;min-height:52px;border-radius:1.4rem;
+            background:linear-gradient(135deg,#10b981,#059669);color:white;
+            border:none;font-size:13px;font-weight:900;text-transform:uppercase;
+            letter-spacing:0.08em;cursor:pointer;font-family:inherit;
+            display:flex;align-items:center;justify-content:center;gap:8px;
+            box-shadow:0 8px 20px rgba(5,150,105,0.30);transition:transform 0.18s;}
+        .referral-btn:active{transform:scale(0.97);}
+
         /* Loyalty traka */
         .loyalty-bar{background:linear-gradient(135deg,#1e1b4b,#312e81);border:1px solid rgba(167,139,250,0.25);border-radius:1.5rem;padding:14px 16px;color:white;}
         .loyalty-progress{height:6px;background:rgba(255,255,255,0.10);border-radius:999px;margin-top:10px;overflow:hidden;}
@@ -542,6 +566,28 @@
                             </div>
                         </div>
                         <a id="wa-link" href="#" target="_blank" class="cta-link cta-green">💬 Pišite domaćinu / Host</a>
+
+                        <!-- Referral kartica - samo premium -->
+                        <div id="referral-card-wrap" class="hidden">
+                            <div class="referral-card">
+                                <div class="referral-shine"></div>
+                                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;position:relative;z-index:2">
+                                    <div style="width:44px;height:44px;border-radius:14px;background:rgba(52,211,153,0.20);border:1px solid rgba(52,211,153,0.30);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0">🎁</div>
+                                    <div>
+                                        <div style="font-size:14px;font-weight:900;letter-spacing:-0.02em">Pozovi prijatelja</div>
+                                        <div style="font-size:10px;color:rgba(255,255,255,0.60);font-weight:700;margin-top:1px">Obezbedi mu popust na direktnu rezervaciju</div>
+                                    </div>
+                                </div>
+                                <div style="position:relative;z-index:2;font-size:11px;color:rgba(255,255,255,0.70);font-weight:600;line-height:1.5;margin-bottom:4px">
+                                    Tvoj prijatelj dobija <strong id="referral-pct" style="color:#6ee7b7">10%</strong> popusta kada rezerviše direktno:
+                                </div>
+                                <div class="referral-code-box" id="referral-code-display">LOADING</div>
+                                <button class="referral-btn" onclick="shareReferral()">
+                                    🔗 Pošalji prijatelju
+                                </button>
+                            </div>
+                        </div>
+
                         <div id="shareCampaignBox" class="share-card fade-in hidden">
                             <div class="share-glow"></div><div class="share-shine"></div>
                             <div class="share-badge">🎁 Podeli i osvoji poklon</div>
@@ -617,6 +663,7 @@ let currentReelUrl = '';
 let currentGiftText = 'mali poklon';
 let shareCampaignActive = false;
 let deferredPrompt = null;
+let referralData = null;
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const isAndroid = /Android/i.test(navigator.userAgent);
 const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -731,7 +778,7 @@ async function loadPartnerData(){
 
     const { data: partner, error } = await sb
         .from('partners')
-        .select('id, name, type, phone, whatsapp, loyalty_enabled, is_premium')
+        .select('id, name, type, phone, whatsapp, loyalty_enabled, is_premium, referral_active, referral_code, referral_discount')
         .eq('partner_code', currentUnitId)
         .eq('is_active', true)
         .maybeSingle();
@@ -806,6 +853,9 @@ async function loadPartnerData(){
     if(!isPremiumApplicable){
         document.getElementById('shareCampaignBox')?.classList.add('hidden');
     }
+
+    // Referral kartica
+    loadReferral(partner, isPremiumApplicable);
 }
 
 async function loadHH(){
@@ -896,6 +946,58 @@ async function registerSW(){
 let cityCategories = [];
 let cityPartners = [];
 let cityContent = {};
+
+// ── Referral sistem ───────────────────────────────────────────────
+async function shareReferral(){
+    if(!referralData) return;
+
+    try{ await sb.from('referral_clicks').insert({
+        partner_id: referralData.partnerId,
+        referral_code: referralData.code
+    }); }catch(e){}
+
+    const partnerName = document.getElementById('unit-name')?.innerText || 'smeštaj';
+    const phone = ownerPhone.replace(/[^0-9+]/g,'');
+    const waUrl = phone ? 'https://wa.me/' + phone.replace('+','') : '';
+    const indexUrl = location.origin + location.pathname + '?id=' + encodeURIComponent(currentUnitId);
+
+    const msg = '🏨 Tvoj prijatelj ti je obezbedio ' + referralData.discount + '% popusta u Vrnjačkoj Banji!\n\n'
+        + 'Ostani u ' + partnerName + ' i uštedi na direktnoj rezervaciji.\n\n'
+        + '🎟️ Kod za popust: ' + referralData.code + '\n\n'
+        + 'Rezerviši direktno:\n'
+        + (ownerPhone ? '📞 ' + ownerPhone + '\n' : '')
+        + (waUrl ? '💬 ' + waUrl + '\n' : '')
+        + '\n🗺️ Otkrij Vrnjačku Banju: ' + indexUrl;
+
+    if(navigator.share){
+        try{ await navigator.share({ title: 'Popust u Vrnjačkoj Banji 🎁', text: msg }); }catch(e){}
+    } else {
+        try{ await navigator.clipboard.writeText(msg); }catch(e){}
+        const t = document.createElement('div');
+        t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:14px;font-size:12px;font-weight:900;z-index:9999;white-space:nowrap;background:rgba(16,185,129,0.95);color:white';
+        t.textContent = '✓ Kopirano! Zalepi u poruku prijatelju.';
+        document.body.appendChild(t);
+        setTimeout(()=>t.remove(), 3000);
+    }
+}
+
+function loadReferral(partner, isPremiumApplicable){
+    if(!isPremiumApplicable || !partner.referral_active || !partner.referral_code){
+        document.getElementById('referral-card-wrap')?.classList.add('hidden');
+        return;
+    }
+    referralData = {
+        partnerId: partner.id,
+        code: partner.referral_code,
+        discount: partner.referral_discount || 10
+    };
+    const wrap = document.getElementById('referral-card-wrap');
+    const codeEl = document.getElementById('referral-code-display');
+    const pctEl = document.getElementById('referral-pct');
+    if(wrap) wrap.classList.remove('hidden');
+    if(codeEl) codeEl.textContent = partner.referral_code;
+    if(pctEl) pctEl.textContent = (partner.referral_discount || 10) + '%';
+}
 
 async function loadCityInfo(){
     const {data:cats} = await sb.from('city_categories')
