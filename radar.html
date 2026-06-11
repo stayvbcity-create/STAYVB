@@ -249,6 +249,18 @@ async function init(){
     marker.addTo(map);
   });
 
+  // Highlight lokacije iz stamp.html (?highlight=LOC_CODE)
+  const highlightCode = new URLSearchParams(location.search).get('highlight');
+  if(highlightCode){
+    const target = allMarkers.find(m => m.data.location_code === highlightCode);
+    if(target){
+      map.setView([target.data.lat, target.data.lng], 17);
+      setTimeout(() => {
+        target.marker.fire('click');
+      }, 600);
+    }
+  }
+
   // Pokušaj geolokacija korisnika
   if(navigator.geolocation){
     navigator.geolocation.getCurrentPosition(pos => {
