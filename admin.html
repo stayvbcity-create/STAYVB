@@ -1057,7 +1057,8 @@ async function loadStatsCharts(){
 
 // ── Partneri ──────────────────────────────────────────────────────
 async function loadPartners(){
-  const {data} = await sb.from('partners').select('*').order('partner_code');
+  const {data, error} = await sb.from('partners').select('*').order('partner_code');
+  if(error){ console.error('loadPartners error:', error); return; }
   allPartners = data||[];
   renderPartners(allPartners);
 }
@@ -1108,13 +1109,21 @@ function renderPartners(list){
 }
 
 async function tog(id,field,val){
-  await sb.from('partners').update({[field]:val}).eq('id',id);
-  loadPartners();
+  const {error} = await sb.from('partners').update({[field]:val}).eq('id',id);
+  if(error){ console.error('tog error:', error); return; }
+  // Ažuriraj lokalno da ne reloadujemo celu tabelu
+  const p = allPartners.find(x=>x.id===id);
+  if(p) p[field] = val;
+  renderPartners(allPartners);
 }
 
 async function togPremium(id,val){
-  await sb.from('partners').update({is_premium:val, loyalty_enabled:val}).eq('id',id);
-  loadPartners();
+  const {error} = await sb.from('partners').update({is_premium:val, loyalty_enabled:val}).eq('id',id);
+  if(error){ console.error('togPremium error:', error); return; }
+  // Ažuriraj lokalno
+  const p = allPartners.find(x=>x.id===id);
+  if(p){ p.is_premium = val; p.loyalty_enabled = val; }
+  renderPartners(allPartners);
 }
 
 async function regenToken(id){
@@ -1188,7 +1197,10 @@ async function saveEdit(){
   else if(pin && pin.length!==4){ const m=document.getElementById('edit-msg'); m.textContent='⚠️ PIN mora biti tačno 4 cifre.'; m.className='form-msg err'; return; }
   await sb.from('partners').update(u).eq('id',id);
   const m=document.getElementById('edit-msg'); m.textContent='✓ Sačuvano!'; m.className='form-msg ok';
-  setTimeout(()=>{closeModal('modal-edit');loadPartners();},900);
+  setTimeout(async ()=>{
+    closeModal('modal-edit');
+    await loadPartners(); // Uvek reloaduj iz baze posle save-a
+  }, 700);
 }
 
 function openNewPartner(){
