@@ -845,42 +845,53 @@ async function registerSW(){
 // ── City Info ─────────────────────────────────────────────────────
 let cityCategories = [];
 let cityPartners = [];
+let cityContent = {};
 
 async function loadCityInfo(){
-    // Uzmi kategorije
+    // Kategorije
     const {data:cats} = await sb.from('city_categories')
-        .select('*').eq('is_active',true).order('sort_order');
+        .select('id,name,icon,color,sort_order')
+        .eq('is_active', true)
+        .order('sort_order');
     cityCategories = cats || [];
 
-    // Uzmi sve aktivne biznise u city info
+    // Partneri u city info — bez join-a
     const {data:partners} = await sb.from('partners')
-        .select('id, name, phone, whatsapp, city_category_id, partner_content(short_desc, working_hours, address)')
+        .select('id,name,phone,whatsapp,city_category_id')
         .eq('is_active', true)
-        .eq('show_in_city_info', true);
+        .eq('show_in_city_info', true)
+        .order('name');
     cityPartners = partners || [];
 
-    // Render grid
+    // Sadržaj za sve te partnere — poseban upit
+    if(cityPartners.length){
+        const ids = cityPartners.map(p => p.id);
+        const {data:pcs} = await sb.from('partner_content')
+            .select('partner_id,short_desc,working_hours,address')
+            .in('partner_id', ids);
+        cityContent = {};
+        (pcs||[]).forEach(pc => { cityContent[pc.partner_id] = pc; });
+    }
+
+    // Render grid chipova
     const grid = document.getElementById('city-categories-grid');
     if(!grid) return;
 
-    if(!cityCategories.length){
-        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:12px;font-size:11px;color:#94a3b8;font-weight:700">Nema dostupnih usluga</div>';
+    // Prikaži samo kategorije koje imaju bar jednog partnera
+    const activeCats = cityCategories.filter(cat =>
+        cityPartners.some(p => p.city_category_id === cat.id)
+    );
+
+    if(!activeCats.length){
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:14px;font-size:11px;color:#94a3b8;font-weight:700">Uskoro dostupno</div>`;
         return;
     }
 
-    grid.innerHTML = cityCategories.map(cat => {
-        const count = cityPartners.filter(p => p.city_category_id === cat.id).length;
-        if(!count) return '';
-        return `<button class="service-btn" onclick="openCityModal('${cat.id}')">
-            <span class="text-xl">${C.escapeHtml(cat.icon)}</span>
-            <span class="text-[9px] font-black uppercase" style="line-height:1.2">${C.escapeHtml(cat.name)}</span>
-        </button>`;
-    }).filter(Boolean).join('');
-
-    // Ako nema nijednog partnera — fallback poruka
-    if(!cityPartners.length){
-        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:12px;font-size:11px;color:#94a3b8;font-weight:700">Uskoro dostupno</div>';
-    }
+    grid.innerHTML = activeCats.map(cat => `
+        <button class="service-btn" onclick="openCityModal('${cat.id}')">
+            <span style="font-size:1.4rem;line-height:1">${C.escapeHtml(cat.icon)}</span>
+            <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.04em;line-height:1.2;text-align:center">${C.escapeHtml(cat.name)}</span>
+        </button>`).join('');
 }
 
 function openCityModal(catId){
@@ -890,36 +901,35 @@ function openCityModal(catId){
     document.getElementById('modal-cat-icon').textContent = cat.icon;
     document.getElementById('modal-cat-name').textContent = cat.name;
 
-    const partners = cityPartners.filter(p => p.city_category_id === catId);
     const list = document.getElementById('city-modal-list');
+    const partners = cityPartners.filter(p => p.city_category_id === catId);
 
     if(!partners.length){
-        list.innerHTML = '<div class="city-empty">Nema registrovanih biznisa u ovoj kategoriji.</div>';
+        list.innerHTML = '<div class="city-empty">Nema registrovanih biznisa.</div>';
     } else {
         list.innerHTML = partners.map(p => {
-            const pc = p.partner_content?.[0] || {};
-            const phone = p.phone || '';
-            const wa = p.whatsapp || '';
-            const desc = pc.short_desc || '';
-            const hours = pc.working_hours || '';
+            const pc = cityContent[p.id] || {};
+            const phone = (p.phone||'').replace(/\s/g,'');
+            const wa = (p.whatsapp||'').replace(/\D/g,'');
             return `<div class="city-biz-card">
                 <div class="city-biz-name">${C.escapeHtml(p.name)}</div>
-                ${desc ? `<div class="city-biz-desc">${C.escapeHtml(desc)}</div>` : ''}
-                ${hours ? `<div class="city-biz-meta"><span class="city-biz-hours">🕐 ${C.escapeHtml(hours)}</span></div>` : ''}
+                ${pc.short_desc ? `<div class="city-biz-desc">${C.escapeHtml(pc.short_desc)}</div>` : ''}
+                ${pc.working_hours ? `<div class="city-biz-meta"><span class="city-biz-hours">🕐 ${C.escapeHtml(pc.working_hours)}</span></div>` : ''}
+                ${pc.address ? `<div class="city-biz-meta"><span class="city-biz-hours">📍 ${C.escapeHtml(pc.address)}</span></div>` : ''}
                 <div class="city-biz-btns">
-                    ${phone ? `<a href="tel:${C.escapeHtml(phone)}" class="city-btn-call">📞 Pozovi</a>` : ''}
-                    ${wa ? `<a href="https://wa.me/${wa.replace(/\D/g,'')}" target="_blank" class="city-btn-wa">💬 WhatsApp</a>` : ''}
+                    ${phone ? `<a href="tel:${phone}" class="city-btn-call">📞 Pozovi</a>` : ''}
+                    ${wa ? `<a href="https://wa.me/${wa}" target="_blank" class="city-btn-wa">💬 WhatsApp</a>` : ''}
                 </div>
             </div>`;
         }).join('');
     }
 
-    const modal = document.getElementById('city-modal');
-    modal.style.display = 'flex';
+    document.getElementById('city-modal').style.display = 'flex';
 }
 
 function closeCityModal(){
     document.getElementById('city-modal').style.display = 'none';
+    document.getElementById('city-modal-list').innerHTML = '';
 }
 
 // ── Boot ──────────────────────────────────────────────────────────
