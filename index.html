@@ -719,6 +719,8 @@ async function loadPartnerData(){
         .eq('is_active', true)
         .maybeSingle();
 
+    if(partner) console.log('Partner:', partner.name, 'type:', partner.type, 'is_premium:', partner.is_premium, 'loyalty_enabled:', partner.loyalty_enabled);
+
     if(error || !partner){
         document.getElementById('unit-name').innerText = currentUnitId || 'StayVB';
         document.getElementById('stay-zone-unit-name').innerText = currentUnitId || 'StayVB';
@@ -761,7 +763,9 @@ async function loadPartnerData(){
     }
 
     // Premium se primenjuje SAMO za apartment i hotel
-    const isPremiumApplicable = (partner.type === 'apartment' || partner.type === 'hotel') && partner.is_premium;
+    // Proveravamo is_premium ILI loyalty_enabled (admin moze podesiti ili jedno ili drugo)
+    const isPremiumApplicable = (partner.type === 'apartment' || partner.type === 'hotel') 
+        && (partner.is_premium === true || partner.loyalty_enabled === true);
 
     // Loyalty traka i nagradna igra
     await loadLoyalty(isPremiumApplicable);
