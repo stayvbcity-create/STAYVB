@@ -27,19 +27,23 @@
             }, 'google_translate_element');
 
             // Čekaj GT widget i primeni sačuvani jezik
-            // Ne primenjuj GT ako je reload sa srpskog (_sr parametar)
             var saved = localStorage.getItem('stayvb_lang') || '';
-            var isSrReload = location.search.indexOf('_sr=') > -1;
-            if(saved && saved !== '' && !isSrReload) _gtApply(saved);
+            if(saved && saved !== '') {
+                _gtApply(saved);
+            } else {
+                // Srpski — eksplicitno postavi GT na originalni jezik
+                _gtApply('');
+            }
         }
 
         // Primeni jezik kroz GT select element
+        // code = '' znači originalni jezik (srpski)
         function _gtApply(code) {
             var attempts = 0;
             var iv = setInterval(function(){
                 var sel = document.querySelector('.goog-te-combo');
                 if(sel) {
-                    sel.value = code || 'sr';
+                    sel.value = code; // '' = original, 'en','de'... = prevod
                     sel.dispatchEvent(new Event('change', {bubbles:true}));
                     clearInterval(iv);
                 }
@@ -100,19 +104,14 @@
                 if(langCode && langCode !== '') {
                     _gtApply(langCode);
                 } else {
-                    // Srpski — jedino pouzdano: reload na čist URL
-                    // GT keširа prevod i ne može se poništiti bez novog load-a
+                    // Srpski — ista logika kao ostali jezici, samo bez GT
                     localStorage.setItem('stayvb_lang', '');
                     updateLangPills('');
-
-                    // Uzmi čist URL bez ikakvih GT parametara
-                    var baseUrl = location.pathname + location.search;
-                    // Dodaj timestamp da spречимо keširanje
-                    var sep = location.search ? '&' : '?';
-                    var cleanUrl = baseUrl + sep + '_sr=' + Date.now();
-
-                    // location.replace ne dodaje u history (back dugme radi normalno)
-                    window.location.replace(cleanUrl);
+                    var ld = document.getElementById('loader');
+                    if(ld) ld.style.display = 'flex';
+                    var cont = document.getElementById('content');
+                    if(cont) cont.style.display = 'none';
+                    setTimeout(function(){ window.location.reload(); }, 150);
                 }
             }
         }
@@ -972,9 +971,8 @@ async function startApp(lang){
     const ls = document.getElementById('lang-screen');
     if(ls) ls.style.display = 'none';
 
-    // Primeni prevod samo ako nije srpski i nije srpski reload
-    var isSrReload = location.search.indexOf('_sr=') > -1;
-    if(lang && lang !== '' && !isSrReload) _gtApply(lang);
+    // Uvek primeni GT (i za '' = srpski original)
+    _gtApply(lang || '');
 
     // Prikaži loader, sakrij content dok se učitava
     document.getElementById('loader').style.display = 'flex';
