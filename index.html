@@ -98,18 +98,43 @@
                 if(langCode && langCode !== '') {
                     _gtApply(langCode);
                 } else {
-                    // Srpski — brišemo jezik i reload
-                    // Prazno ('') znači srpski originalni
+                    // Srpski — koristi GT restore originalnog teksta
                     localStorage.setItem('stayvb_lang', '');
-                    // Brišemo i GT cookie da GT ne primeni prethodni jezik
-                    document.cookie = 'googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
-                    document.cookie = 'googtrans=; path=/; domain=' + location.hostname + '; expires=Thu, 01 Jan 1970 00:00:00 UTC';
                     updateLangPills('');
-                    var ld = document.getElementById('loader');
-                    if(ld) ld.style.display = 'flex';
-                    var cont = document.getElementById('content');
-                    if(cont) cont.style.opacity = '0.3';
-                    setTimeout(function(){ window.location.reload(); }, 150);
+
+                    // Pokušaj 1: GT doGTranslate('sr|sr') resetuje na original
+                    if(typeof google !== 'undefined' && google.translate && google.translate.TranslateElement) {
+                        try {
+                            new google.translate.TranslateElement({pageLanguage:'sr'}, 'google_translate_element');
+                        } catch(e){}
+                    }
+
+                    // Pokušaj 2: Direktno kroz select - prazan string = original
+                    var sel = document.querySelector('.goog-te-combo');
+                    if(sel) {
+                        sel.value = '';
+                        sel.dispatchEvent(new Event('change', {bubbles:true}));
+                        return; // ne trebamo reload ako je ovo radilo
+                    }
+
+                    // Pokušaj 3: GT restore link u banner-u
+                    var restoreEl = document.querySelector('.goog-te-gadget');
+                    if(restoreEl) {
+                        var links = restoreEl.querySelectorAll('a');
+                        links.forEach(function(a){ if(a.href && a.href.indexOf('restore') > -1) a.click(); });
+                    }
+
+                    // Fallback: reload sa ?notranslate=1 da sprecimo auto-prevod
+                    var url = location.href.split('?')[0];
+                    var params = new URLSearchParams(location.search);
+                    params.delete('googtrans');
+                    var newUrl = url + (params.toString() ? '?' + params.toString() : '');
+                    // Brišemo SVE GT cookies
+                    document.cookie = 'googtrans=/sr/sr; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+                    document.cookie = 'googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+                    document.cookie = 'googtrans=; path=/; domain=.' + location.hostname + '; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+                    document.cookie = 'googtrans=; path=/; domain=' + location.hostname + '; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+                    setTimeout(function(){ window.location.replace(newUrl); }, 100);
                 }
             }
         }
