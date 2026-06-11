@@ -3,251 +3,428 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>StayVB — Pečat</title>
+<title>StayVB — Pečati</title>
 <link rel="manifest" href="./manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0f172a">
 <link rel="apple-touch-icon" href="icon192.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
-<script src="lang-init.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
 *{box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:linear-gradient(145deg,#0f172a 0%,#1e293b 100%);color:white;min-height:100vh;margin:0}
-.app{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px}
-#google_translate_element{display:none!important}
-.goog-te-banner-frame,.skiptranslate{display:none!important}
-body{top:0!important}
-body.translated-ltr,body.translated-rtl{margin-top:0!important}
+body{font-family:'Inter',sans-serif;background:linear-gradient(145deg,#0f172a 0%,#1a2540 100%);color:white;min-height:100vh;margin:0}
+.app{max-width:430px;margin:0 auto;min-height:100vh;padding:24px 20px 40px}
 
 /* Stamp grid */
-.stamps-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;width:100%;max-width:320px;margin:0 auto}
-.stamp-cell{aspect-ratio:1;border-radius:16px;border:2px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;font-size:1.4rem;position:relative;transition:all 0.3s ease}
-.stamp-cell.filled{border-color:rgba(251,191,36,0.50);background:rgba(251,191,36,0.12)}
+.stamps-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;width:100%;max-width:320px;margin:0 auto}
+.stamp-cell{aspect-ratio:1;border-radius:14px;border:1.5px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;font-size:1.3rem;transition:all 0.3s ease;position:relative}
+.stamp-cell.filled{border-color:rgba(251,191,36,0.45);background:rgba(251,191,36,0.10)}
 .stamp-cell.new-stamp{animation:stampPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards}
-@keyframes stampPop{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+@keyframes stampPop{0%{transform:scale(0);opacity:0}60%{transform:scale(1.25)}100%{transform:scale(1);opacity:1}}
 
-/* State screens */
-.state-screen{text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;width:100%}
-.state-icon{font-size:4rem;line-height:1}
-.state-title{font-size:1.4rem;font-weight:900;letter-spacing:-0.03em}
-.state-sub{font-size:13px;color:rgba(255,255,255,0.6);font-weight:600;line-height:1.5;max-width:280px}
+/* Cards */
+.card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);border-radius:1.5rem;padding:20px}
+.gold-card{background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid rgba(251,191,36,0.25);border-radius:2rem;padding:22px 20px}
 
-/* Gold card */
-.gold-card{background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid rgba(251,191,36,0.30);border-radius:2rem;padding:24px 20px;width:100%;box-shadow:0 20px 40px rgba(0,0,0,0.4)}
-.gold-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(251,191,36,0.3),transparent);margin:16px 0}
-
-/* Progress bar */
+/* Progress */
 .progress-track{height:8px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden;width:100%}
 .progress-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#f59e0b,#fbbf24);transition:width 0.6s ease}
+
+/* Location item */
+.loc-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);margin-bottom:8px}
+.loc-icon{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.loc-icon.earned{background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.30)}
+.loc-icon.empty{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08)}
+.loc-name{font-size:13px;font-weight:800;color:white;flex:1}
+.loc-date{font-size:10px;color:rgba(255,255,255,0.40);margin-top:2px}
+.loc-badge{font-size:9px;font-weight:900;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.lb-earned{background:rgba(16,185,129,0.15);color:#6ee7b7;border:1px solid rgba(16,185,129,0.25)}
+.lb-missing{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.30)}
 
 /* Buttons */
 .btn-gold{width:100%;padding:16px;background:linear-gradient(135deg,#d97706,#f59e0b);color:#0f172a;border:none;border-radius:1.2rem;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;cursor:pointer;font-family:inherit;transition:transform 0.18s;box-shadow:0 10px 24px rgba(245,158,11,0.30)}
 .btn-gold:active{transform:scale(0.97)}
-.btn-ghost{width:100%;padding:14px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.10);border-radius:1.2rem;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:all 0.18s;text-transform:uppercase;letter-spacing:0.08em}
-.btn-ghost:active{background:rgba(255,255,255,0.10)}
+.btn-scan{width:100%;padding:16px;background:linear-gradient(135deg,#7c3aed,#8b5cf6);color:white;border:none;border-radius:1.2rem;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;cursor:pointer;font-family:inherit;transition:transform 0.18s;box-shadow:0 10px 24px rgba(139,92,246,0.30);display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-scan:active{transform:scale(0.97)}
+.btn-ghost{width:100%;padding:14px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.10);border-radius:1.2rem;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:0.08em}
 
-/* Reward form */
-.form-input{width:100%;padding:14px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:14px;color:white;font-size:14px;font-weight:700;font-family:inherit;outline:none}
-.form-input::placeholder{color:rgba(255,255,255,0.3)}
-.form-input:focus{border-color:rgba(251,191,36,0.40);background:rgba(255,255,255,0.08)}
-.form-label{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.45);margin-bottom:6px;display:block}
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.10);margin-bottom:20px}
+.tab-btn{flex:1;padding:12px 8px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;color:rgba(255,255,255,0.40);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.18s;text-align:center}
+.tab-btn.active{color:#fbbf24;border-bottom-color:#fbbf24}
+.tab-content{display:none}.tab-content.active{display:block}
 
-/* Location name badge */
-.loc-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.8)}
-.loc-dot{width:7px;height:7px;border-radius:50%;background:#10b981;animation:pulse 1.4s infinite}
-@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:0.7}}
+/* Scanner modal */
+#scanner-modal{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.95);flex-direction:column;align-items:center;justify-content:center;padding:20px}
+#scanner-modal.open{display:flex}
+#scanner-video{width:100%;max-width:320px;border-radius:1.5rem;border:2px solid rgba(251,191,36,0.40)}
+.scanner-frame{position:relative;width:100%;max-width:320px}
+.scanner-corners{position:absolute;inset:0;pointer-events:none}
+.sc{position:absolute;width:24px;height:24px;border-color:var(--gold,#fbbf24);border-style:solid}
+.sc-tl{top:8px;left:8px;border-width:3px 0 0 3px;border-radius:4px 0 0 0}
+.sc-tr{top:8px;right:8px;border-width:3px 3px 0 0;border-radius:0 4px 0 0}
+.sc-bl{bottom:8px;left:8px;border-width:0 0 3px 3px;border-radius:0 0 0 4px}
+.sc-br{bottom:8px;right:8px;border-width:0 3px 3px 0;border-radius:0 0 4px 0}
+.scanner-line{position:absolute;left:10%;right:10%;height:2px;background:rgba(251,191,36,0.7);animation:scanLine 2s ease-in-out infinite;box-shadow:0 0 8px rgba(251,191,36,0.8)}
+@keyframes scanLine{0%{top:10%}100%{top:90%}}
+#scanner-result{margin-top:16px;padding:12px 20px;border-radius:12px;background:rgba(255,255,255,0.08);font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);text-align:center;min-height:42px;display:flex;align-items:center;justify-content:center}
+
+/* Form */
+.form-input{width:100%;padding:13px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:14px;color:white;font-size:14px;font-weight:700;font-family:inherit;outline:none;margin-bottom:10px}
+.form-input::placeholder{color:rgba(255,255,255,0.25)}
+.form-input:focus{border-color:rgba(251,191,36,0.40)}
+.form-label{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.40);margin-bottom:6px;display:block}
+
+/* Badge */
+.loc-badge-top{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.7)}
+.dot-pulse{width:7px;height:7px;border-radius:50%;background:#10b981;animation:dotPulse 1.4s infinite;flex-shrink:0}
+@keyframes dotPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:0.7}}
+
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);margin:16px 0}
+.msg{font-size:11px;font-weight:800;min-height:16px;text-align:center;margin-top:8px;color:#6ee7b7}
+.msg.err{color:#f87171}
 </style>
 </head>
 <body>
-<div id="google_translate_element" style="display:none"></div>
-
 <div class="app">
-  <div id="screen" class="w-full flex flex-col items-center gap-5">
-    <!-- Dinamički sadržaj -->
-    <div class="state-screen">
-      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-400"></div>
-      <p style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.16em">Učitavanje...</p>
+  <div id="main-screen"></div>
+</div>
+
+<!-- Scanner Modal -->
+<div id="scanner-modal">
+  <div style="width:100%;max-width:360px;text-align:center">
+    <p style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.16em;color:rgba(255,255,255,0.5);margin-bottom:16px">Usmeri kameru na QR kod lokacije</p>
+    <div class="scanner-frame">
+      <video id="scanner-video" playsinline autoplay muted></video>
+      <div class="scanner-corners">
+        <div class="sc sc-tl"></div><div class="sc sc-tr"></div>
+        <div class="sc sc-bl"></div><div class="sc sc-br"></div>
+        <div class="scanner-line"></div>
+      </div>
     </div>
+    <div id="scanner-result">Čekam QR kod...</div>
+    <button onclick="closeScanner()" class="btn-ghost" style="margin-top:14px">✕ Zatvori</button>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>
 const sb = C.db();
 const params = new URLSearchParams(location.search);
-const LOCATION_CODE = params.get('code') || '';
-const LANG = localStorage.getItem('stayvb_lang') || 'sr';
+const LOCATION_CODE = (params.get('code') || '').toUpperCase();
 const GOAL = C.LOYALTY_GOAL;
+let scannerStream = null;
+let scannerActive = false;
+let scanCanvas, scanCtx;
 
-// i18n mini
-const T = {
-  sr:{ new_stamp:'Novi pečat!', already:'Već imaš pečat ovde', progress:'pečata od', goal_title:'Čestitamo!', goal_sub:'Skupio/la si 10 pečata! Unesi kontakt da preuzmeš nagradu.', claim_btn:'Preuzmi nagradu 🎁', name_ph:'Tvoje ime', phone_ph:'Broj telefona', send_btn:'Pošalji zahtev', sent_title:'Zahtev poslat!', sent_sub:'Kontaktiraćemo te uskoro sa nagradom.', err_code:'Nevažeći QR kod. Kontaktiraj osoblje.', err_db:'Greška. Pokušaj ponovo.', back:'← Nazad', location_label:'Lokacija', stamp_label:'Pečat', collecting:'Skupljaj pečate po Vrnjačkoj Banji' },
-  en:{ new_stamp:'New stamp!', already:"You've already stamped here", progress:'stamps out of', goal_title:'Congratulations!', goal_sub:"You've collected 10 stamps! Enter your contact to claim your reward.", claim_btn:'Claim reward 🎁', name_ph:'Your name', phone_ph:'Phone number', send_btn:'Send request', sent_title:'Request sent!', sent_sub:"We'll contact you soon with your reward.", err_code:'Invalid QR code. Contact staff.', err_db:'Error. Please try again.', back:'← Back', location_label:'Location', stamp_label:'Stamp', collecting:'Collect stamps across Vrnjačka Banja' },
-  de:{ new_stamp:'Neuer Stempel!', already:'Hier bereits gestempelt', progress:'Stempel von', goal_title:'Glückwunsch!', goal_sub:'Du hast 10 Stempel gesammelt! Gib deine Kontaktdaten ein.', claim_btn:'Preis abholen 🎁', name_ph:'Dein Name', phone_ph:'Telefonnummer', send_btn:'Anfrage senden', sent_title:'Anfrage gesendet!', sent_sub:'Wir melden uns bald.', err_code:'Ungültiger QR-Code.', err_db:'Fehler. Bitte nochmals versuchen.', back:'← Zurück', location_label:'Standort', stamp_label:'Stempel', collecting:'Sammle Stempel in Vrnjačka Banja' },
-  ru:{ new_stamp:'Новый штамп!', already:'Штамп здесь уже получен', progress:'штампов из', goal_title:'Поздравляем!', goal_sub:'Вы собрали 10 штампов! Введите контакт для получения приза.', claim_btn:'Получить приз 🎁', name_ph:'Ваше имя', phone_ph:'Номер телефона', send_btn:'Отправить заявку', sent_title:'Заявка отправлена!', sent_sub:'Мы свяжемся с вами.', err_code:'Неверный QR-код.', err_db:'Ошибка. Попробуйте снова.', back:'← Назад', location_label:'Локация', stamp_label:'Штамп', collecting:'Собирайте штампы по всей Врняцкой Бане' },
-  bg:{ new_stamp:'Нов печат!', already:'Вече имаш печат тук', progress:'печата от', goal_title:'Честито!', goal_sub:'Събра 10 печата! Въведи контакт за наградата.', claim_btn:'Вземи наградата 🎁', name_ph:'Твоето име', phone_ph:'Телефонен номер', send_btn:'Изпрати заявка', sent_title:'Заявката е изпратена!', sent_sub:'Ще се свържем с теб скоро.', err_code:'Невалиден QR код.', err_db:'Грешка. Опитай отново.', back:'← Назад', location_label:'Локация', stamp_label:'Печат', collecting:'Събирай печати из Враячка Баня' },
-  'zh-CN':{ new_stamp:'新印章！', already:'已在此处盖章', progress:'个印章，共', goal_title:'恭喜！', goal_sub:'您已集满10个印章！请输入联系方式领取奖励。', claim_btn:'领取奖励 🎁', name_ph:'您的姓名', phone_ph:'电话号码', send_btn:'发送申请', sent_title:'申请已发送！', sent_sub:'我们将很快联系您。', err_code:'无效的二维码。', err_db:'错误，请重试。', back:'← 返回', location_label:'地点', stamp_label:'印章', collecting:'在弗尔尼亚奇卡温泉城集章' }
-};
-function t(k){ return (T[LANG]||T['sr'])[k]||k; }
+// ── Helpers ──────────────────────────────────────────────────────
+function esc(v){ return C.escapeHtml(v); }
+function fmtDate(d){ return d ? new Date(d).toLocaleDateString('sr-RS') : ''; }
 
-function showError(msg){
-  document.getElementById('screen').innerHTML = `
-    <div class="state-screen">
-      <div class="state-icon">❌</div>
-      <h2 class="state-title">${C.escapeHtml(msg)}</h2>
-      <a href="index.html" style="margin-top:8px;font-size:12px;font-weight:800;color:rgba(255,255,255,0.5);text-decoration:none">${t('back')}</a>
-    </div>`;
-}
-
-function renderStamps(count, newOne){
-  const cells = [];
+// ── Render grid ──────────────────────────────────────────────────
+function renderGrid(count, isNew){
+  let html = '';
   for(let i=0;i<GOAL;i++){
     const filled = i < count;
-    const isNew  = filled && i === count-1 && newOne;
-    cells.push(`<div class="stamp-cell ${filled?'filled':''} ${isNew?'new-stamp':''}">${filled?'⭐':''}</div>`);
+    const isNewCell = filled && i === count-1 && isNew;
+    html += `<div class="stamp-cell ${filled?'filled':''} ${isNewCell?'new-stamp':''}">${filled?'⭐':''}</div>`;
   }
-  return cells.join('');
+  return html;
 }
 
-function showStampScreen(locationName, count, isNew, isDuplicate){
-  const pct = Math.round((count/GOAL)*100);
-  document.getElementById('screen').innerHTML = `
-    <div class="state-screen">
-      ${isDuplicate
-        ? `<div class="state-icon">✅</div><h2 class="state-title">${t('already')}</h2>`
-        : `<div class="state-icon" style="animation:stampPop 0.5s ease">${isNew?'🌟':'⭐'}</div>
-           <h2 class="state-title" style="color:#fbbf24">${isNew?t('new_stamp'):t('stamp_label')}</h2>`
+// ── Glavni ekran ─────────────────────────────────────────────────
+async function renderMain(){
+  const token = C.getOrCreateGuestToken();
+
+  // Uzmi gosta
+  let guest = null;
+  const {data:g} = await sb.from('guests').select('id,stamp_count,reward_status').eq('token',token).maybeSingle();
+  guest = g;
+
+  const count = guest?.stamp_count || 0;
+  const pct = Math.min(Math.round(count/GOAL*100),100);
+
+  // Uzmi sve stamp lokacije (aktivne)
+  const {data:allLocs} = await sb.from('stamp_locations').select('id,name,type,location_code').eq('is_active',true).order('sort_order').order('name');
+
+  // Uzmi pečate gosta
+  let earnedLocIds = [];
+  let stampDates = {};
+  if(guest?.id){
+    const {data:stamps} = await sb.from('stamps').select('location_id,created_at').eq('guest_id',guest.id);
+    earnedLocIds = (stamps||[]).map(s=>s.location_id);
+    (stamps||[]).forEach(s=>{ stampDates[s.location_id] = s.created_at; });
+  }
+
+  const screen = document.getElementById('main-screen');
+  screen.innerHTML = `
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:20px">
+      <img src="icon192.png" style="width:56px;height:56px;border-radius:16px;border:1px solid rgba(251,191,36,0.30);margin-bottom:12px">
+      <h1 style="font-size:1.5rem;font-weight:900;color:#fbbf24;letter-spacing:-0.03em;margin:0 0 4px">Loyalty Pečati</h1>
+      <p style="font-size:11px;color:rgba(255,255,255,0.45);font-weight:700;text-transform:uppercase;letter-spacing:0.14em">Vrnjačka Banja</p>
+    </div>
+
+    <!-- Progress card -->
+    <div class="gold-card" style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.45)">Tvoji pečati</span>
+        <span style="font-size:1.1rem;font-weight:900;color:#fbbf24">${count}/${GOAL}</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div style="margin-top:14px">${renderGrid(count, false)}</div>
+      ${count >= GOAL ? `<div style="margin-top:14px;padding:12px;background:rgba(251,191,36,0.10);border:1px solid rgba(251,191,36,0.25);border-radius:12px;text-align:center;font-size:12px;font-weight:800;color:#fbbf24">🎁 Skupio/la si sve pečate! Popuni formu ispod.</div>` : ''}
+    </div>
+
+    <!-- Scan dugme -->
+    <button class="btn-scan" onclick="openScanner()" style="margin-bottom:12px">
+      📷 Skeniraj QR kod lokacije
+    </button>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('lokacije',this)">Lokacije (${(allLocs||[]).length})</button>
+      <button class="tab-btn" onclick="switchTab('nagrada',this)">Nagrada</button>
+    </div>
+
+    <!-- Tab: Lokacije -->
+    <div id="tab-lokacije" class="tab-content active">
+      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.35);margin-bottom:12px">
+        ${earnedLocIds.length} od ${(allLocs||[]).length} skupljeno
+      </p>
+      ${(allLocs||[]).map(loc => {
+        const earned = earnedLocIds.includes(loc.id);
+        const date = stampDates[loc.id];
+        const isPartner = loc.type === 'partner';
+        return `<div class="loc-item">
+          <div class="loc-icon ${earned?'earned':'empty'}">${earned?'⭐':isPartner?'🏢':'📍'}</div>
+          <div style="flex:1;min-width:0">
+            <div class="loc-name">${esc(loc.name)}</div>
+            ${earned&&date?`<div class="loc-date">Skupljeno ${fmtDate(date)}</div>`:''}
+          </div>
+          <span class="loc-badge ${earned?'lb-earned':'lb-missing'}">${earned?'✓ Skupljeno':'Nije još'}</span>
+        </div>`;
+      }).join('') || '<p style="font-size:12px;color:rgba(255,255,255,0.35);font-weight:700;text-align:center;padding:20px">Nema aktivnih lokacija.</p>'}
+    </div>
+
+    <!-- Tab: Nagrada -->
+    <div id="tab-nagrada" class="tab-content">
+      ${count >= GOAL
+        ? `<div class="card" style="text-align:center;margin-bottom:14px">
+            <div style="font-size:2.5rem;margin-bottom:10px">🎁</div>
+            <h3 style="font-size:1.1rem;font-weight:900;color:#fbbf24;margin:0 0 6px">Čestitamo!</h3>
+            <p style="font-size:12px;color:rgba(255,255,255,0.6);font-weight:600;margin:0">Skupio/la si ${GOAL} pečata! Unesi kontakt da preuzmeš nagradu.</p>
+          </div>
+          <div id="reward-form">
+            <label class="form-label">Tvoje ime</label>
+            <input class="form-input" id="r-name" type="text" placeholder="Ime i prezime">
+            <label class="form-label">Telefon</label>
+            <input class="form-input" id="r-phone" type="tel" placeholder="+381...">
+            <button class="btn-gold" onclick="submitReward()">🎁 Pošalji zahtev</button>
+            <p class="msg" id="reward-msg"></p>
+          </div>`
+        : `<div style="text-align:center;padding:32px 20px">
+            <div style="font-size:3rem;margin-bottom:14px">⭐</div>
+            <p style="font-size:14px;font-weight:900;color:#fbbf24;margin:0 0 8px">Još ${GOAL-count} pečata do nagrade!</p>
+            <p style="font-size:12px;color:rgba(255,255,255,0.5);font-weight:600;line-height:1.6;margin:0">Poseti lokacije sa radar mape i skeniraj QR kod na svakom mestu da skupiš pečat.</p>
+          </div>`
       }
+    </div>
 
-      <div class="loc-badge"><span class="loc-dot"></span>${C.escapeHtml(locationName)}</div>
-
-      <div class="gold-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-          <span style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.45)">${t('collecting')}</span>
-          <span style="font-size:13px;font-weight:900;color:#fbbf24">${count}/${GOAL}</span>
-        </div>
-        <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
-        <div class="gold-divider"></div>
-        <div class="stamps-grid">${renderStamps(count, isNew && !isDuplicate)}</div>
-        ${count >= GOAL && !document.getElementById('reward-form')
-          ? `<div class="gold-divider"></div>
-             <button class="btn-gold" onclick="showRewardForm()">${t('claim_btn')}</button>`
-          : ''}
-      </div>
-
-      <a href="index.html?lang=${LANG}" style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.35);text-decoration:none;margin-top:4px">${t('back')}</a>
+    <div style="margin-top:20px;text-align:center">
+      <a href="index.html" style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.30);text-decoration:none;text-transform:uppercase;letter-spacing:0.10em">← Nazad na vodič</a>
     </div>`;
 }
 
-function showRewardForm(){
-  const formHtml = `
-    <div class="gold-divider"></div>
-    <div id="reward-form" style="display:flex;flex-direction:column;gap:12px;text-align:left">
-      <h3 style="font-size:14px;font-weight:900;color:#fbbf24;text-align:center;margin:0">${t('goal_title')}</h3>
-      <p style="font-size:12px;color:rgba(255,255,255,0.6);text-align:center;margin:0">${t('goal_sub')}</p>
-      <div>
-        <label class="form-label">${t('name_ph')}</label>
-        <input id="r-name" class="form-input" type="text" placeholder="${t('name_ph')}">
-      </div>
-      <div>
-        <label class="form-label">${t('phone_ph')}</label>
-        <input id="r-phone" class="form-input" type="tel" placeholder="${t('phone_ph')}">
-      </div>
-      <button class="btn-gold" onclick="submitReward()">${t('send_btn')}</button>
-    </div>`;
-
-  const card = document.querySelector('.gold-card');
-  if(card) card.insertAdjacentHTML('beforeend', formHtml);
+// ── Tab switch ────────────────────────────────────────────────────
+function switchTab(id, btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('tab-'+id)?.classList.add('active');
 }
 
-async function submitReward(){
-  const name  = (document.getElementById('r-name')?.value||'').trim();
-  const phone = (document.getElementById('r-phone')?.value||'').trim();
-  if(!name||!phone){ alert('Popuni sva polja.'); return; }
-
+// ── QR stamp (kod URL-a) ──────────────────────────────────────────
+async function processCode(code){
+  if(!code) return {ok:false, msg:'Nevažeći QR kod.'};
   const token = C.getOrCreateGuestToken();
-  const { error } = await sb.from('guests')
-    .update({ reward_status:'pending', reward_phone:phone, reward_claimed:true })
-    .eq('token', token);
 
-  if(error){ alert(t('err_db')); return; }
-
-  document.getElementById('screen').innerHTML = `
-    <div class="state-screen">
-      <div class="state-icon">🎁</div>
-      <h2 class="state-title" style="color:#fbbf24">${t('sent_title')}</h2>
-      <p class="state-sub">${t('sent_sub')}</p>
-      <a href="index.html?lang=${LANG}" class="btn-ghost" style="max-width:260px;display:inline-block;text-align:center;text-decoration:none;padding:14px">${t('back')}</a>
-    </div>`;
-}
-
-async function init(){
-  if(!LOCATION_CODE){ showError(t('err_code')); return; }
-
-  // 1. Nađi stamp lokaciju po kodu
-  const { data:loc } = await sb
-    .from('stamp_locations')
-    .select('id, name, type, partner_id, is_active')
-    .eq('location_code', LOCATION_CODE)
+  // Nađi lokaciju
+  const {data:loc} = await sb.from('stamp_locations')
+    .select('id,name,is_active')
+    .eq('location_code', code.toUpperCase())
     .maybeSingle();
 
-  if(!loc || !loc.is_active){ showError(t('err_code')); return; }
+  if(!loc || !loc.is_active) return {ok:false, msg:'Nevažeći kod. Kontaktiraj osoblje.'};
 
-  // 2. Gost token
-  const token = C.getOrCreateGuestToken();
-
-  // 3. Upsert gosta
+  // Nađi ili kreiraj gosta
   let guestId;
-  const { data:guest } = await sb
-    .from('guests')
-    .select('id, stamp_count, reward_status')
-    .eq('token', token)
-    .maybeSingle();
-
-  if(!guest){
-    const { data:ng } = await sb
-      .from('guests')
-      .insert({ token, lang:LANG })
-      .select('id, stamp_count, reward_status')
-      .single();
-    if(!ng){ showError(t('err_db')); return; }
-    guestId = ng.id;
-  } else {
-    guestId = guest.id;
+  const {data:eg} = await sb.from('guests').select('id').eq('token',token).maybeSingle();
+  if(eg){ guestId = eg.id; }
+  else {
+    const {data:ng} = await sb.from('guests').insert({token, lang:localStorage.getItem('stayvb_lang')||'sr'}).select('id').single();
+    if(ng) guestId = ng.id;
   }
+  if(!guestId) return {ok:false, msg:'Greška. Pokušaj ponovo.'};
 
-  // 4. Pokušaj insert pečata (unique constraint hvata duplikate)
-  const { error:stampErr } = await sb
-    .from('stamps')
-    .insert({ guest_id:guestId, location_id:loc.id });
+  // Upiši pečat
+  const {error} = await sb.from('stamps').insert({guest_id:guestId, location_id:loc.id});
+  const isDup = error?.code === '23505';
+  if(error && !isDup) return {ok:false, msg:'Greška. Pokušaj ponovo.'};
 
-  const isDuplicate = stampErr?.code === '23505'; // unique violation
-  if(stampErr && !isDuplicate){ showError(t('err_db')); return; }
-
-  // 5. Uzmi ažurirani broj pečata
-  const { data:updated } = await sb
-    .from('guests')
-    .select('stamp_count, reward_status')
-    .eq('id', guestId)
-    .single();
-
-  const count = updated?.stamp_count || 0;
-  showStampScreen(loc.name, count, !isDuplicate, isDuplicate);
-
-  // 6. Analytics (tih)
-  C.trackAction(loc.partner_id||null, guestId, 'qr_scan');
+  return {ok:true, isDup, name:loc.name};
 }
 
-init();
-</script>
-<script>
-  function googleTranslateElementInit(){
-    new google.translate.TranslateElement({pageLanguage:'sr',includedLanguages:'en,de,ru,bg,zh-CN',autoDisplay:false},'google_translate_element');
-    STAYVB_LANG.onWidgetReady();
+// ── Scanner ───────────────────────────────────────────────────────
+function openScanner(){
+  document.getElementById('scanner-modal').classList.add('open');
+  document.getElementById('scanner-result').textContent = 'Čekam QR kod...';
+  document.getElementById('scanner-result').style.color = 'rgba(255,255,255,0.6)';
+
+  if(!scanCanvas){
+    scanCanvas = document.createElement('canvas');
+    scanCtx = scanCanvas.getContext('2d');
   }
+
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
+    .then(stream => {
+      scannerStream = stream;
+      scannerActive = true;
+      const video = document.getElementById('scanner-video');
+      video.srcObject = stream;
+      video.play();
+      requestAnimationFrame(scanFrame);
+    })
+    .catch(() => {
+      document.getElementById('scanner-result').textContent = 'Kamera nije dostupna. Upiši kod ručno.';
+      document.getElementById('scanner-result').style.color = '#f87171';
+    });
+}
+
+function scanFrame(){
+  if(!scannerActive) return;
+  const video = document.getElementById('scanner-video');
+  if(video.readyState === video.HAVE_ENOUGH_DATA){
+    scanCanvas.width = video.videoWidth;
+    scanCanvas.height = video.videoHeight;
+    scanCtx.drawImage(video, 0, 0);
+    const imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height, {inversionAttempts:'dontInvert'});
+    if(code){
+      const url = code.data;
+      // Izvuci code= parametar iz URL-a
+      let extractedCode = url;
+      try{
+        const u = new URL(url);
+        extractedCode = u.searchParams.get('code') || url;
+      } catch(e){}
+
+      document.getElementById('scanner-result').textContent = '✓ Kod prepoznat! Obrađujem...';
+      document.getElementById('scanner-result').style.color = '#6ee7b7';
+      scannerActive = false;
+      closeScanner();
+      handleScannedCode(extractedCode);
+      return;
+    }
+  }
+  requestAnimationFrame(scanFrame);
+}
+
+function closeScanner(){
+  scannerActive = false;
+  if(scannerStream){
+    scannerStream.getTracks().forEach(t=>t.stop());
+    scannerStream = null;
+  }
+  document.getElementById('scanner-video').srcObject = null;
+  document.getElementById('scanner-modal').classList.remove('open');
+}
+
+async function handleScannedCode(code){
+  // Prikaži loading
+  document.getElementById('main-screen').innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center">
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-400 mx-auto" style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-bottom-color:#fbbf24;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+      <p style="font-size:11px;margin-top:16px;color:rgba(255,255,255,0.5);font-weight:700;text-transform:uppercase;letter-spacing:0.14em">Obrađujem pečat...</p>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+
+  const result = await processCode(code);
+
+  if(!result.ok){
+    document.getElementById('main-screen').innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;text-align:center;gap:14px">
+        <div style="font-size:3rem">❌</div>
+        <h2 style="font-size:1.2rem;font-weight:900;color:#f87171;margin:0">${esc(result.msg)}</h2>
+        <button class="btn-ghost" style="max-width:240px" onclick="renderMain()">← Nazad</button>
+      </div>`;
+    return;
+  }
+
+  if(result.isDup){
+    await renderMain();
+    // Pokaži toast
+    showToast('Već imaš pečat sa ove lokacije ✓', false);
+    return;
+  }
+
+  // Novi pečat — rerender i toast
+  await renderMain();
+  showToast(`⭐ Novi pečat: ${result.name}!`, true);
+}
+
+function showToast(msg, isGood){
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:14px;font-size:12px;font-weight:900;z-index:1000;white-space:nowrap;animation:toastIn 0.3s ease;${isGood?'background:rgba(16,185,129,0.9);color:white':'background:rgba(245,158,11,0.9);color:#0f172a'}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  const style = document.createElement('style');
+  style.textContent = '@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}';
+  document.head.appendChild(style);
+  setTimeout(()=>t.remove(), 3000);
+}
+
+// ── Nagrada forma ─────────────────────────────────────────────────
+async function submitReward(){
+  const name = document.getElementById('r-name')?.value.trim();
+  const phone = document.getElementById('r-phone')?.value.trim();
+  const msg = document.getElementById('reward-msg');
+  if(!name||!phone){ msg.textContent='⚠️ Popuni oba polja.'; msg.className='msg err'; return; }
+
+  const token = C.getOrCreateGuestToken();
+  const {error} = await sb.from('guests').update({reward_status:'pending', reward_phone:phone, reward_claimed:true}).eq('token',token);
+  if(error){ msg.textContent='⚠️ Greška. Pokušaj ponovo.'; msg.className='msg err'; return; }
+
+  document.getElementById('main-screen').innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;gap:16px">
+      <div style="font-size:3.5rem">🎁</div>
+      <h2 style="font-size:1.4rem;font-weight:900;color:#fbbf24;margin:0">Zahtev poslat!</h2>
+      <p style="font-size:13px;color:rgba(255,255,255,0.6);font-weight:600;max-width:280px;line-height:1.6;margin:0">Kontaktiraćemo te uskoro sa nagradom.</p>
+      <a href="index.html" class="btn-gold" style="max-width:240px;display:block;text-align:center;text-decoration:none;padding:16px">← Nazad na vodič</a>
+    </div>`;
+}
+
+// ── Boot ──────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  // Ako ima ?code= u URL-u — odmah procesuj
+  if(LOCATION_CODE){
+    const result = await processCode(LOCATION_CODE);
+    await renderMain();
+    if(result.ok && !result.isDup){
+      showToast(`⭐ Novi pečat: ${result.name}!`, true);
+    } else if(result.isDup){
+      showToast('Već imaš pečat sa ove lokacije ✓', false);
+    } else {
+      showToast(result.msg, false);
+    }
+  } else {
+    // Nema koda — prikaži listu pečata
+    await renderMain();
+  }
+});
 </script>
-<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
