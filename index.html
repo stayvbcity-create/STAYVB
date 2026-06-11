@@ -67,12 +67,14 @@
         function stayvbSetLang(langCode) {
             localStorage.setItem('stayvb_lang', langCode);
             stayvbApplyLang(langCode);
-            // Sakrij lang screen odmah pre reload-a
+            // Ukloni lang screen potpuno iz DOM-a
             var ls = document.getElementById('lang-screen');
-            if(ls) ls.style.display = 'none';
+            if(ls) ls.remove();
+            // Prikaži loader
             var ld = document.getElementById('loader');
-            if(ld) ld.classList.remove('hidden');
-            window.location.reload();
+            if(ld){ ld.classList.remove('hidden'); ld.style.display='flex'; }
+            // Reload posle kratkog delay-a da loader bude vidljiv
+            setTimeout(function(){ window.location.reload(); }, 100);
         }
 
         function updateLangPills(activeLang) {
@@ -928,6 +930,10 @@ window.addEventListener('load', async () => {
         document.getElementById('loader').classList.add('hidden');
         return;
     }
+
+    // Jezik je izabran — ukloni lang screen potpuno iz DOM-a
+    var ls = document.getElementById('lang-screen');
+    if(ls) ls.remove();
 
     updateLangPills(savedLang);
     document.getElementById('lang-screen').classList.add('hidden');
