@@ -28,7 +28,7 @@
 
             // Čekaj GT widget i primeni sačuvani jezik
             var saved = localStorage.getItem('stayvb_lang') || '';
-            if(saved) _gtApply(saved);
+            if(saved && saved !== '') _gtApply(saved);
         }
 
         // Primeni jezik kroz GT select element
@@ -98,8 +98,13 @@
                 if(langCode && langCode !== '') {
                     _gtApply(langCode);
                 } else {
-                    // Srpski — reload je najpouzdaniji način za vraćanje
+                    // Srpski — brišemo jezik i reload
+                    // Prazno ('') znači srpski originalni
                     localStorage.setItem('stayvb_lang', '');
+                    // Brišemo i GT cookie da GT ne primeni prethodni jezik
+                    document.cookie = 'googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+                    document.cookie = 'googtrans=; path=/; domain=' + location.hostname + '; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+                    updateLangPills('');
                     var ld = document.getElementById('loader');
                     if(ld) ld.style.display = 'flex';
                     var cont = document.getElementById('content');
@@ -964,8 +969,8 @@ async function startApp(lang){
     const ls = document.getElementById('lang-screen');
     if(ls) ls.style.display = 'none';
 
-    // Primeni prevod odmah čim GT bude spreman
-    if(lang) _gtApply(lang);
+    // Primeni prevod samo ako nije srpski
+    if(lang && lang !== '') _gtApply(lang);
 
     // Prikaži loader, sakrij content dok se učitava
     document.getElementById('loader').style.display = 'flex';
