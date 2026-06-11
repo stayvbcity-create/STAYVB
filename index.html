@@ -16,8 +16,6 @@
     <script src="config.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // ── Google Translate sistem ───────────────────────────────────
-        // Jedini pouzdan način: GT select element direktno
 
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({
@@ -26,23 +24,18 @@
                 autoDisplay: false
             }, 'google_translate_element');
 
-            // Čekaj GT widget i primeni sačuvani jezik
             var saved = localStorage.getItem('stayvb_lang') || '';
             if(saved && saved !== '') {
                 _gtApply(saved);
             }
-            // Srpski ('') — GT se ne aktivira, stranica ostaje neprevedena
         }
 
-        // Učitaj GT script ako još nije (lazy load)
         function _gtLoad(cb) {
             if(document.querySelector('.goog-te-combo')) {
-                // Već učitan
                 if(cb) cb();
                 return;
             }
             if(window._gtLoading) {
-                // Čekaj da se učita
                 var wait = setInterval(function(){
                     if(document.querySelector('.goog-te-combo')){
                         clearInterval(wait);
@@ -59,7 +52,6 @@
             document.body.appendChild(s);
         }
 
-        // Primeni jezik kroz GT select element
         function _gtApply(code) {
             if(!code || code === '') return; // srpski - nema GT
             _gtLoad(function(){
@@ -76,36 +68,28 @@
             });
         }
 
-        // Vrati na srpski (originalni jezik)
         function _gtReset() {
             var sel = document.querySelector('.goog-te-combo');
             if(sel) {
-                // GT koristi '' ili 'sr' za originalni jezik
                 sel.value = '';
                 sel.dispatchEvent(new Event('change', {bubbles:true}));
-                // Ako nije promenilo, pokušaj sa explicit restore
                 setTimeout(function(){
                     var bar = document.querySelector('.goog-te-banner-frame');
                     if(bar) {
-                        // Klikni "Show original" u GT bar-u ako postoji
                         try {
                             bar.contentDocument.querySelector('a')?.click();
                         } catch(e){}
                     }
-                    // Najsigurniji fallback — reload bez GT cookie-ja
                     var saved = localStorage.getItem('stayvb_lang');
                     if(saved !== '') {
-                        // samo ako je bio na nekom jeziku
                     }
                 }, 200);
                 return;
             }
-            // Bez GT widgeta — jednostavan reload
             localStorage.setItem('stayvb_lang', '');
             window.location.reload();
         }
 
-        // Poziva se sa zastavica
         function stayvbSetLang(langCode) {
             localStorage.setItem('stayvb_lang', langCode);
             updateLangPills(langCode);
@@ -114,7 +98,6 @@
             var isLangScreen = ls && ls.style.display !== 'none';
 
             if(isLangScreen) {
-                // Prvo otvaranje — animiraj van i pokreni app
                 ls.style.transition = 'opacity 0.3s ease';
                 ls.style.opacity = '0';
                 ls.style.pointerEvents = 'none';
@@ -125,12 +108,9 @@
                     if(typeof startApp === 'function') startApp(langCode);
                 }, 200);
             } else {
-                // Promena kroz pilule — primeni direktno bez reload-a
                 if(langCode && langCode !== '') {
                     _gtApply(langCode);
                 } else {
-                    // Srpski — sacuvaj '' i reload
-                    // GT se nece ucitati jer loader proverava lang
                     localStorage.setItem('stayvb_lang', '');
                     window.location.replace(location.pathname + location.search);
                 }
@@ -346,11 +326,11 @@
         <p class="lang-select-label">Select language · Izaberite jezik</p>
         <div class="lang-grid">
             <button class="lang-btn" onclick="stayvbSetLang('')">
-                <img class="lang-flag-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIHk9IjAiIGZpbGw9IiNDNjM2M0MiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzBDNDA3NiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGRkZGRiIvPjwvc3ZnPg==" alt="SR">
+                <img class="lang-flag-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNDNjM2M0MiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzBDNDA3NiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGRiIvPjwvc3ZnPg==" alt="SR">
                 <span class="lang-name">Srpski</span><span class="lang-native">Srpski</span>
             </button>
             <button class="lang-btn" onclick="stayvbSetLang('en')">
-                <img class="lang-flag-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDEyMTY5Ii8+PHBhdGggZD0iTTAsMCBMMzAsMjAgTTMwLDAgTDAsMjAiIHN0cm9rZT0iI0ZGRiIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTAsMCBMMzAsMjAgTTMwLDAgTDAsMjAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSIyLjUiLz48cGF0aCBkPSJNMTUsMCBMMTUsMjAgTTAsMTAgTDMwLDEwIiBzdHJva2U9IiNGRkYiIHN0cm9rZS13aWR0aD0iNiIvPjxwYXRoIGQ9Ik0xNSwwIEwxNSwyMCBNMCwxMCBMMzAsMTAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSI0Ii8+PC9zdmc+" alt="EN">
+                <img class="lang-flag-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDEyMTY5Ii8+PHBhdGggZD0iTTAsMEwzMCwyME0zMCwwTDAsMjAiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTAsMEwzMCwyME0zMCwwTDAsMjAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSIyLjUiLz48cGF0aCBkPSJNMTUsMEwxNSwyME0wLDEwTDMwLDEwIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iNiIvPjxwYXRoIGQ9Ik0xNSwwTDE1LDIwTTAsMTBMMzAsMTAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSI0Ii8+PC9zdmc+" alt="EN">
                 <span class="lang-name">English</span><span class="lang-native">English</span>
             </button>
             <button class="lang-btn" onclick="stayvbSetLang('de')">
@@ -366,7 +346,7 @@
                 <span class="lang-name">Български</span><span class="lang-native">Български</span>
             </button>
             <button class="lang-btn" onclick="stayvbSetLang('zh-CN')">
-                <img class="lang-flag-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+CjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI0RFMjkxMCIvPgo8cG9seWdvbiBwb2ludHM9IjcuMDAsNS41MCA4LjA2LDguNTQgMTEuMjgsOC42MSA4LjcxLDEwLjU2IDkuNjUsMTMuNjQgNy4wMCwxMS44MCA0LjM1LDEzLjY0IDUuMjksMTAuNTYgMi43Miw4LjYxIDUuOTQsOC41NCIgZmlsbD0iI0ZGREUwMCIvPgo8cG9seWdvbiBwb2ludHM9IjEyLjAwLDIuNzAgMTIuNDIsMy45MiAxMy43MSwzLjk0IDEyLjY4LDQuNzIgMTMuMDYsNS45NiAxMi4wMCw1LjIyIDEwLjk0LDUuOTYgMTEuMzIsNC43MiAxMC4yOSwzLjk0IDExLjU4LDMuOTIiIGZpbGw9IiNGRkRFMDAiLz4KPHBvbHlnb24gcG9pbnRzPSIxNC4wMCw1LjcwIDE0LjQyLDYuOTIgMTUuNzEsNi45NCAxNC42OCw3LjcyIDE1LjA2LDguOTYgMTQuMDAsOC4yMiAxMi45NCw4Ljk2IDEzLjMyLDcuNzIgMTIuMjksNi45NCAxMy41OCw2LjkyIiBmaWxsPSIjRkZERTAwIi8+Cjxwb2x5Z29uIHBvaW50cz0iMTQuMDAsOS43MCAxNC40MiwxMC45MiAxNS43MSwxMC45NCAxNC42OCwxMS43MiAxNS4wNiwxMi45NiAxNC4wMCwxMi4yMiAxMi45NCwxMi45NiAxMy4zMiwxMS43MiAxMi4yOSwxMC45NCAxMy41OCwxMC45MiIgZmlsbD0iI0ZGREUwMCIvPgo8cG9seWdvbiBwb2ludHM9IjEyLjAwLDEyLjcwIDEyLjQyLDEzLjkyIDEzLjcxLDEzLjk0IDEyLjY4LDE0LjcyIDEzLjA2LDE1Ljk2IDEyLjAwLDE1LjIyIDEwLjk0LDE1Ljk2IDExLjMyLDE0LjcyIDEwLjI5LDEzLjk0IDExLjU4LDEzLjkyIiBmaWxsPSIjRkZERTAwIi8+Cjwvc3ZnPg==" alt="ZH">
+                <img class="lang-flag-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjREUyOTEwIi8+PHBvbHlnb24gcG9pbnRzPSI3LDMuNSA4LjA2LDYuNTQgMTEuMjgsNi42MSA4LjcxLDguNTYgOS42NSwxMS42NCA3LDkuOCA0LjM1LDExLjY0IDUuMjksOC41NiAyLjcyLDYuNjEgNS45NCw2LjU0IiBmaWxsPSIjRkZERTAwIi8+PHBvbHlnb24gcG9pbnRzPSIxMiwyLjcgMTIuNDIsMy45MiAxMy43MSwzLjk0IDEyLjY4LDQuNzIgMTMuMDYsNS45NiAxMiw1LjIyIDEwLjk0LDUuOTYgMTEuMzIsNC43MiAxMC4yOSwzLjk0IDExLjU4LDMuOTIiIGZpbGw9IiNGRkRFMDAiLz48cG9seWdvbiBwb2ludHM9IjE0LDUuNyAxNC40Miw2LjkyIDE1LjcxLDYuOTQgMTQuNjgsNy43MiAxNS4wNiw4Ljk2IDE0LDguMjIgMTIuOTQsOC45NiAxMy4zMiw3LjcyIDEyLjI5LDYuOTQgMTMuNTgsNi45MiIgZmlsbD0iI0ZGREUwMCIvPjxwb2x5Z29uIHBvaW50cz0iMTQsOS43IDE0LjQyLDEwLjkyIDE1LjcxLDEwLjk0IDE0LjY4LDExLjcyIDE1LjA2LDEyLjk2IDE0LDEyLjIyIDEyLjk0LDEyLjk2IDEzLjMyLDExLjcyIDEyLjI5LDEwLjk0IDEzLjU4LDEwLjkyIiBmaWxsPSIjRkZERTAwIi8+PHBvbHlnb24gcG9pbnRzPSIxMiwxMi43IDEyLjQyLDEzLjkyIDEzLjcxLDEzLjk0IDEyLjY4LDE0LjcyIDEzLjA2LDE1Ljk2IDEyLDE1LjIyIDEwLjk0LDE1Ljk2IDExLjMyLDE0LjcyIDEwLjI5LDEzLjk0IDExLjU4LDEzLjkyIiBmaWxsPSIjRkZERTAwIi8+PC9zdmc+" alt="ZH">
                 <span class="lang-name">中文</span><span class="lang-native">中文</span>
             </button>
         </div>
@@ -382,12 +362,12 @@
     <div id="content" class="hidden">
         <div class="hero">
             <div class="lang-pills-bar">
-                <button class="lang-pill" id="langpill-sr"    onclick="stayvbSetLang('')"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNDNjM2M0MiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzBDNDA3NiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGRkZGRiIvPjwvc3ZnPg==" alt="SR"></button>
-                <button class="lang-pill" id="langpill-en"    onclick="stayvbSetLang('en')"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDEyMTY5Ii8+PHBhdGggZD0iTTAsMCBMMzAsMjAgTTMwLDAgTDAsMjAiIHN0cm9rZT0iI0ZGRiIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTAsMCBMMzAsMjAgTTMwLDAgTDAsMjAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSIyLjUiLz48cGF0aCBkPSJNMTUsMCBMMTUsMjAgTTAsMTAgTDMwLDEwIiBzdHJva2U9IiNGRkYiIHN0cm9rZS13aWR0aD0iNiIvPjxwYXRoIGQ9Ik0xNSwwIEwxNSwyMCBNMCwxMCBMMzAsMTAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSI0Ii8+PC9zdmc+" alt="EN"></button>
+                <button class="lang-pill" id="langpill-sr"    onclick="stayvbSetLang('')"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNDNjM2M0MiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzBDNDA3NiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGRiIvPjwvc3ZnPg==" alt="SR"></button>
+                <button class="lang-pill" id="langpill-en"    onclick="stayvbSetLang('en')"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDEyMTY5Ii8+PHBhdGggZD0iTTAsMEwzMCwyME0zMCwwTDAsMjAiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTAsMEwzMCwyME0zMCwwTDAsMjAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSIyLjUiLz48cGF0aCBkPSJNMTUsMEwxNSwyME0wLDEwTDMwLDEwIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iNiIvPjxwYXRoIGQ9Ik0xNSwwTDE1LDIwTTAsMTBMMzAsMTAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSI0Ii8+PC9zdmc+" alt="EN"></button>
                 <button class="lang-pill" id="langpill-de"    onclick="stayvbSetLang('de')"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiMwMDAiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iI0REMDAwMCIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGQ0UwMCIvPjwvc3ZnPg==" alt="DE"></button>
                 <button class="lang-pill" id="langpill-ru"    onclick="stayvbSetLang('ru')"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNGRkYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzAwMzlBNiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0Q1MkIxRSIvPjwvc3ZnPg==" alt="RU"></button>
                 <button class="lang-pill" id="langpill-bg"    onclick="stayvbSetLang('bg')"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNGRkYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzAwOTY2RSIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0Q2MjYxMiIvPjwvc3ZnPg==" alt="BG"></button>
-                <button class="lang-pill" id="langpill-zh-CN" onclick="stayvbSetLang('zh-CN')"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+CjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI0RFMjkxMCIvPgo8cG9seWdvbiBwb2ludHM9IjcuMDAsNS41MCA4LjA2LDguNTQgMTEuMjgsOC42MSA4LjcxLDEwLjU2IDkuNjUsMTMuNjQgNy4wMCwxMS44MCA0LjM1LDEzLjY0IDUuMjksMTAuNTYgMi43Miw4LjYxIDUuOTQsOC41NCIgZmlsbD0iI0ZGREUwMCIvPgo8cG9seWdvbiBwb2ludHM9IjEyLjAwLDIuNzAgMTIuNDIsMy45MiAxMy43MSwzLjk0IDEyLjY4LDQuNzIgMTMuMDYsNS45NiAxMi4wMCw1LjIyIDEwLjk0LDUuOTYgMTEuMzIsNC43MiAxMC4yOSwzLjk0IDExLjU4LDMuOTIiIGZpbGw9IiNGRkRFMDAiLz4KPHBvbHlnb24gcG9pbnRzPSIxNC4wMCw1LjcwIDE0LjQyLDYuOTIgMTUuNzEsNi45NCAxNC42OCw3LjcyIDE1LjA2LDguOTYgMTQuMDAsOC4yMiAxMi45NCw4Ljk2IDEzLjMyLDcuNzIgMTIuMjksNi45NCAxMy41OCw2LjkyIiBmaWxsPSIjRkZERTAwIi8+Cjxwb2x5Z29uIHBvaW50cz0iMTQuMDAsOS43MCAxNC40MiwxMC45MiAxNS43MSwxMC45NCAxNC42OCwxMS43MiAxNS4wNiwxMi45NiAxNC4wMCwxMi4yMiAxMi45NCwxMi45NiAxMy4zMiwxMS43MiAxMi4yOSwxMC45NCAxMy41OCwxMC45MiIgZmlsbD0iI0ZGREUwMCIvPgo8cG9seWdvbiBwb2ludHM9IjEyLjAwLDEyLjcwIDEyLjQyLDEzLjkyIDEzLjcxLDEzLjk0IDEyLjY4LDE0LjcyIDEzLjA2LDE1Ljk2IDEyLjAwLDE1LjIyIDEwLjk0LDE1Ljk2IDExLjMyLDE0LjcyIDEwLjI5LDEzLjk0IDExLjU4LDEzLjkyIiBmaWxsPSIjRkZERTAwIi8+Cjwvc3ZnPg==" alt="ZH"></button>
+                <button class="lang-pill" id="langpill-zh-CN" onclick="stayvbSetLang('zh-CN')"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjREUyOTEwIi8+PHBvbHlnb24gcG9pbnRzPSI3LDMuNSA4LjA2LDYuNTQgMTEuMjgsNi42MSA4LjcxLDguNTYgOS42NSwxMS42NCA3LDkuOCA0LjM1LDExLjY0IDUuMjksOC41NiAyLjcyLDYuNjEgNS45NCw2LjU0IiBmaWxsPSIjRkZERTAwIi8+PHBvbHlnb24gcG9pbnRzPSIxMiwyLjcgMTIuNDIsMy45MiAxMy43MSwzLjk0IDEyLjY4LDQuNzIgMTMuMDYsNS45NiAxMiw1LjIyIDEwLjk0LDUuOTYgMTEuMzIsNC43MiAxMC4yOSwzLjk0IDExLjU4LDMuOTIiIGZpbGw9IiNGRkRFMDAiLz48cG9seWdvbiBwb2ludHM9IjE0LDUuNyAxNC40Miw2LjkyIDE1LjcxLDYuOTQgMTQuNjgsNy43MiAxNS4wNiw4Ljk2IDE0LDguMjIgMTIuOTQsOC45NiAxMy4zMiw3LjcyIDEyLjI5LDYuOTQgMTMuNTgsNi45MiIgZmlsbD0iI0ZGREUwMCIvPjxwb2x5Z29uIHBvaW50cz0iMTQsOS43IDE0LjQyLDEwLjkyIDE1LjcxLDEwLjk0IDE0LjY4LDExLjcyIDE1LjA2LDEyLjk2IDE0LDEyLjIyIDEyLjk0LDEyLjk2IDEzLjMyLDExLjcyIDEyLjI5LDEwLjk0IDEzLjU4LDEwLjkyIiBmaWxsPSIjRkZERTAwIi8+PHBvbHlnb24gcG9pbnRzPSIxMiwxMi43IDEyLjQyLDEzLjkyIDEzLjcxLDEzLjk0IDEyLjY4LDE0LjcyIDEzLjA2LDE1Ljk2IDEyLDE1LjIyIDEwLjk0LDE1Ljk2IDExLjMyLDE0LjcyIDEwLjI5LDEzLjk0IDExLjU4LDEzLjkyIiBmaWxsPSIjRkZERTAwIi8+PC9zdmc+" alt="ZH"></button>
             </div>
             <div class="hero-badge">✨ StayVB Verified Stay</div>
             <h1 id="unit-name">StayVB</h1>
@@ -630,7 +610,6 @@
 </div>
 
 <script>
-// ── Globalne varijable ────────────────────────────────────────────
 const sb = C.db();
 let currentUnitId = '';
 let ownerPhone = '';
@@ -642,7 +621,6 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const isAndroid = /Android/i.test(navigator.userAgent);
 const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-// ── Helperi ───────────────────────────────────────────────────────
 function esc(v){ return C.escapeHtml(v); }
 function getDate(){ const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); }
 function toMins(t){ if(!t) return 0; const p=String(t).split(':'); return parseInt(p[0]||0)*60+parseInt(p[1]||0); }
@@ -656,7 +634,6 @@ function getRemainingLabel(endTime, nowMins){
     return '⏱ još ' + Math.floor(diff/60) + 'h ' + (diff%60) + 'm';
 }
 
-// ── VIP Modal ─────────────────────────────────────────────────────
 function toggleVIP(show){
     document.getElementById('vipModal').style.display = show ? 'flex' : 'none';
     if(show){
@@ -665,7 +642,6 @@ function toggleVIP(show){
     }
 }
 
-// ── Usluge ────────────────────────────────────────────────────────
 function orderService(type){
     if(!ownerPhone){ alert('Kontakt domaćina nije podešen.'); return; }
     const name = document.getElementById('unit-name')?.innerText || 'StayVB';
@@ -675,7 +651,6 @@ function orderService(type){
     window.location.href = 'https://wa.me/' + ownerPhone.replace(/\D/g,'') + '?text=' + encodeURIComponent(msg);
 }
 
-// ── Share kampanja ────────────────────────────────────────────────
 function shareStayVB(){
     if(!shareCampaignActive || !currentReelUrl){ alert('Ova akcija nije trenutno aktivna.'); return; }
     let gs = localStorage.getItem('stayvb_guest_session');
@@ -683,7 +658,6 @@ function shareStayVB(){
     window.location.href = 'share.html?session='+gs+'&unit='+encodeURIComponent(currentUnitId)+'&target='+encodeURIComponent(currentReelUrl);
 }
 
-// ── Check-out ─────────────────────────────────────────────────────
 function confirmCheckout(){
     if(!ownerPhone){ alert('Kontakt domaćina nije podešen.'); return; }
     if(confirm('Potvrđujete napuštanje?')){
@@ -692,10 +666,8 @@ function confirmCheckout(){
     }
 }
 
-// ── Loyalty ───────────────────────────────────────────────────────
 async function loadLoyalty(isPremium){
     if(!isPremium){
-        // Sakrij loyalty traku i nagradnu igru
         document.getElementById('loyalty-section').style.display = 'none';
         document.getElementById('treasure-strip-wrap').style.display = 'none';
         return;
@@ -712,12 +684,10 @@ async function loadLoyalty(isPremium){
     document.getElementById('treasure-strip-wrap').style.display = 'block';
 }
 
-// ── Auto stamp pri dolasku ────────────────────────────────────────
 async function autoStamp(partnerId, partnerCode){
     if(!partnerId) return;
     const token = C.getOrCreateGuestToken();
 
-    // Nađi ili kreiraj gosta
     let guestId;
     const { data: existing } = await sb.from('guests').select('id').eq('token', token).maybeSingle();
     if(existing){
@@ -728,7 +698,6 @@ async function autoStamp(partnerId, partnerCode){
     }
     if(!guestId) return;
 
-    // Nađi stamp lokaciju za ovog partnera
     const { data: loc } = await sb.from('stamp_locations')
         .select('id')
         .eq('partner_id', partnerId)
@@ -736,12 +705,10 @@ async function autoStamp(partnerId, partnerCode){
         .maybeSingle();
     if(!loc) return;
 
-    // Upiši pečat (unique constraint ignoriše duplikate)
     await sb.from('stamps').insert({ guest_id: guestId, location_id: loc.id });
     await loadLoyalty();
 }
 
-// ── Učitaj podatke partnera ───────────────────────────────────────
 async function loadPartnerData(){
     if(!currentUnitId) return;
 
@@ -760,7 +727,6 @@ async function loadPartnerData(){
         return;
     }
 
-    // Poseban upit za partner_content
     const { data: pcData } = await sb
         .from('partner_content')
         .select('wifi_name, wifi_pass, extra_offer, service_prices, house_rules, share_campaign_active, instagram_reel_url, share_gift_text')
@@ -769,27 +735,22 @@ async function loadPartnerData(){
 
     const pc = pcData || {};
 
-    // Ime u hero i stay zoni
     document.getElementById('unit-name').innerText = partner.name || 'StayVB';
     document.getElementById('stay-zone-unit-name').innerText = partner.name || 'StayVB';
 
-    // WiFi
     document.getElementById('wifi-name').innerText = pc.wifi_name || 'Nije podešeno';
     document.getElementById('wifi-pass').innerText = pc.wifi_pass ? 'Lozinka: ' + pc.wifi_pass : '';
 
-    // Kontakt
     ownerPhone = partner.whatsapp || partner.phone || '';
     if(ownerPhone){
         document.getElementById('wa-link').href = 'https://wa.me/' + ownerPhone.replace(/\D/g,'') + '?text=' + encodeURIComponent('Zdravo, gost sam u '+partner.name+'.');
     }
 
-    // Premium sadržaj
     if(partner.is_premium){
         if(pc.extra_offer) document.getElementById('extra-offer-text').innerHTML = pc.extra_offer.replace(/\n/g,'<br>');
         if(pc.service_prices) document.getElementById('service-prices-text').innerHTML = pc.service_prices.replace(/\n/g,'<br>');
         if(pc.house_rules) document.getElementById('house-rules-text').innerHTML = pc.house_rules.replace(/\n/g,'<br>');
 
-        // Share kampanja
         currentReelUrl = pc.instagram_reel_url || '';
         currentGiftText = pc.share_gift_text || 'mali poklon';
         shareCampaignActive = pc.share_campaign_active === true;
@@ -799,14 +760,12 @@ async function loadPartnerData(){
         }
     }
 
-    // Premium partner — loyalty + auto stamp
     await loadLoyalty(partner.is_premium);
     if(partner.is_premium && (partner.type === 'apartment' || partner.type === 'hotel')){
         await autoStamp(partner.id, currentUnitId);
     }
 }
 
-// ── Učitaj HH ─────────────────────────────────────────────────────
 async function loadHH(){
     const todayStr = getDate();
     const now = new Date();
@@ -839,7 +798,6 @@ async function loadHH(){
         </div>`).join('');
 }
 
-// ── Učitaj događaje ───────────────────────────────────────────────
 async function loadEvents(){
     const todayStr = getDate();
     const { data: events } = await sb
@@ -862,7 +820,6 @@ async function loadEvents(){
         </div>`).join('');
 }
 
-// ── PWA install ───────────────────────────────────────────────────
 function showInstallBanner(mode){
     if(isStandalone()) return;
     const promptEl = document.getElementById('pwa-install-prompt');
@@ -889,26 +846,22 @@ function showInstallBanner(mode){
 }
 function closeInstallPrompt(){ document.getElementById('pwa-install-prompt').style.display = 'none'; }
 
-// ── Service Worker ────────────────────────────────────────────────
 async function registerSW(){
     if(!('serviceWorker' in navigator)) return;
     try{ await navigator.serviceWorker.register('./sw.js', {scope:'./'}); }catch(e){}
 }
 
-// ── City Info ─────────────────────────────────────────────────────
 let cityCategories = [];
 let cityPartners = [];
 let cityContent = {};
 
 async function loadCityInfo(){
-    // Kategorije
     const {data:cats} = await sb.from('city_categories')
         .select('id,name,icon,color,sort_order')
         .eq('is_active', true)
         .order('sort_order');
     cityCategories = cats || [];
 
-    // Partneri u city info — bez join-a
     const {data:partners} = await sb.from('partners')
         .select('id,name,phone,whatsapp,city_category_id')
         .eq('is_active', true)
@@ -916,7 +869,6 @@ async function loadCityInfo(){
         .order('name');
     cityPartners = partners || [];
 
-    // Sadržaj za sve te partnere — poseban upit
     if(cityPartners.length){
         const ids = cityPartners.map(p => p.id);
         const {data:pcs} = await sb.from('partner_content')
@@ -926,11 +878,9 @@ async function loadCityInfo(){
         (pcs||[]).forEach(pc => { cityContent[pc.partner_id] = pc; });
     }
 
-    // Render grid chipova
     const grid = document.getElementById('city-categories-grid');
     if(!grid) return;
 
-    // Prikaži samo kategorije koje imaju bar jednog partnera
     const activeCats = cityCategories.filter(cat =>
         cityPartners.some(p => p.city_category_id === cat.id)
     );
@@ -985,35 +935,26 @@ function closeCityModal(){
     document.getElementById('city-modal-list').innerHTML = '';
 }
 
-// ── Boot ──────────────────────────────────────────────────────────
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; showInstallBanner('android-install'); });
 window.addEventListener('appinstalled', () => { deferredPrompt = null; closeInstallPrompt(); });
 
-// startApp — poziva se ili direktno (ako je jezik već izabran)
-// ili iz stayvbSetLang (kad korisnik klikne zastavu)
 async function startApp(lang){
     const params = new URLSearchParams(window.location.search);
     currentUnitId = (params.get('id') || '').toUpperCase();
 
     updateLangPills(lang || '');
 
-    // Ukloni lang screen
     const ls = document.getElementById('lang-screen');
     if(ls) ls.style.display = 'none';
 
-    // Primeni GT samo ako nije srpski
     if(lang && lang !== '') _gtApply(lang);
 
-    // Prikaži loader, sakrij content dok se učitava
     document.getElementById('loader').style.display = 'flex';
     document.getElementById('content').style.display = 'none';
 
-    // Wake-up ping — šalje mali upit da "probudi" bazu pre glavnih upita
-    // Ovo smanjuje cold start kašnjenje
     try{ await sb.from('partners').select('id').limit(1); } catch(e){}
 
     try{
-        // Timeout od 8 sekundi - ne blokira UI ako je baza spora
         const timeout = new Promise(resolve => setTimeout(resolve, 8000));
         await Promise.race([
             Promise.all([
@@ -1029,13 +970,11 @@ async function startApp(lang){
     document.getElementById('loader').style.display = 'none';
     document.getElementById('content').style.display = 'block';
 
-    // PWA install prompt
     if(isIOS) showInstallBanner('ios');
     else if(isAndroid && !deferredPrompt){
         setTimeout(() => { if(!deferredPrompt && !isStandalone()) showInstallBanner('android-install'); }, 2500);
     }
 
-    // VIP pointer animacija
     const pointer = document.getElementById('vipPointer');
     if(pointer){
         setTimeout(() => {
@@ -1052,19 +991,15 @@ async function startApp(lang){
 window.addEventListener('load', async () => {
     await registerSW();
 
-    // Eksplicitno proveri da li je korisnik ikad odabrao jezik
-    // hasLang je null samo pri prvom otvaranju
     const hasLang = localStorage.getItem('stayvb_lang');
 
     if(hasLang === null){
-        // Prvo otvaranje — prikaži lang screen, čekaj da korisnik odabere
         document.getElementById('lang-screen').style.display = 'flex';
         document.getElementById('loader').style.display = 'none';
         document.getElementById('content').style.display = 'none';
         return; // startApp() će biti pozvan iz stayvbSetLang()
     }
 
-    // Jezik već izabran — sakrij lang screen i pokreni app
     const ls = document.getElementById('lang-screen');
     if(ls) ls.style.display = 'none';
 
@@ -1075,7 +1010,6 @@ window.addEventListener('load', async () => {
     <script>
     window.addEventListener('load', function(){
         var lang = localStorage.getItem('stayvb_lang');
-        // Ne ucitavaj GT uopste ako je srpski ili nije jos odabran
         if(!lang || lang === '') return;
         var s = document.createElement('script');
         s.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
