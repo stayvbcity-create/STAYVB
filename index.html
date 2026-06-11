@@ -773,9 +773,9 @@ async function loadPartnerData(){
     }
 
     // Premium se primenjuje SAMO za apartment i hotel
-    // Proveravamo is_premium ILI loyalty_enabled (admin moze podesiti ili jedno ili drugo)
+    // Jedini izvor istine je is_premium kolona
     const isPremiumApplicable = (partner.type === 'apartment' || partner.type === 'hotel') 
-        && (partner.is_premium === true || partner.loyalty_enabled === true);
+        && partner.is_premium === true;
 
     // Loyalty traka i nagradna igra
     await loadLoyalty(isPremiumApplicable);
