@@ -253,6 +253,17 @@
         .footer-note{text-align:center;padding:18px 0 24px;opacity:0.35;font-size:9px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;}
         .install-debug{display:none;margin-top:8px;font-size:9px;color:#94a3b8;font-weight:700;}
 
+        /* City Info */
+        .city-biz-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:1.2rem;padding:14px 16px;margin-bottom:10px}
+        .city-biz-name{font-size:14px;font-weight:900;color:#0f172a;margin-bottom:3px}
+        .city-biz-desc{font-size:12px;color:#475569;font-weight:600;line-height:1.5;margin-bottom:8px}
+        .city-biz-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+        .city-biz-hours{font-size:10px;font-weight:800;color:#64748b;background:#f1f5f9;padding:3px 8px;border-radius:6px}
+        .city-biz-btns{display:flex;gap:8px}
+        .city-btn-call{flex:1;padding:10px;background:#0f172a;color:white;border:none;border-radius:12px;font-size:11px;font-weight:900;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px}
+        .city-btn-wa{flex:1;padding:10px;background:#10b981;color:white;border:none;border-radius:12px;font-size:11px;font-weight:900;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px}
+        .city-empty{text-align:center;padding:32px 20px;color:#94a3b8;font-size:13px;font-weight:700}
+
         /* Loyalty traka */
         .loyalty-bar{background:linear-gradient(135deg,#1e1b4b,#312e81);border:1px solid rgba(167,139,250,0.25);border-radius:1.5rem;padding:14px 16px;color:white;}
         .loyalty-progress{height:6px;background:rgba(255,255,255,0.10);border-radius:999px;margin-top:10px;overflow:hidden;}
@@ -427,22 +438,31 @@
                     <p class="feature-hint text-teal-600">Pogledaj šta nudi Vrnjačka Banja</p>
                 </div>
 
-                <!-- Brze usluge -->
+                <!-- City Info -->
                 <div class="soft-card service-panel fade-in">
-                    <p class="section-label text-center">Brze usluge / City info</p>
-                    <div class="grid grid-cols-3 gap-3">
+                    <p class="section-label text-center">Brze usluge / City Info</p>
+                    <!-- Hitne uvek vidljive -->
+                    <div class="grid grid-cols-3 gap-3" style="margin-bottom:12px">
                         <a href="tel:194" class="service-btn"><span class="text-xl">🚑</span><span class="text-[9px] font-black uppercase">Hitna</span></a>
                         <a href="tel:193" class="service-btn"><span class="text-xl">🚒</span><span class="text-[9px] font-black uppercase">Vatrogasci</span></a>
                         <a href="tel:192" class="service-btn"><span class="text-xl">👮</span><span class="text-[9px] font-black uppercase">Policija</span></a>
-                        <a href="https://www.google.com/maps/search/Vrnjacka+Banja+doktor+zubar" target="_blank" class="service-btn"><span class="text-xl">🏥</span><span class="text-[9px] font-black uppercase">Zdravlje</span></a>
-                        <a href="https://www.google.com/maps/search/Vrnjacka+Banja+kozmeticar+frizerski" target="_blank" class="service-btn"><span class="text-xl">💄</span><span class="text-[9px] font-black uppercase">Makeup</span></a>
-                        <a href="https://www.google.com/maps/search/Vrnjacka+Banja+auto+servis+vulkanizer" target="_blank" class="service-btn"><span class="text-xl">🛠️</span><span class="text-[9px] font-black uppercase">Servis</span></a>
-                        <a href="tel:036611111" class="service-btn"><span class="text-xl">🚕</span><span class="text-[9px] font-black uppercase">Taxi</span></a>
-                        <a href="https://www.google.com/maps/search/Vrnjacka+Banja+apoteka" target="_blank" class="service-btn"><span class="text-xl">💊</span><span class="text-[9px] font-black uppercase">Apoteka</span></a>
-                        <a href="https://www.google.com/search?q=vreme+vrnjacka+banja" target="_blank" class="service-btn"><span class="text-xl">☀️</span><span class="text-[9px] font-black uppercase">Vreme</span></a>
-                        <a href="https://www.google.com/maps/search/Vrnjacka+Banja+menjacnica" target="_blank" class="service-btn"><span class="text-xl">💸</span><span class="text-[9px] font-black uppercase">Novac</span></a>
-                        <a href="https://www.google.com/maps/search/Vrnjacka+Banja+restoran" target="_blank" class="service-btn"><span class="text-xl">🍔</span><span class="text-[9px] font-black uppercase">Hrana</span></a>
-                        <a href="https://www.google.com/maps/search/Vrnjacka+Banja+turisticki+info" target="_blank" class="service-btn"><span class="text-xl">ℹ️</span><span class="text-[9px] font-black uppercase">Info</span></a>
+                    </div>
+                    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.08),transparent);margin-bottom:12px"></div>
+                    <!-- Kategorije iz baze -->
+                    <div id="city-categories-grid" class="grid grid-cols-3 gap-3"></div>
+                </div>
+
+                <!-- City Info Modal -->
+                <div id="city-modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(15,23,42,0.92);backdrop-filter:blur(10px);align-items:flex-end;justify-content:center;padding:0">
+                    <div style="background:white;border-top-left-radius:2rem;border-top-right-radius:2rem;width:100%;max-width:430px;max-height:85vh;overflow-y:auto">
+                        <div style="padding:14px 20px 10px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:white;z-index:10">
+                            <div style="display:flex;align-items:center;gap:10px">
+                                <span id="modal-cat-icon" style="font-size:1.4rem"></span>
+                                <span id="modal-cat-name" style="font-size:14px;font-weight:900;color:#0f172a"></span>
+                            </div>
+                            <button onclick="closeCityModal()" style="width:30px;height:30px;border-radius:50%;background:#f1f5f9;border:none;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+                        </div>
+                        <div id="city-modal-list" style="padding:14px 16px 32px"></div>
                     </div>
                 </div>
 
@@ -805,6 +825,86 @@ async function registerSW(){
     try{ await navigator.serviceWorker.register('./sw.js', {scope:'./'}); }catch(e){}
 }
 
+// ── City Info ─────────────────────────────────────────────────────
+let cityCategories = [];
+let cityPartners = [];
+
+async function loadCityInfo(){
+    // Uzmi kategorije
+    const {data:cats} = await sb.from('city_categories')
+        .select('*').eq('is_active',true).order('sort_order');
+    cityCategories = cats || [];
+
+    // Uzmi sve aktivne biznise u city info
+    const {data:partners} = await sb.from('partners')
+        .select('id, name, phone, whatsapp, city_category_id, partner_content(short_desc, working_hours, address)')
+        .eq('is_active', true)
+        .eq('show_in_city_info', true);
+    cityPartners = partners || [];
+
+    // Render grid
+    const grid = document.getElementById('city-categories-grid');
+    if(!grid) return;
+
+    if(!cityCategories.length){
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:12px;font-size:11px;color:#94a3b8;font-weight:700">Nema dostupnih usluga</div>';
+        return;
+    }
+
+    grid.innerHTML = cityCategories.map(cat => {
+        const count = cityPartners.filter(p => p.city_category_id === cat.id).length;
+        if(!count) return '';
+        return `<button class="service-btn" onclick="openCityModal('${cat.id}')">
+            <span class="text-xl">${C.escapeHtml(cat.icon)}</span>
+            <span class="text-[9px] font-black uppercase" style="line-height:1.2">${C.escapeHtml(cat.name)}</span>
+        </button>`;
+    }).filter(Boolean).join('');
+
+    // Ako nema nijednog partnera — fallback poruka
+    if(!cityPartners.length){
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:12px;font-size:11px;color:#94a3b8;font-weight:700">Uskoro dostupno</div>';
+    }
+}
+
+function openCityModal(catId){
+    const cat = cityCategories.find(c => c.id === catId);
+    if(!cat) return;
+
+    document.getElementById('modal-cat-icon').textContent = cat.icon;
+    document.getElementById('modal-cat-name').textContent = cat.name;
+
+    const partners = cityPartners.filter(p => p.city_category_id === catId);
+    const list = document.getElementById('city-modal-list');
+
+    if(!partners.length){
+        list.innerHTML = '<div class="city-empty">Nema registrovanih biznisa u ovoj kategoriji.</div>';
+    } else {
+        list.innerHTML = partners.map(p => {
+            const pc = p.partner_content?.[0] || {};
+            const phone = p.phone || '';
+            const wa = p.whatsapp || '';
+            const desc = pc.short_desc || '';
+            const hours = pc.working_hours || '';
+            return `<div class="city-biz-card">
+                <div class="city-biz-name">${C.escapeHtml(p.name)}</div>
+                ${desc ? `<div class="city-biz-desc">${C.escapeHtml(desc)}</div>` : ''}
+                ${hours ? `<div class="city-biz-meta"><span class="city-biz-hours">🕐 ${C.escapeHtml(hours)}</span></div>` : ''}
+                <div class="city-biz-btns">
+                    ${phone ? `<a href="tel:${C.escapeHtml(phone)}" class="city-btn-call">📞 Pozovi</a>` : ''}
+                    ${wa ? `<a href="https://wa.me/${wa.replace(/\D/g,'')}" target="_blank" class="city-btn-wa">💬 WhatsApp</a>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    const modal = document.getElementById('city-modal');
+    modal.style.display = 'flex';
+}
+
+function closeCityModal(){
+    document.getElementById('city-modal').style.display = 'none';
+}
+
 // ── Boot ──────────────────────────────────────────────────────────
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; showInstallBanner('android-install'); });
 window.addEventListener('appinstalled', () => { deferredPrompt = null; closeInstallPrompt(); });
@@ -833,7 +933,8 @@ window.addEventListener('load', async () => {
         await Promise.all([
             loadPartnerData(),
             loadHH(),
-            loadEvents()
+            loadEvents(),
+            loadCityInfo()
         ]);
     } catch(e){ console.error('Load error:', e); }
 
