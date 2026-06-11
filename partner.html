@@ -139,14 +139,22 @@ function doLogout(){
 
 // ── Init App ──────────────────────────────────────────────────────
 async function initApp(){
-  document.getElementById('partner-name-header').textContent = partner.name;
-  document.getElementById('partner-type-label').textContent = getTypeLabel(partner.type);
+  try {
+    document.getElementById('partner-name-header').textContent = partner.name || 'Partner';
+    document.getElementById('partner-type-label').textContent = getTypeLabel(partner.type);
 
-  // Učitaj sadržaj
-  const { data:pc } = await sb.from('partner_content').select('*').eq('partner_id', partner.id).maybeSingle();
-  partnerContent = pc || {};
+    // Učitaj sadržaj
+    const { data:pc } = await sb.from('partner_content').select('*').eq('partner_id', partner.id).maybeSingle();
+    partnerContent = pc || {};
 
-  buildTabs();
+    buildTabs();
+  } catch(e) {
+    console.error('initApp greška:', e);
+    // Ako nešto pade — vrati na PIN screen
+    document.getElementById('pin-screen').classList.remove('hidden');
+    document.getElementById('main-app').classList.add('hidden');
+    document.getElementById('pin-error').textContent = 'Greška pri učitavanju. Pokušajte ponovo.';
+  }
 }
 
 function getTypeLabel(type){
@@ -504,12 +512,17 @@ async function renderStats(){
 function esc(s){ return C.escapeHtml(s); }
 
 // ── Boot ──────────────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener("DOMContentLoaded", () => {
   const guard = StayVBGuard.requirePartner();
   if(!guard) return;
-  // Provjeri sačuvanu sesiju
+
+  // Uvek prikaži PIN screen kao default
+  document.getElementById('pin-screen').classList.remove('hidden');
+  document.getElementById('main-app').classList.add('hidden');
+
+  // Ako postoji validna sesija — auto-login
   const saved = C.getPartnerSession();
-  if(saved && saved.token === guard){
+  if(saved && saved.token === guard && saved.name){
     partner = saved;
     document.getElementById('pin-screen').classList.add('hidden');
     document.getElementById('main-app').classList.remove('hidden');
