@@ -45,13 +45,33 @@
             }, 150);
         }
 
-        // Vrati na srpski
+        // Vrati na srpski (originalni jezik)
         function _gtReset() {
             var sel = document.querySelector('.goog-te-combo');
-            if(sel){ sel.value = ''; sel.dispatchEvent(new Event('change',{bubbles:true})); return; }
-            // Fallback — iframe reload
-            var f = document.querySelector('.goog-te-menu-frame');
-            if(f) f.src = f.src;
+            if(sel) {
+                // GT koristi '' ili 'sr' za originalni jezik
+                sel.value = '';
+                sel.dispatchEvent(new Event('change', {bubbles:true}));
+                // Ako nije promenilo, pokušaj sa explicit restore
+                setTimeout(function(){
+                    var bar = document.querySelector('.goog-te-banner-frame');
+                    if(bar) {
+                        // Klikni "Show original" u GT bar-u ako postoji
+                        try {
+                            bar.contentDocument.querySelector('a')?.click();
+                        } catch(e){}
+                    }
+                    // Najsigurniji fallback — reload bez GT cookie-ja
+                    var saved = localStorage.getItem('stayvb_lang');
+                    if(saved !== '') {
+                        // samo ako je bio na nekom jeziku
+                    }
+                }, 200);
+                return;
+            }
+            // Bez GT widgeta — jednostavan reload
+            localStorage.setItem('stayvb_lang', '');
+            window.location.reload();
         }
 
         // Poziva se sa zastavica
@@ -75,10 +95,16 @@
                 }, 200);
             } else {
                 // Promena kroz pilule — primeni direktno bez reload-a
-                if(langCode) {
+                if(langCode && langCode !== '') {
                     _gtApply(langCode);
                 } else {
-                    _gtReset();
+                    // Srpski — reload je najpouzdaniji način za vraćanje
+                    localStorage.setItem('stayvb_lang', '');
+                    var ld = document.getElementById('loader');
+                    if(ld) ld.style.display = 'flex';
+                    var cont = document.getElementById('content');
+                    if(cont) cont.style.opacity = '0.3';
+                    setTimeout(function(){ window.location.reload(); }, 150);
                 }
             }
         }
@@ -310,7 +336,7 @@
                 <span class="lang-name">Български</span><span class="lang-native">Български</span>
             </button>
             <button class="lang-btn" onclick="stayvbSetLang('zh-CN')">
-                <img class="lang-flag-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjREUyOTEwIi8+PHBvbHlnb24gcG9pbnRzPSI3LDMgOC4yLDYuOCAxMiw2LjggOSw5IDEwLjIsMTIuOCA3LDEwLjUgMy44LDEyLjggNSw5IDIsMy44LDYuOCIgZmlsbD0iI0ZGREUwMCIvPjwvc3ZnPg==" alt="ZH">
+                <img class="lang-flag-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+CjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI0RFMjkxMCIvPgo8cG9seWdvbiBwb2ludHM9IjcuMDAsNS41MCA4LjA2LDguNTQgMTEuMjgsOC42MSA4LjcxLDEwLjU2IDkuNjUsMTMuNjQgNy4wMCwxMS44MCA0LjM1LDEzLjY0IDUuMjksMTAuNTYgMi43Miw4LjYxIDUuOTQsOC41NCIgZmlsbD0iI0ZGREUwMCIvPgo8cG9seWdvbiBwb2ludHM9IjEyLjAwLDIuNzAgMTIuNDIsMy45MiAxMy43MSwzLjk0IDEyLjY4LDQuNzIgMTMuMDYsNS45NiAxMi4wMCw1LjIyIDEwLjk0LDUuOTYgMTEuMzIsNC43MiAxMC4yOSwzLjk0IDExLjU4LDMuOTIiIGZpbGw9IiNGRkRFMDAiLz4KPHBvbHlnb24gcG9pbnRzPSIxNC4wMCw1LjcwIDE0LjQyLDYuOTIgMTUuNzEsNi45NCAxNC42OCw3LjcyIDE1LjA2LDguOTYgMTQuMDAsOC4yMiAxMi45NCw4Ljk2IDEzLjMyLDcuNzIgMTIuMjksNi45NCAxMy41OCw2LjkyIiBmaWxsPSIjRkZERTAwIi8+Cjxwb2x5Z29uIHBvaW50cz0iMTQuMDAsOS43MCAxNC40MiwxMC45MiAxNS43MSwxMC45NCAxNC42OCwxMS43MiAxNS4wNiwxMi45NiAxNC4wMCwxMi4yMiAxMi45NCwxMi45NiAxMy4zMiwxMS43MiAxMi4yOSwxMC45NCAxMy41OCwxMC45MiIgZmlsbD0iI0ZGREUwMCIvPgo8cG9seWdvbiBwb2ludHM9IjEyLjAwLDEyLjcwIDEyLjQyLDEzLjkyIDEzLjcxLDEzLjk0IDEyLjY4LDE0LjcyIDEzLjA2LDE1Ljk2IDEyLjAwLDE1LjIyIDEwLjk0LDE1Ljk2IDExLjMyLDE0LjcyIDEwLjI5LDEzLjk0IDExLjU4LDEzLjkyIiBmaWxsPSIjRkZERTAwIi8+Cjwvc3ZnPg==" alt="ZH">
                 <span class="lang-name">中文</span><span class="lang-native">中文</span>
             </button>
         </div>
@@ -331,7 +357,7 @@
                 <button class="lang-pill" id="langpill-de"    onclick="stayvbSetLang('de')"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiMwMDAiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iI0REMDAwMCIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGQ0UwMCIvPjwvc3ZnPg==" alt="DE"></button>
                 <button class="lang-pill" id="langpill-ru"    onclick="stayvbSetLang('ru')"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNGRkYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzAwMzlBNiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0Q1MkIxRSIvPjwvc3ZnPg==" alt="RU"></button>
                 <button class="lang-pill" id="langpill-bg"    onclick="stayvbSetLang('bg')"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNGRkYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzAwOTY2RSIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0Q2MjYxMiIvPjwvc3ZnPg==" alt="BG"></button>
-                <button class="lang-pill" id="langpill-zh-CN" onclick="stayvbSetLang('zh-CN')"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjREUyOTEwIi8+PHBvbHlnb24gcG9pbnRzPSI3LDMgOC4yLDYuOCAxMiw2LjggOSw5IDEwLjIsMTIuOCA3LDEwLjUgMy44LDEyLjggNSw5IDIsMy44LDYuOCIgZmlsbD0iI0ZGREUwMCIvPjwvc3ZnPg==" alt="ZH"></button>
+                <button class="lang-pill" id="langpill-zh-CN" onclick="stayvbSetLang('zh-CN')"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+CjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI0RFMjkxMCIvPgo8cG9seWdvbiBwb2ludHM9IjcuMDAsNS41MCA4LjA2LDguNTQgMTEuMjgsOC42MSA4LjcxLDEwLjU2IDkuNjUsMTMuNjQgNy4wMCwxMS44MCA0LjM1LDEzLjY0IDUuMjksMTAuNTYgMi43Miw4LjYxIDUuOTQsOC41NCIgZmlsbD0iI0ZGREUwMCIvPgo8cG9seWdvbiBwb2ludHM9IjEyLjAwLDIuNzAgMTIuNDIsMy45MiAxMy43MSwzLjk0IDEyLjY4LDQuNzIgMTMuMDYsNS45NiAxMi4wMCw1LjIyIDEwLjk0LDUuOTYgMTEuMzIsNC43MiAxMC4yOSwzLjk0IDExLjU4LDMuOTIiIGZpbGw9IiNGRkRFMDAiLz4KPHBvbHlnb24gcG9pbnRzPSIxNC4wMCw1LjcwIDE0LjQyLDYuOTIgMTUuNzEsNi45NCAxNC42OCw3LjcyIDE1LjA2LDguOTYgMTQuMDAsOC4yMiAxMi45NCw4Ljk2IDEzLjMyLDcuNzIgMTIuMjksNi45NCAxMy41OCw2LjkyIiBmaWxsPSIjRkZERTAwIi8+Cjxwb2x5Z29uIHBvaW50cz0iMTQuMDAsOS43MCAxNC40MiwxMC45MiAxNS43MSwxMC45NCAxNC42OCwxMS43MiAxNS4wNiwxMi45NiAxNC4wMCwxMi4yMiAxMi45NCwxMi45NiAxMy4zMiwxMS43MiAxMi4yOSwxMC45NCAxMy41OCwxMC45MiIgZmlsbD0iI0ZGREUwMCIvPgo8cG9seWdvbiBwb2ludHM9IjEyLjAwLDEyLjcwIDEyLjQyLDEzLjkyIDEzLjcxLDEzLjk0IDEyLjY4LDE0LjcyIDEzLjA2LDE1Ljk2IDEyLjAwLDE1LjIyIDEwLjk0LDE1Ljk2IDExLjMyLDE0LjcyIDEwLjI5LDEzLjk0IDExLjU4LDEzLjkyIiBmaWxsPSIjRkZERTAwIi8+Cjwvc3ZnPg==" alt="ZH"></button>
             </div>
             <div class="hero-badge">✨ StayVB Verified Stay</div>
             <h1 id="unit-name">StayVB</h1>
