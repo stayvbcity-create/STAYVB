@@ -760,9 +760,28 @@ async function loadPartnerData(){
         }
     }
 
-    await loadLoyalty(partner.is_premium);
-    if(partner.is_premium && (partner.type === 'apartment' || partner.type === 'hotel')){
+    // Premium se primenjuje SAMO za apartment i hotel
+    const isPremiumApplicable = (partner.type === 'apartment' || partner.type === 'hotel') && partner.is_premium;
+
+    // Loyalty traka i nagradna igra
+    await loadLoyalty(isPremiumApplicable);
+
+    // Auto stamp pri dolasku
+    if(isPremiumApplicable){
         await autoStamp(partner.id, currentUnitId);
+    }
+
+    // Posebne pogodnosti i Room service - sakrij ako nije premium apartment/hotel
+    if(!isPremiumApplicable){
+        const el = document.getElementById('extra-card');
+        const el2 = document.getElementById('service-card');
+        if(el) el.style.display = 'none';
+        if(el2) el2.style.display = 'none';
+    }
+
+    // Share kampanja - sakrij za ne-premium
+    if(!isPremiumApplicable){
+        document.getElementById('shareCampaignBox')?.classList.add('hidden');
     }
 }
 
