@@ -67,11 +67,24 @@
         function stayvbSetLang(langCode) {
             localStorage.setItem('stayvb_lang', langCode);
             stayvbApplyLang(langCode);
-            // Ukloni overlay lang screen iz DOM-a
+
+            // Animiraj izlaz lang screena
             var ls = document.getElementById('lang-screen');
-            if(ls) ls.remove();
-            // Pokreni app inicijalizaciju
-            if(typeof startApp === 'function') startApp(langCode);
+            if(ls){
+                ls.style.transition = 'opacity 0.3s ease';
+                ls.style.opacity = '0';
+                ls.style.pointerEvents = 'none';
+                setTimeout(function(){ ls.remove(); }, 300);
+            }
+
+            // Prikaži loader odmah
+            var ld = document.getElementById('loader');
+            if(ld){ ld.classList.remove('hidden'); }
+
+            // Pokreni app
+            setTimeout(function(){
+                if(typeof startApp === 'function') startApp(langCode);
+            }, 150);
         }
 
         function updateLangPills(activeLang) {
@@ -86,7 +99,7 @@
             if (saved) stayvbApplyLang(saved);
         })();
     </script>
-    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <!-- Google Translate se učitava async da ne blokira rendering -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
         :root{--bg:#f8fafc;--card:rgba(255,255,255,0.92);--slate-1:#0f172a;--amber-1:#f59e0b;--amber-2:#fbbf24;--shadow-card:0 12px 28px rgba(15,23,42,0.10);--radius-xl:2rem;}
@@ -921,15 +934,24 @@ async function startApp(lang){
 
     updateLangPills(lang || '');
 
-    // Sakrij loader, prikaži content skeleton
+    // Prikaži loader
     document.getElementById('loader').classList.remove('hidden');
 
+    // Wake-up ping — šalje mali upit da "probudi" bazu pre glavnih upita
+    // Ovo smanjuje cold start kašnjenje
+    try{ await sb.from('partners').select('id').limit(1); } catch(e){}
+
     try{
-        await Promise.all([
-            loadPartnerData(),
-            loadHH(),
-            loadEvents(),
-            loadCityInfo()
+        // Timeout od 8 sekundi - ne blokira UI ako je baza spora
+        const timeout = new Promise(resolve => setTimeout(resolve, 8000));
+        await Promise.race([
+            Promise.all([
+                loadPartnerData(),
+                loadHH(),
+                loadEvents(),
+                loadCityInfo()
+            ]),
+            timeout
         ]);
     } catch(e){ console.error('Load error:', e); }
 
@@ -958,23 +980,34 @@ async function startApp(lang){
 
 window.addEventListener('load', async () => {
     await registerSW();
-    const savedLang = localStorage.getItem('stayvb_lang');
 
-    if(savedLang === null){
-        // Prvo otvaranje — prikaži lang screen overlay, sakrij loader i content
+    // Eksplicitno proveri da li je korisnik ikad odabrao jezik
+    // hasLang je null samo pri prvom otvaranju
+    const hasLang = localStorage.getItem('stayvb_lang');
+
+    if(hasLang === null){
+        // Prvo otvaranje — prikaži lang screen, čekaj da korisnik odabere
         document.getElementById('lang-screen').classList.remove('hidden');
         document.getElementById('loader').classList.add('hidden');
-        // Lang screen je fixed overlay — content ispod može da postoji
-        // ali ga korisnik ne vidi dok overlay ne nestane
-        return;
+        document.getElementById('content').classList.add('hidden');
+        return; // startApp() će biti pozvan iz stayvbSetLang()
     }
 
-    // Jezik već izabran — ukloni lang screen odmah i pokreni app
+    // Jezik već izabran — ukloni lang screen i pokreni app
     const ls = document.getElementById('lang-screen');
     if(ls) ls.remove();
 
-    await startApp(savedLang);
+    await startApp(hasLang);
 });
 </script>
+    <!-- Google Translate async - ne blokira učitavanje -->
+    <script>
+    window.addEventListener('load', function(){
+        var s = document.createElement('script');
+        s.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+        s.async = true;
+        document.body.appendChild(s);
+    });
+    </script>
 </body>
 </html>
