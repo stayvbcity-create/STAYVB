@@ -780,16 +780,18 @@ async function loadPartnerData(){
     }
 
     // Premium se primenjuje SAMO za apartment i hotel
-    // Jedini izvor istine je is_premium kolona
+    // Eksplicitna konverzija jer Supabase ponekad vraća string umesto boolean
     const isPremiumApplicable = (partner.type === 'apartment' || partner.type === 'hotel') 
-        && partner.is_premium === true;
+        && (partner.is_premium === true || partner.is_premium === 'true' || partner.is_premium === 1);
 
-    // Loyalty traka i nagradna igra
+    console.log('isPremiumApplicable:', isPremiumApplicable, '| raw is_premium:', partner.is_premium, typeof partner.is_premium);
+
+    // Loyalty traka, nagradna igra i VIP kartica
     await loadLoyalty(isPremiumApplicable);
 
-    // Auto stamp pri dolasku
+    // Auto stamp pri dolasku - ne čeka, ne blokira prikaz
     if(isPremiumApplicable){
-        await autoStamp(partner.id, isPremiumApplicable);
+        autoStamp(partner.id, isPremiumApplicable); // bez await - ne blokira UI
     }
 
     // Posebne pogodnosti i Room service - sakrij ako nije premium apartment/hotel
