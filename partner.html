@@ -98,6 +98,18 @@ textarea.field-input{resize:vertical;min-height:90px}
 </div>
 
 <!-- Main App -->
+<!-- Suspendovan nalog -->
+<div id="suspended-screen" class="hidden" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;background:linear-gradient(145deg,#0f172a,#1a2540)">
+  <div style="font-size:3rem;margin-bottom:20px">🔒</div>
+  <h2 style="font-size:1.3rem;font-weight:900;color:#f87171;margin:0 0 10px;letter-spacing:-0.02em">Nalog je suspendovan</h2>
+  <p style="font-size:13px;color:rgba(255,255,255,0.55);font-weight:600;line-height:1.6;max-width:280px;margin:0 0 28px">
+    Vaš nalog je privremeno deaktiviran. Kontaktirajte administratora StayVB sistema za više informacija.
+  </p>
+  <div style="padding:14px 20px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.20);border-radius:14px;font-size:11px;font-weight:800;color:#fca5a5;max-width:280px">
+    📧 Kontakt: admin@stayvb.rs
+  </div>
+</div>
+
 <div id="main-app" class="app hidden">
   <div class="header">
     <button class="logout-btn" onclick="doLogout()">Odjavi se</button>
@@ -127,6 +139,17 @@ async function doLogin(){
   if(!result.ok){ errEl.textContent = result.error || 'Pogrešan PIN.'; return; }
 
   partner = result.partner;
+
+  // Provjeri da li je nalog suspendovan
+  if(!partner.is_active){
+    document.getElementById('pin-screen').classList.add('hidden');
+    document.getElementById('main-app').classList.add('hidden');
+    // Prikaži suspendovan ekran
+    const suspended = document.getElementById('suspended-screen');
+    if(suspended) suspended.classList.remove('hidden');
+    return;
+  }
+
   document.getElementById('pin-screen').classList.add('hidden');
   document.getElementById('main-app').classList.remove('hidden');
   initApp();
