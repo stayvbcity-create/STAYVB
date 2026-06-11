@@ -27,8 +27,10 @@
             }, 'google_translate_element');
 
             // Čekaj GT widget i primeni sačuvani jezik
+            // Ne primenjuj GT ako je reload sa srpskog (_sr parametar)
             var saved = localStorage.getItem('stayvb_lang') || '';
-            if(saved && saved !== '') _gtApply(saved);
+            var isSrReload = location.search.indexOf('_sr=') > -1;
+            if(saved && saved !== '' && !isSrReload) _gtApply(saved);
         }
 
         // Primeni jezik kroz GT select element
@@ -98,43 +100,19 @@
                 if(langCode && langCode !== '') {
                     _gtApply(langCode);
                 } else {
-                    // Srpski — koristi GT restore originalnog teksta
+                    // Srpski — jedino pouzdano: reload na čist URL
+                    // GT keširа prevod i ne može se poništiti bez novog load-a
                     localStorage.setItem('stayvb_lang', '');
                     updateLangPills('');
 
-                    // Pokušaj 1: GT doGTranslate('sr|sr') resetuje na original
-                    if(typeof google !== 'undefined' && google.translate && google.translate.TranslateElement) {
-                        try {
-                            new google.translate.TranslateElement({pageLanguage:'sr'}, 'google_translate_element');
-                        } catch(e){}
-                    }
+                    // Uzmi čist URL bez ikakvih GT parametara
+                    var baseUrl = location.pathname + location.search;
+                    // Dodaj timestamp da spречимо keširanje
+                    var sep = location.search ? '&' : '?';
+                    var cleanUrl = baseUrl + sep + '_sr=' + Date.now();
 
-                    // Pokušaj 2: Direktno kroz select - prazan string = original
-                    var sel = document.querySelector('.goog-te-combo');
-                    if(sel) {
-                        sel.value = '';
-                        sel.dispatchEvent(new Event('change', {bubbles:true}));
-                        return; // ne trebamo reload ako je ovo radilo
-                    }
-
-                    // Pokušaj 3: GT restore link u banner-u
-                    var restoreEl = document.querySelector('.goog-te-gadget');
-                    if(restoreEl) {
-                        var links = restoreEl.querySelectorAll('a');
-                        links.forEach(function(a){ if(a.href && a.href.indexOf('restore') > -1) a.click(); });
-                    }
-
-                    // Fallback: reload sa ?notranslate=1 da sprecimo auto-prevod
-                    var url = location.href.split('?')[0];
-                    var params = new URLSearchParams(location.search);
-                    params.delete('googtrans');
-                    var newUrl = url + (params.toString() ? '?' + params.toString() : '');
-                    // Brišemo SVE GT cookies
-                    document.cookie = 'googtrans=/sr/sr; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
-                    document.cookie = 'googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
-                    document.cookie = 'googtrans=; path=/; domain=.' + location.hostname + '; expires=Thu, 01 Jan 1970 00:00:00 UTC';
-                    document.cookie = 'googtrans=; path=/; domain=' + location.hostname + '; expires=Thu, 01 Jan 1970 00:00:00 UTC';
-                    setTimeout(function(){ window.location.replace(newUrl); }, 100);
+                    // location.replace ne dodaje u history (back dugme radi normalno)
+                    window.location.replace(cleanUrl);
                 }
             }
         }
@@ -994,8 +972,9 @@ async function startApp(lang){
     const ls = document.getElementById('lang-screen');
     if(ls) ls.style.display = 'none';
 
-    // Primeni prevod samo ako nije srpski
-    if(lang && lang !== '') _gtApply(lang);
+    // Primeni prevod samo ako nije srpski i nije srpski reload
+    var isSrReload = location.search.indexOf('_sr=') > -1;
+    if(lang && lang !== '' && !isSrReload) _gtApply(lang);
 
     // Prikaži loader, sakrij content dok se učitava
     document.getElementById('loader').style.display = 'flex';
