@@ -67,6 +67,11 @@
         function stayvbSetLang(langCode) {
             localStorage.setItem('stayvb_lang', langCode);
             stayvbApplyLang(langCode);
+            // Sakrij lang screen odmah pre reload-a
+            var ls = document.getElementById('lang-screen');
+            if(ls) ls.style.display = 'none';
+            var ld = document.getElementById('loader');
+            if(ld) ld.classList.remove('hidden');
             window.location.reload();
         }
 
