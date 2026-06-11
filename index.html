@@ -140,7 +140,7 @@
         .treasure-strip::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.26),transparent);transform:translateX(-120%) skewX(-20deg);animation:goldSweep 2.8s ease-in-out infinite;pointer-events:none;}
         .treasure-strip::after{content:"";position:absolute;inset:4px;border-radius:1.25rem;border:1px solid rgba(255,255,255,0.18);pointer-events:none;}
         .treasure-strip-left{position:relative;z-index:2;display:flex;align-items:center;min-width:0;flex:1;}
-        .treasure-strip-title{font-size:1rem;line-height:1;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;color:#fffdf5;text-shadow:0 1px 0 rgba(120,53,15,0.18);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .treasure-strip-title{font-size:0.82rem;line-height:1;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;color:#fffdf5;text-shadow:0 1px 0 rgba(120,53,15,0.18);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
         .treasure-strip-icon{position:relative;z-index:2;width:46px;height:46px;min-width:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:rgba(120,53,15,0.18);border:1px solid rgba(255,255,255,0.22);animation:iconBounce 1.35s ease-in-out infinite;}
         @keyframes goldBlink{0%,100%{box-shadow:0 12px 24px rgba(245,158,11,0.22),inset 0 1px 0 rgba(255,255,255,0.28);filter:brightness(1);}50%{box-shadow:0 16px 30px rgba(245,158,11,0.34),0 0 22px rgba(251,191,36,0.36),inset 0 1px 0 rgba(255,255,255,0.34);filter:brightness(1.08);}}
         @keyframes goldSweep{0%{transform:translateX(-140%) skewX(-20deg);opacity:0;}16%{opacity:0.5;}42%{transform:translateX(180%) skewX(-20deg);opacity:0.4;}43%{opacity:0;}100%{transform:translateX(180%) skewX(-20deg);opacity:0;}}
@@ -655,13 +655,12 @@ async function loadPartnerData(){
 
     const { data: partner, error } = await sb
         .from('partners')
-        .select('id, name, type, phone, whatsapp, loyalty_enabled, is_premium, partner_content(wifi_name, wifi_pass, extra_offer, service_prices, house_rules, share_campaign_active, instagram_reel_url, share_gift_text)')
+        .select('id, name, type, phone, whatsapp, loyalty_enabled, is_premium')
         .eq('partner_code', currentUnitId)
         .eq('is_active', true)
         .maybeSingle();
 
     if(error || !partner){
-        // Fallback — pokaži samo ime koda ako partner ne postoji
         document.getElementById('unit-name').innerText = currentUnitId || 'StayVB';
         document.getElementById('stay-zone-unit-name').innerText = currentUnitId || 'StayVB';
         document.getElementById('wifi-name').innerText = 'Kontaktirajte recepciju';
@@ -669,7 +668,14 @@ async function loadPartnerData(){
         return;
     }
 
-    const pc = partner.partner_content?.[0] || {};
+    // Poseban upit za partner_content
+    const { data: pcData } = await sb
+        .from('partner_content')
+        .select('wifi_name, wifi_pass, extra_offer, service_prices, house_rules, share_campaign_active, instagram_reel_url, share_gift_text')
+        .eq('partner_id', partner.id)
+        .maybeSingle();
+
+    const pc = pcData || {};
 
     // Ime u hero i stay zoni
     document.getElementById('unit-name').innerText = partner.name || 'StayVB';
