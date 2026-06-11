@@ -114,7 +114,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .search-input{flex:1;min-width:180px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:12px;font-weight:600;font-family:inherit;outline:none}
 .search-input::placeholder{color:var(--faint)}
 .search-input:focus{border-color:rgba(251,191,36,0.35)}
-.filter-select{padding:9px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:11px;font-weight:700;font-family:inherit;outline:none;cursor:pointer}
+.filter-select{padding:9px 14px;background:#1e293b;border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:11px;font-weight:700;font-family:inherit;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
 
 /* ── Modal ── */
 .modal{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px}
@@ -127,8 +127,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 /* ── Form fields ── */
 .field{margin-bottom:14px}
 .field label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.14em;color:var(--muted);display:block;margin-bottom:5px}
-.field input,.field select,.field textarea,.field.select{width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:13px;font-weight:600;font-family:inherit;outline:none;transition:border-color 0.15s}
-.field input:focus,.field select:focus{border-color:rgba(251,191,36,0.40);background:rgba(255,255,255,0.07)}
+.field input,.field select,.field textarea,.field.select{width:100%;padding:11px 14px;background:#1e293b;border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:13px;font-weight:600;font-family:inherit;outline:none;transition:border-color 0.15s;-webkit-appearance:none;appearance:none}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+.field input:focus,.field select:focus{border-color:rgba(251,191,36,0.40);background:#253347}
+.field select option{background:#1e293b;color:white}
+.filter-select option{background:#1e293b;color:white}
 .field input::placeholder{color:var(--faint)}
 .field textarea{resize:vertical;min-height:70px}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -454,15 +457,20 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         </select>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
-      <label style="display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;cursor:pointer;padding:10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius)">
-        <label class="tog"><input type="checkbox" id="edit-premium"><span class="tog-s"></span></label> Premium
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <label style="display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;cursor:pointer;padding:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius)">
+        <label class="tog"><input type="checkbox" id="edit-premium"><span class="tog-s"></span></label>
+        <div>
+          <div style="font-weight:900">Premium partner</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:2px">Loyalty traka + nagradna igra vidljivi gostu</div>
+        </div>
       </label>
-      <label style="display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;cursor:pointer;padding:10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius)">
-        <label class="tog"><input type="checkbox" id="edit-loyalty"><span class="tog-s"></span></label> Loyalty
-      </label>
-      <label style="display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;cursor:pointer;padding:10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius)">
-        <label class="tog"><input type="checkbox" id="edit-booking"><span class="tog-s"></span></label> Booking
+      <label style="display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;cursor:pointer;padding:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius)">
+        <label class="tog"><input type="checkbox" id="edit-booking"><span class="tog-s"></span></label>
+        <div>
+          <div style="font-weight:900">Booking</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:2px">Rezervacije aktivne za goste</div>
+        </div>
       </label>
     </div>
     <button class="btn btn-gold" style="width:100%;padding:13px;font-size:12px;justify-content:center" onclick="saveEdit()">Sačuvaj izmene</button>
@@ -509,13 +517,31 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <button class="modal-close" onclick="closeModal('modal-category')">✕</button>
     <div class="modal-title" id="cat-modal-title">🏙️ Nova kategorija</div>
     <input type="hidden" id="cat-edit-id">
-    <div class="field-row">
-      <div class="field"><label>Ikona (emoji)</label><input id="cat-icon" placeholder="npr. 🚕" maxlength="4"></div>
-      <div class="field"><label>Naziv</label><input id="cat-name" placeholder="npr. Taksi"></div>
+
+    <div class="field"><label>Odaberi ikonu</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px" id="icon-picker">
+        <!-- Popularne ikone za city info -->
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border2);border-radius:var(--radius)">
+        <span id="cat-icon-preview" style="font-size:1.8rem;min-width:32px">📍</span>
+        <input id="cat-icon" placeholder="ili upiši emoji..." maxlength="4" 
+          style="background:none;border:none;color:white;font-size:14px;font-weight:700;font-family:inherit;outline:none;flex:1"
+          oninput="document.getElementById('cat-icon-preview').textContent=this.value||'📍'">
+      </div>
     </div>
+
     <div class="field-row">
-      <div class="field"><label>Boja (hex)</label><input id="cat-color" type="color" value="#f59e0b" style="height:44px;padding:4px 8px"></div>
+      <div class="field"><label>Naziv kategorije</label><input id="cat-name" placeholder="npr. Taksi"></div>
       <div class="field"><label>Redosled</label><input id="cat-order" type="number" placeholder="1" min="0"></div>
+    </div>
+    <div class="field">
+      <label>Boja</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px" id="color-picker">
+        <!-- Predefinisane boje -->
+      </div>
+      <input id="cat-color" type="color" value="#f59e0b" 
+        style="height:36px;padding:3px 8px;background:#1e293b;border:1px solid var(--border2);border-radius:var(--radius);cursor:pointer;width:100%"
+        oninput="highlightColor(this.value)">
     </div>
     <button class="btn btn-gold" style="width:100%;padding:13px;font-size:12px;justify-content:center" onclick="saveCategory()">Sačuvaj kategoriju</button>
     <div class="form-msg" id="cat-msg"></div>
@@ -793,7 +819,7 @@ function renderPartners(list){
       <thead><tr>
         <th>Kod</th><th>Naziv</th><th>Tip</th><th>PIN</th>
         <th>Cena/mes</th><th>Plaćanje</th><th>Ističe</th>
-        <th>Aktivan</th><th>Loyalty</th><th>Akcije</th>
+        <th>Aktivan</th><th>Premium partner</th><th>Akcije</th>
       </tr></thead>
       <tbody>${list.map(p=>`<tr>
         <td><span class="p-code">${esc(p.partner_code||'')}</span></td>
@@ -807,7 +833,7 @@ function renderPartners(list){
         <td>${payBadge(p.payment_status)}</td>
         <td>${expiryBadge(p.subscription_expires)}<div style="font-size:9px;color:var(--muted);margin-top:3px">${fmtDate(p.subscription_expires)}</div></td>
         <td><label class="tog"><input type="checkbox" ${p.is_active?'checked':''} onchange="tog('${p.id}','is_active',this.checked)"><span class="tog-s"></span></label></td>
-        <td><label class="tog"><input type="checkbox" ${p.loyalty_enabled?'checked':''} onchange="tog('${p.id}','loyalty_enabled',this.checked)"><span class="tog-s"></span></label></td>
+        <td><label class="tog"><input type="checkbox" ${p.loyalty_enabled?'checked':''} onchange="togPremium('${p.id}',this.checked)"><span class="tog-s"></span></label></td>
         <td><div style="display:flex;gap:5px;flex-wrap:wrap">
           <button class="btn btn-ghost btn-sm" onclick="openEdit('${p.id}')">✏️ Edit</button>
           <button class="btn btn-blue btn-sm" onclick="regenToken('${p.id}')">🔄 URL</button>
@@ -847,7 +873,6 @@ function openEdit(id){
   document.getElementById('edit-expires').value=p.subscription_expires||'';
   document.getElementById('edit-paystatus').value=p.payment_status||'pending';
   document.getElementById('edit-premium').checked=!!p.is_premium;
-  document.getElementById('edit-loyalty').checked=!!p.loyalty_enabled;
   document.getElementById('edit-booking').checked=!!p.has_booking;
   document.getElementById('edit-msg').textContent='';
   openModal('modal-edit');
@@ -869,7 +894,7 @@ async function saveEdit(){
     subscription_expires:expires,
     payment_status:document.getElementById('edit-paystatus').value,
     is_premium:document.getElementById('edit-premium').checked,
-    loyalty_enabled:document.getElementById('edit-loyalty').checked,
+    loyalty_enabled:document.getElementById('edit-premium').checked,
     has_booking:document.getElementById('edit-booking').checked,
   };
   if(pin && pin.length===4) u.pin=pin;
@@ -1179,6 +1204,93 @@ function editCategory(id){
     document.getElementById('cat-color').value=cat.color||'#f59e0b';
     document.getElementById('cat-order').value=cat.sort_order;
     document.getElementById('cat-msg').textContent='';
+    openModal('modal-category');
+}
+
+// Icon i color picker inicijalizacija
+function initIconPicker(){
+    const icons = [
+        '🚕','🚗','🏥','💊','💄','💅','✂️','🛠️','⚙️','🔧',
+        '🍔','🍕','🍜','🥗','☕','🍺','🍷','🎂','🛒','🛍️',
+        '👗','👠','👟','💎','⌚','📱','💻','🎮','📚','🎵',
+        '🎸','🎭','🎨','🏊','💪','🧘','⚽','🎾','🏋️','🚴',
+        '🌿','🌸','🌊','⛰️','🏖️','🌅','🎡','🎪','🎠','🏟️',
+        '🏨','🏠','🔑','🧹','🧴','💈','🪒','🌙','⭐','📍'
+    ];
+    const colors = [
+        '#f59e0b','#ef4444','#10b981','#3b82f6','#8b5cf6',
+        '#ec4899','#f97316','#06b6d4','#84cc16','#64748b'
+    ];
+
+    const ip = document.getElementById('icon-picker');
+    if(ip && !ip.children.length){
+        ip.innerHTML = icons.map(i=>`
+            <button type="button" onclick="selectIcon('${i}')" 
+              style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,0.06);border:1.5px solid transparent;font-size:1.3rem;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center"
+              onmouseover="this.style.background='rgba(251,191,36,0.15)';this.style.borderColor='rgba(251,191,36,0.4)'"
+              onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.borderColor='transparent'"
+            >${i}</button>`).join('');
+    }
+
+    const cp = document.getElementById('color-picker');
+    if(cp && !cp.children.length){
+        cp.innerHTML = colors.map(col=>`
+            <button type="button" onclick="selectColor('${col}')"
+              style="width:32px;height:32px;border-radius:8px;background:${col};border:2px solid transparent;cursor:pointer;transition:all 0.15s"
+              id="colorbtn-${col.replace('#','')}"
+            ></button>`).join('');
+    }
+}
+
+function selectIcon(icon){
+    document.getElementById('cat-icon').value = icon;
+    document.getElementById('cat-icon-preview').textContent = icon;
+    // Highlight izabrane
+    document.querySelectorAll('#icon-picker button').forEach(b=>{
+        b.style.background = b.textContent === icon ? 'rgba(251,191,36,0.20)' : 'rgba(255,255,255,0.06)';
+        b.style.borderColor = b.textContent === icon ? 'rgba(251,191,36,0.60)' : 'transparent';
+    });
+}
+
+function selectColor(col){
+    document.getElementById('cat-color').value = col;
+    highlightColor(col);
+}
+
+function highlightColor(col){
+    document.querySelectorAll('#color-picker button').forEach(b=>{
+        b.style.borderColor = b.style.background === col ? 'white' : 'transparent';
+        b.style.transform = b.style.background === col ? 'scale(1.15)' : 'scale(1)';
+    });
+}
+
+function openNewCategory(){
+    document.getElementById('cat-edit-id').value='';
+    document.getElementById('cat-modal-title').textContent='🏙️ Nova kategorija';
+    document.getElementById('cat-icon').value='';
+    document.getElementById('cat-icon-preview').textContent='📍';
+    document.getElementById('cat-name').value='';
+    document.getElementById('cat-color').value='#f59e0b';
+    document.getElementById('cat-order').value=allCityCategories.length+1;
+    document.getElementById('cat-msg').textContent='';
+    initIconPicker();
+    openModal('modal-category');
+}
+
+function editCategory(id){
+    const cat = allCityCategories.find(c=>c.id===id); if(!cat) return;
+    document.getElementById('cat-edit-id').value=cat.id;
+    document.getElementById('cat-modal-title').textContent='✏️ Uredi: '+cat.name;
+    document.getElementById('cat-icon').value=cat.icon;
+    document.getElementById('cat-icon-preview').textContent=cat.icon||'📍';
+    document.getElementById('cat-color').value=cat.color||'#f59e0b';
+    document.getElementById('cat-order').value=cat.sort_order;
+    document.getElementById('cat-msg').textContent='';
+    initIconPicker();
+    setTimeout(()=>{
+        selectIcon(cat.icon);
+        selectColor(cat.color||'#f59e0b');
+    }, 50);
     openModal('modal-category');
 }
 
