@@ -34,23 +34,19 @@
             }, 'google_translate_element');
 
             var savedLang = localStorage.getItem('stayvb_lang') || '';
-            if (savedLang) stayvbApplyLang(savedLang);
 
-            var observer = new MutationObserver(function() {
+            // Pokušaj da primenimo jezik čim GT bude spreman
+            var attempts = 0;
+            var applyInterval = setInterval(function(){
                 var sel = document.querySelector('.goog-te-combo');
-                if (sel && !sel._stayvb_bound) {
-                    sel._stayvb_bound = true;
-                    sel.addEventListener('change', function() {
-                        localStorage.setItem('stayvb_lang', sel.value || '');
-                        updateLangPills(sel.value || '');
-                    });
-                    if (savedLang) {
-                        sel.value = savedLang;
-                        sel.dispatchEvent(new Event('change', { bubbles: true }));
-                    }
+                attempts++;
+                if(sel && savedLang){
+                    sel.value = savedLang;
+                    sel.dispatchEvent(new Event('change', {bubbles:true}));
+                    clearInterval(applyInterval);
                 }
-            });
-            observer.observe(document.body, { childList: true, subtree: true });
+                if(attempts > 30) clearInterval(applyInterval);
+            }, 200);
         }
 
         function stayvbApplyLang(langCode) {
@@ -68,23 +64,44 @@
             localStorage.setItem('stayvb_lang', langCode);
             stayvbApplyLang(langCode);
 
-            // Animiraj izlaz lang screena
             var ls = document.getElementById('lang-screen');
-            if(ls){
+            var appStarted = ls === null || ls.style.display === 'none' || getComputedStyle(ls).display === 'none';
+
+            if(ls && ls.style.display !== 'none'){
+                // Lang screen je vidljiv — prvi odabir jezika
+                // Animiraj izlaz i pokreni app bez reload-a
                 ls.style.transition = 'opacity 0.3s ease';
                 ls.style.opacity = '0';
                 ls.style.pointerEvents = 'none';
                 setTimeout(function(){ ls.remove(); }, 300);
+
+                var ld = document.getElementById('loader');
+                if(ld){ ld.style.display = 'flex'; }
+
+                setTimeout(function(){
+                    if(typeof startApp === 'function') startApp(langCode);
+                }, 150);
+            } else {
+                // Promena jezika kroz pilule
+                // Postavi cookie, sačekaj da se upiše, pa reload
+                var ld = document.getElementById('loader');
+                if(ld){ ld.style.display = 'flex'; }
+                var cont = document.getElementById('content');
+                if(cont){ cont.style.display = 'none'; }
+
+                // Forsiraj cookie upis na oba načina
+                if(langCode){
+                    var cv = '/sr/' + langCode;
+                    document.cookie = 'googtrans=' + cv + '; path=/; domain=' + location.hostname;
+                    document.cookie = 'googtrans=' + cv + '; path=/';
+                } else {
+                    document.cookie = 'googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+                    document.cookie = 'googtrans=; path=/; domain=' + location.hostname + '; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+                }
+
+                // Delay 300ms da cookie sigurno bude upisan pre reload-a
+                setTimeout(function(){ window.location.reload(); }, 300);
             }
-
-            // Prikaži loader odmah
-            var ld = document.getElementById('loader');
-            if(ld){ ld.classList.remove('hidden'); }
-
-            // Pokreni app
-            setTimeout(function(){
-                if(typeof startApp === 'function') startApp(langCode);
-            }, 150);
         }
 
         function updateLangPills(activeLang) {
@@ -96,7 +113,12 @@
 
         (function() {
             var saved = localStorage.getItem('stayvb_lang') || '';
-            if (saved) stayvbApplyLang(saved);
+            if (saved) {
+                // Postavi cookie odmah, pre GT inicijalizacije
+                var cv = '/sr/' + saved;
+                document.cookie = 'googtrans=' + cv + '; path=/';
+                document.cookie = 'googtrans=' + cv + '; path=/; domain=' + location.hostname;
+            }
         })();
     </script>
     <!-- Google Translate se učitava async da ne blokira rendering -->
@@ -293,7 +315,7 @@
 <div id="app" class="app-shell pb-8">
 
     <!-- LANG SCREEN -->
-    <div id="lang-screen" class="hidden">
+    <div id="lang-screen" style="display:none">
         <img src="icon192.png" alt="StayVB" class="lang-logo-img">
         <h1 class="lang-title">StayVB</h1>
         <p class="lang-sub-text">Vrnjačka Banja · Digitalni Vodič</p>
@@ -944,8 +966,13 @@ async function startApp(lang){
 
     updateLangPills(lang || '');
 
-    // Prikaži loader
-    document.getElementById('loader').classList.remove('hidden');
+    // Ukloni lang screen ako još postoji
+    const ls = document.getElementById('lang-screen');
+    if(ls) ls.style.display = 'none';
+
+    // Prikaži loader, sakrij content dok se učitava
+    document.getElementById('loader').style.display = 'flex';
+    document.getElementById('content').style.display = 'none';
 
     // Wake-up ping — šalje mali upit da "probudi" bazu pre glavnih upita
     // Ovo smanjuje cold start kašnjenje
@@ -965,8 +992,8 @@ async function startApp(lang){
         ]);
     } catch(e){ console.error('Load error:', e); }
 
-    document.getElementById('loader').classList.add('hidden');
-    document.getElementById('content').classList.remove('hidden');
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
 
     // PWA install prompt
     if(isIOS) showInstallBanner('ios');
@@ -997,15 +1024,15 @@ window.addEventListener('load', async () => {
 
     if(hasLang === null){
         // Prvo otvaranje — prikaži lang screen, čekaj da korisnik odabere
-        document.getElementById('lang-screen').classList.remove('hidden');
-        document.getElementById('loader').classList.add('hidden');
-        document.getElementById('content').classList.add('hidden');
+        document.getElementById('lang-screen').style.display = 'flex';
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('content').style.display = 'none';
         return; // startApp() će biti pozvan iz stayvbSetLang()
     }
 
-    // Jezik već izabran — ukloni lang screen i pokreni app
+    // Jezik već izabran — sakrij lang screen i pokreni app
     const ls = document.getElementById('lang-screen');
-    if(ls) ls.remove();
+    if(ls) ls.style.display = 'none';
 
     await startApp(hasLang);
 });
