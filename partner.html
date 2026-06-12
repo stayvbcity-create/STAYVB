@@ -194,12 +194,25 @@ function buildTabs(){
   const type = partner.type;
   const tabs = [];
 
+  // Apartman/Hotel - Smeštaj
   if(type === 'apartment' || type === 'hotel') tabs.push({id:'stay', label:'Smeštaj', render: renderStay});
-  if(type === 'restaurant') tabs.push({id:'hh', label:'Happy Hour', render: renderHH});
+
+  // Hotel i Restoran i Atrakcija - Happy Hour
+  if(type === 'hotel' || type === 'restaurant' || type === 'attraction') tabs.push({id:'hh', label:'Happy Hour', render: renderHH});
+
+  // Mali biznis - Promocije
   if(type === 'business') tabs.push({id:'promo', label:'Promocije', render: renderPromo});
-  if(type === 'attraction') tabs.push({id:'info', label:'Info', render: renderInfo});
+
+  // Hotel i Atrakcija - Info za Atrakcije sekciju
+  if(type === 'hotel' || type === 'attraction') tabs.push({id:'info', label:'Atrakcije Info', render: renderInfo});
+
+  // Booking - ako je omogućeno (atrakcija može sama uključiti kroz Info tab)
   if(partner.has_booking) tabs.push({id:'bookings', label:'Rezervacije', render: renderBookings});
-  tabs.push({id:'events', label:'Događaji', render: renderEvents});
+
+  // Hotel i Restoran - Događaji
+  if(type === 'hotel' || type === 'restaurant') tabs.push({id:'events', label:'Događaji', render: renderEvents});
+
+  // Svi - Statistike
   tabs.push({id:'stats', label:'Statistike', render: renderStats});
 
   const tabsBar = document.getElementById('tabs-bar');
@@ -312,6 +325,7 @@ function renderHH(){
         <div class="field-group"><label class="field-label">Od</label><input type="time" class="field-input" id="hh-start" value="${partner.hh_start?.slice(0,5)||'17:00'}"></div>
         <div class="field-group"><label class="field-label">Do</label><input type="time" class="field-input" id="hh-end" value="${partner.hh_end?.slice(0,5)||'19:00'}"></div>
       </div>
+      <p style="font-size:10px;color:rgba(255,255,255,0.35);font-weight:700;margin:8px 0 0">⏱ Happy Hour može trajati najviše 4 sata, jednom dnevno.</p>
     </div>
     <div class="panel-card">
       <p class="panel-card-title">Opis ponude</p>
@@ -327,11 +341,32 @@ async function saveHH(){
   const start  = document.getElementById('hh-start').value;
   const end    = document.getElementById('hh-end').value;
   const info   = document.getElementById('hh-info').value;
+  const msgEl  = document.getElementById('hh-msg');
+
+  // Validacija - max 4 sata trajanja
+  if(active && start && end){
+    const [sh,sm] = start.split(':').map(Number);
+    const [eh,em] = end.split(':').map(Number);
+    let diffMin = (eh*60+em) - (sh*60+sm);
+    if(diffMin <= 0) diffMin += 24*60; // prelazak preko ponoći
+    if(diffMin > 240){
+      msgEl.textContent = '⚠️ Happy Hour može trajati najviše 4 sata.';
+      msgEl.style.color = '#f87171';
+      return;
+    }
+    if(diffMin <= 0){
+      msgEl.textContent = '⚠️ Vreme završetka mora biti posle početka.';
+      msgEl.style.color = '#f87171';
+      return;
+    }
+  }
+
   await sb.from('partners').update({hh_active:active, hh_date:date, hh_start:start, hh_end:end}).eq('id', partner.id);
   await sb.from('partner_content').update({hh_info:info, updated_at: new Date().toISOString()}).eq('partner_id', partner.id);
   partner.hh_active = active;
-  document.getElementById('hh-msg').textContent = '✓ Sačuvano!';
-  setTimeout(() => document.getElementById('hh-msg').textContent = '', 2500);
+  msgEl.style.color = '#6ee7b7';
+  msgEl.textContent = '✓ Sačuvano!';
+  setTimeout(() => msgEl.textContent = '', 2500);
 }
 
 // ── Promo Tab (mali biznisi) ──────────────────────────────────────
@@ -386,7 +421,27 @@ async function activatePromo(){
 function renderInfo(){
   const el = document.getElementById('tab-info');
   const pc = partnerContent;
+  const typeNote = partner.type==='hotel'
+    ? 'Ovi podaci se prikazuju gostima u sekciji <strong style="color:#fbbf24">Atrakcije</strong> kao informacija o vašem hotelu.'
+    : 'Ovi podaci se prikazuju gostima u sekciji <strong style="color:#fbbf24">Atrakcije</strong>.';
+
+  const bookingToggle = partner.type==='attraction' ? `
+    <div class="panel-card" style="border-color:rgba(59,130,246,0.18);background:rgba(59,130,246,0.04)">
+      <div class="toggle-wrap">
+        <div>
+          <div class="toggle-label" style="color:#93c5fd">Zakazivanje termina</div>
+          <div class="toggle-sub">Gosti mogu rezervisati termin direktno</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="info-booking" ${partner.has_booking?'checked':''} onchange="toggleBooking(this.checked)"><span class="toggle-slider"></span></label>
+      </div>
+      <p style="font-size:10px;color:rgba(255,255,255,0.35);font-weight:700;margin:8px 0 0">Kada je uključeno, pojaviće se nov tab "Rezervacije" gde upravljate terminima i kapacitetima.</p>
+    </div>` : '';
+
   el.innerHTML = `
+    <div class="panel-card" style="border-color:rgba(251,191,36,0.15);background:rgba(251,191,36,0.03)">
+      <p style="font-size:11px;color:rgba(255,255,255,0.55);font-weight:600;line-height:1.5;margin:0">${typeNote}</p>
+    </div>
+    ${bookingToggle}
     <div class="panel-card">
       <p class="panel-card-title">Opis</p>
       <div class="field-group"><label class="field-label">Kratki opis (za karticu)</label><input class="field-input" id="i-short" value="${esc(pc.short_desc||'')}" maxlength="120"></div>
@@ -399,6 +454,35 @@ function renderInfo(){
     </div>
     <button class="btn-primary" onclick="saveInfo()">💾 Sačuvaj</button>
     <p class="save-msg" id="info-msg"></p>`;
+}
+
+async function toggleBooking(enabled){
+  await sb.from('partners').update({has_booking:enabled}).eq('id', partner.id);
+  partner.has_booking = enabled;
+
+  if(enabled){
+    // Provjeri da li već postoji bookable_resources red, ako ne - kreiraj default
+    const {data:existing} = await sb.from('bookable_resources').select('id').eq('partner_id', partner.id).limit(1);
+    if(!existing?.length){
+      await sb.from('bookable_resources').insert({
+        partner_id: partner.id,
+        name: 'Termin',
+        total_qty: 10,
+        is_active: true
+      });
+    }
+  }
+
+  buildTabs(); // Rebuild tabs da se Rezervacije pojavi/sakrije
+
+  // Vrati na info tab posle rebuild-a
+  setTimeout(() => {
+    const tabsBar = document.getElementById('tabs-bar');
+    const btns = tabsBar?.querySelectorAll('.tab') || [];
+    btns.forEach(b => {
+      if(b.getAttribute('onclick')?.includes("'info'")) b.click();
+    });
+  }, 50);
 }
 
 async function saveInfo(){
@@ -421,8 +505,22 @@ async function renderBookings(){
   const today = new Date().toISOString().split('T')[0];
   const { data:resources } = await sb.from('bookable_resources').select('*').eq('partner_id', partner.id).eq('is_active', true).order('sort_order');
 
+  // Editor resursa - samo atrakcije mogu sami podesiti
+  let resourceEditor = '';
+  if(partner.type === 'attraction'){
+    const r = resources?.[0];
+    resourceEditor = `
+    <div class="panel-card" style="border-color:rgba(59,130,246,0.18);background:rgba(59,130,246,0.04)">
+      <p class="panel-card-title" style="color:#93c5fd">Podešavanje termina</p>
+      <div class="field-group"><label class="field-label">Naziv termina</label><input class="field-input" id="res-name" value="${esc(r?.name||'Termin')}" placeholder="npr. Vožnja, Obilazak, Sto"></div>
+      <div class="field-group"><label class="field-label">Kapacitet po terminu</label><input type="number" class="field-input" id="res-qty" value="${r?.total_qty||10}" min="1" max="999"></div>
+      <button class="btn-primary" onclick="saveResource('${r?.id||''}')">💾 Sačuvaj podešavanje</button>
+      <p class="save-msg" id="res-msg"></p>
+    </div>`;
+  }
+
   if(!resources?.length){
-    el.innerHTML = '<p style="font-size:13px;color:rgba(255,255,255,0.4);font-weight:700">Nemate definisane resurse za booking. Kontaktirajte administratora.</p>';
+    el.innerHTML = resourceEditor + '<p style="font-size:13px;color:rgba(255,255,255,0.4);font-weight:700;margin-top:12px">Nemate definisane resurse za booking. Kontaktirajte administratora.</p>';
     return;
   }
 
@@ -431,7 +529,7 @@ async function renderBookings(){
   const { data:bookings } = await sb.from('bookings').select('*').in('resource_id', resources.map(r=>r.id)).gte('booking_date', today).lte('booking_date', in7).eq('status','confirmed').order('booking_date').order('slot_time');
 
   // Grupiši po datumu + resursu
-  let html = `<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+  let html = resourceEditor + `<div style="display:flex;gap:8px;margin:14px 0;flex-wrap:wrap">
     ${resources.map(r => `<span style="padding:6px 12px;border-radius:999px;background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.25);font-size:10px;font-weight:900;color:#fcd34d">${esc(r.name)} (${r.total_qty} kom)</span>`).join('')}
   </div>`;
 
@@ -468,6 +566,22 @@ async function cancelBooking(bookingId, btn){
   if(!confirm('Otkazati rezervaciju?')) return;
   await sb.from('bookings').update({status:'cancelled'}).eq('id', bookingId);
   btn.closest('.booking-row').remove();
+}
+
+async function saveResource(resId){
+  const name = document.getElementById('res-name').value.trim() || 'Termin';
+  const qty  = parseInt(document.getElementById('res-qty').value) || 10;
+  const msgEl = document.getElementById('res-msg');
+
+  if(resId){
+    await sb.from('bookable_resources').update({name, total_qty:qty}).eq('id', resId);
+  } else {
+    await sb.from('bookable_resources').insert({partner_id:partner.id, name, total_qty:qty, is_active:true});
+  }
+
+  msgEl.style.color = '#6ee7b7';
+  msgEl.textContent = '✓ Sačuvano!';
+  setTimeout(() => { msgEl.textContent=''; renderBookings(); }, 1200);
 }
 
 // ── Events Tab ────────────────────────────────────────────────────
