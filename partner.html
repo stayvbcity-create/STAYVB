@@ -199,6 +199,15 @@ async function doLogin(){
 
   partner = result.partner;
 
+  // Sigurnosna mera: RPC ponekad ne vraća sve kolone (npr. nove kolone dodate posle RPC definicije)
+  // Dovuci svez red direktno iz partners tabele da budemo sigurni da imamo najnovije podatke
+  try {
+    const { data: freshPartner } = await sb.from('partners').select('*').eq('id', partner.id).maybeSingle();
+    if(freshPartner) partner = { ...partner, ...freshPartner };
+  } catch(e){ console.log('fresh partner fetch skip:', e.message); }
+
+  console.log('PARTNER LOGIN DATA:', JSON.stringify(partner, null, 2));
+
   // Provjeri da li je nalog suspendovan
   if(!partner.is_active){
     document.getElementById('pin-screen').classList.add('hidden');
@@ -251,7 +260,7 @@ function buildTabs(){
   // Apartman/Hotel - Smeštaj
   if(type === 'apartment' || type === 'hotel') tabs.push({id:'stay', label:'Smeštaj', render: renderStay});
 
-  // Hotel i Restoran i Atrakcija - Happy Hour
+  // Hotel, Restoran, Atrakcija - Happy Hour
   if(type === 'hotel' || type === 'restaurant' || type === 'attraction') tabs.push({id:'hh', label:'Happy Hour', render: renderHH});
 
   // Mali biznis - Promocije
@@ -260,11 +269,11 @@ function buildTabs(){
   // Hotel i Atrakcija - Info za Atrakcije sekciju
   if(type === 'hotel' || type === 'attraction') tabs.push({id:'info', label:'Atrakcije Info', render: renderInfo});
 
-  // Booking - ako je omogućeno (atrakcija može sama uključiti kroz Info tab)
+  // Booking - ako je omogućeno
   if(partner.has_booking) tabs.push({id:'bookings', label:'Rezervacije', render: renderBookings});
 
-  // Hotel i Restoran - Događaji
-  if(type === 'hotel' || type === 'restaurant') tabs.push({id:'events', label:'Događaji', render: renderEvents});
+  // Hotel, Restoran, Atrakcija - Događaji
+  if(type === 'hotel' || type === 'restaurant' || type === 'attraction') tabs.push({id:'events', label:'Događaji', render: renderEvents});
 
   // Svi - Statistike
   tabs.push({id:'stats', label:'Statistike', render: renderStats});
@@ -793,7 +802,6 @@ async function renderStats(){
   const from30 = new Date(now.getTime() - 30*24*60*60*1000).toISOString();
   const from7  = new Date(now.getTime() - 7*24*60*60*1000).toISOString();
 
-  // Svi klikovi za ovog partnera u zadnjih 30 dana
   const { data: clicks } = await sb.from('analytics_clicks')
     .select('action,created_at')
     .eq('partner_id', partner.id)
@@ -808,11 +816,10 @@ async function renderStats(){
     .select('*', {count:'exact', head:true})
     .eq('location_id', partner.id);
 
-  const isApartOrHotel = partner.type==='apartment' || partner.type==='hotel';
-  const isRestaurant   = partner.type==='restaurant';
-  const hasHH = partner.type==='hotel' || partner.type==='restaurant' || partner.type==='attraction';
+  const type = partner.type;
+  const isApartOrHotel = type==='apartment' || type==='hotel';
 
-  // Agregacija po akciji - ukupno (30 dana) i poslednjih 7 dana
+  // Agregacija po akciji - 30 dana i poslednjih 7 dana
   const counts30 = { page_visit:0, hh_view:0, radar_view:0, events_view:0, attr_view:0, qr_scan:0, wa_click:0, instagram_share:0 };
   const counts7  = { page_visit:0, hh_view:0, radar_view:0, events_view:0, attr_view:0, qr_scan:0, wa_click:0, instagram_share:0 };
   (clicks||[]).forEach(c=>{
@@ -820,7 +827,44 @@ async function renderStats(){
     if(c.created_at >= from7 && counts7[c.action]!==undefined) counts7[c.action]++;
   });
 
-  // Dnevni niz za graf - poslednjih 14 dana, broj poseta po danu
+  // ── Tip-specifična konfiguracija ─────────────────────────────────
+  // glavna metrika za grafikon + KPI grid stavke
+  let mainMetricKey, mainMetricLabel, mainMetricIcon, mainMetricColor;
+  const kpis = []; // {key, icon, label, color}
+
+  switch(type){
+    case 'apartment':
+      mainMetricKey='page_visit'; mainMetricLabel='Pregledi profila'; mainMetricIcon='👁'; mainMetricColor='#3b82f6';
+      kpis.push({key:'page_visit', icon:'👁', label:'Pregledi profila', color:'#3b82f6'});
+      break;
+    case 'hotel':
+      mainMetricKey='page_visit'; mainMetricLabel='Pregledi profila'; mainMetricIcon='👁'; mainMetricColor='#3b82f6';
+      kpis.push({key:'page_visit', icon:'👁', label:'Pregledi profila', color:'#3b82f6'});
+      kpis.push({key:'hh_view', icon:'🍹', label:'Happy Hour pregledi', color:'#fb923c'});
+      kpis.push({key:'events_view', icon:'🎉', label:'Događaji pregledi', color:'#f87171'});
+      kpis.push({key:'attr_view', icon:'🎡', label:'Atrakcije pregledi', color:'#34d399'});
+      break;
+    case 'restaurant':
+      mainMetricKey='hh_view'; mainMetricLabel='Happy Hour pregledi'; mainMetricIcon='🍹'; mainMetricColor='#fb923c';
+      kpis.push({key:'hh_view', icon:'🍹', label:'Happy Hour pregledi', color:'#fb923c'});
+      kpis.push({key:'events_view', icon:'🎉', label:'Događaji pregledi', color:'#f87171'});
+      break;
+    case 'attraction':
+      mainMetricKey='attr_view'; mainMetricLabel='Atrakcije pregledi'; mainMetricIcon='🎡'; mainMetricColor='#34d399';
+      kpis.push({key:'attr_view', icon:'🎡', label:'Atrakcije pregledi', color:'#34d399'});
+      kpis.push({key:'hh_view', icon:'🍹', label:'Happy Hour pregledi', color:'#fb923c'});
+      kpis.push({key:'events_view', icon:'🎉', label:'Događaji pregledi', color:'#f87171'});
+      break;
+    case 'business':
+      mainMetricKey='radar_view'; mainMetricLabel='Pregledi na radaru'; mainMetricIcon='📡'; mainMetricColor='#a78bfa';
+      kpis.push({key:'radar_view', icon:'📡', label:'Pregledi na radaru', color:'#a78bfa'});
+      break;
+    default:
+      mainMetricKey='page_visit'; mainMetricLabel='Pregledi'; mainMetricIcon='👁'; mainMetricColor='#3b82f6';
+      kpis.push({key:'page_visit', icon:'👁', label:'Pregledi', color:'#3b82f6'});
+  }
+
+  // Dnevni niz za graf - poslednjih 14 dana, glavna metrika po danu
   const days = [];
   const dayLabels = [];
   for(let i=13;i>=0;i--){
@@ -829,24 +873,25 @@ async function renderStats(){
     days.push(key);
     dayLabels.push(d.toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit'}));
   }
-  const visitsByDay = {};
-  days.forEach(d=>visitsByDay[d]=0);
+  const mainByDay = {};
+  days.forEach(d=>mainByDay[d]=0);
   (clicks||[]).forEach(c=>{
-    if(c.action !== 'page_visit') return;
+    if(c.action !== mainMetricKey) return;
     const key = c.created_at.split('T')[0];
-    if(visitsByDay[key]!==undefined) visitsByDay[key]++;
+    if(mainByDay[key]!==undefined) mainByDay[key]++;
   });
-  const visitData = days.map(d=>visitsByDay[d]);
-  const totalVisits14 = visitData.reduce((a,b)=>a+b,0);
+  const mainData = days.map(d=>mainByDay[d]);
+  const totalMain14 = mainData.reduce((a,b)=>a+b,0);
 
   // Trend: poredi poslednjih 7 dana sa prethodnih 7
-  const last7 = visitData.slice(7).reduce((a,b)=>a+b,0);
-  const prev7 = visitData.slice(0,7).reduce((a,b)=>a+b,0);
+  const last7 = mainData.slice(7).reduce((a,b)=>a+b,0);
+  const prev7 = mainData.slice(0,7).reduce((a,b)=>a+b,0);
   const trendPct = prev7>0 ? Math.round(((last7-prev7)/prev7)*100) : (last7>0?100:0);
 
   // ── Total engagement score (za "wow" headline broj) ──────────────
-  const totalEngagement = counts30.page_visit + counts30.hh_view + counts30.radar_view
-    + counts30.events_view + counts30.attr_view + (refCount||0) + counts30.instagram_share;
+  // Zbir svih relevantnih metrika za ovaj tip + referral + instagram share (samo premium apart/hotel)
+  let totalEngagement = kpis.reduce((sum,k)=>sum + (counts30[k.key]||0), 0);
+  if(partner.is_premium && isApartOrHotel) totalEngagement += (refCount||0) + counts30.instagram_share;
 
   let html = `
     <!-- HERO - veliki engagement broj sa trend indikatorom -->
@@ -859,11 +904,11 @@ async function renderStats(){
       </div>
     </div>
 
-    <!-- GRAF - dnevne posete poslednjih 14 dana -->
+    <!-- GRAF - glavna metrika poslednjih 14 dana -->
     <div class="panel-card stats-chart-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <p class="panel-card-title" style="margin:0">📈 Posete profilu (14 dana)</p>
-        <span class="stats-chart-total">${totalVisits14}</span>
+        <p class="panel-card-title" style="margin:0">📈 ${mainMetricIcon} ${mainMetricLabel} (14 dana)</p>
+        <span class="stats-chart-total" style="color:${mainMetricColor}">${totalMain14}</span>
       </div>
       <div style="height:140px;position:relative">
         <canvas id="visitsChart"></canvas>
@@ -871,54 +916,21 @@ async function renderStats(){
     </div>
 
     <!-- KPI grid sa animiranim brojevima -->
-    <div class="stats-kpi-grid">
-      <div class="stats-kpi" style="--accent:#3b82f6">
-        <div class="stats-kpi-icon">👁</div>
-        <div class="stats-kpi-num" data-target="${counts30.page_visit}">0</div>
-        <div class="stats-kpi-label">Pregledi profila</div>
-        ${counts7.page_visit ? `<div class="stats-kpi-badge">+${counts7.page_visit} ova nedelja</div>` : ''}
-      </div>`;
+    <div class="stats-kpi-grid">`;
 
-  if(hasHH){
+  kpis.forEach(k=>{
     html += `
-      <div class="stats-kpi" style="--accent:#fb923c">
-        <div class="stats-kpi-icon">🍹</div>
-        <div class="stats-kpi-num" data-target="${counts30.hh_view}">0</div>
-        <div class="stats-kpi-label">Happy Hour pregledi</div>
-        ${counts7.hh_view ? `<div class="stats-kpi-badge">+${counts7.hh_view} ova nedelja</div>` : ''}
+      <div class="stats-kpi" style="--accent:${k.color}">
+        <div class="stats-kpi-icon">${k.icon}</div>
+        <div class="stats-kpi-num" data-target="${counts30[k.key]||0}">0</div>
+        <div class="stats-kpi-label">${k.label}</div>
+        ${counts7[k.key] ? `<div class="stats-kpi-badge">+${counts7[k.key]} ova nedelja</div>` : ''}
       </div>`;
-  }
+  });
 
-  if(!isRestaurant){
-    html += `
-      <div class="stats-kpi" style="--accent:#a78bfa">
-        <div class="stats-kpi-icon">📡</div>
-        <div class="stats-kpi-num" data-target="${counts30.radar_view}">0</div>
-        <div class="stats-kpi-label">Radar pregledi</div>
-        ${counts7.radar_view ? `<div class="stats-kpi-badge">+${counts7.radar_view} ova nedelja</div>` : ''}
-      </div>`;
-  }
+  html += `</div>`;
 
-  if(partner.type==='attraction'){
-    html += `
-      <div class="stats-kpi" style="--accent:#34d399">
-        <div class="stats-kpi-icon">🎡</div>
-        <div class="stats-kpi-num" data-target="${counts30.attr_view}">0</div>
-        <div class="stats-kpi-label">Atrakcije pregledi</div>
-        ${counts7.attr_view ? `<div class="stats-kpi-badge">+${counts7.attr_view} ova nedelja</div>` : ''}
-      </div>`;
-  }
-
-  html += `
-      <div class="stats-kpi" style="--accent:#f87171">
-        <div class="stats-kpi-icon">🎉</div>
-        <div class="stats-kpi-num" data-target="${counts30.events_view}">0</div>
-        <div class="stats-kpi-label">Događaji pregledi</div>
-        ${counts7.events_view ? `<div class="stats-kpi-badge">+${counts7.events_view} ova nedelja</div>` : ''}
-      </div>
-    </div>`;
-
-  // Premium sekcija - referral i instagram, posebno istaknuto
+  // Premium sekcija - referral, instagram, loyalty (samo apartman/hotel + premium)
   if(partner.is_premium && isApartOrHotel){
     html += `
     <div class="stats-section-label">⭐ Premium analitika</div>
@@ -970,9 +982,9 @@ async function renderStats(){
 
   // ── Animacije posle render ──────────────────────────────────────
   animateNumber(document.getElementById('hero-number'), totalEngagement, 1400);
-  document.querySelectorAll('.stats-kpi-num').forEach(el=>{
-    const target = parseInt(el.dataset.target)||0;
-    animateNumber(el, target, 1100);
+  document.querySelectorAll('.stats-kpi-num').forEach(elx=>{
+    const target = parseInt(elx.dataset.target)||0;
+    animateNumber(elx, target, 1100);
   });
 
   // Graf
@@ -983,13 +995,13 @@ async function renderStats(){
       data: {
         labels: dayLabels,
         datasets: [{
-          data: visitData,
-          borderColor: '#fbbf24',
-          backgroundColor: 'rgba(251,191,36,0.12)',
+          data: mainData,
+          borderColor: mainMetricColor,
+          backgroundColor: mainMetricColor + '1f',
           borderWidth: 2.5,
           pointRadius: 0,
           pointHoverRadius: 5,
-          pointBackgroundColor: '#fbbf24',
+          pointBackgroundColor: mainMetricColor,
           tension: 0.4,
           fill: true
         }]
