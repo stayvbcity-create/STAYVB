@@ -100,14 +100,23 @@ async function load(){
 
   const { data:events } = await sb
     .from('events')
-    .select('*, partners(name, type)')
+    .select('*, partners(name, type, partner_code)')
     .gte('event_date', todayStr)
     .lte('event_date', in14)
     .eq('is_active', true)
     .order('event_date', {ascending:true})
     .order('event_time', {ascending:true});
 
-  const all = events || [];
+  // Trenutni partner_code gosta
+  const guestUnitId = (new URLSearchParams(window.location.search).get('id') || '').toUpperCase();
+
+  // Filtriraj po vidljivosti - 'own_guests' samo za gosta tog hotela
+  const all = (events || []).filter(e => {
+    if((e.visibility||'all') === 'own_guests'){
+      return e.partners?.partner_code === guestUnitId;
+    }
+    return true;
+  });
   document.getElementById('hero-count').textContent = all.length + ' ' + t('events_count');
 
   if(all.length === 0){
