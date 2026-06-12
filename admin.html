@@ -191,6 +191,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="nav-item" onclick="nav('partners',this)"><span class="nav-icon">🏢</span>Partneri</div>
     <div class="nav-item" onclick="nav('stamps',this)"><span class="nav-icon">⭐</span>Stamp mape</div>
     <div class="nav-item" onclick="nav('cityinfo',this)"><span class="nav-icon">🏙️</span>City Info</div>
+    <div class="nav-item" onclick="nav('properties',this)"><span class="nav-icon">🏡</span>Nekretnine</div>
     <div class="nav-item" onclick="nav('loyalty',this)"><span class="nav-icon">🎁</span>Loyalty<span class="nav-badge" id="nb-rewards">0</span></div>
     <div class="nav-item" onclick="nav('events',this)"><span class="nav-icon">🎸</span>Događaji</div>
     <div class="nav-section">Finansije</div>
@@ -458,6 +459,64 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="tbl-card"><div class="tbl-wrap" id="city-partners-tbl"></div></div>
     </div>
 
+    <!-- ═══ NEKRETNINE ═══ -->
+    <div id="page-properties" class="page">
+      <div class="sec-header">
+        <div><div class="sec-title">🏡 Vaš dom u Banji</div><div class="sec-sub">Nekretnine u direktnoj prodaji — gosti vide na nekretnine.html</div></div>
+        <button class="btn btn-gold" onclick="openNewProperty()">+ Nova nekretnina</button>
+      </div>
+      <div id="properties-list"></div>
+    </div>
+
+    <!-- Modal: Nova/Edit Nekretnina -->
+    <div id="modal-property" class="modal">
+      <div class="modal-box" style="max-width:560px">
+        <button class="modal-close" onclick="closeModal('modal-property')">✕</button>
+        <div class="modal-title" id="prop-modal-title">🏡 Nova nekretnina</div>
+        <input type="hidden" id="prop-id">
+
+        <div class="field-row">
+          <div class="field"><label>Naziv oglasa</label><input id="prop-title" placeholder="npr. Stan na Goču, 65m²"></div>
+          <div class="field"><label>Tip</label>
+            <select id="prop-type">
+              <option value="apartment">🏢 Stan</option>
+              <option value="house">🏠 Kuća</option>
+              <option value="land">🌳 Plac</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Cena (EUR)</label><input id="prop-price" type="number" min="0" placeholder="85000"></div>
+          <div class="field"><label>Kvadratura (m²)</label><input id="prop-area" type="number" min="0" placeholder="65"></div>
+          <div class="field"><label>Broj soba</label><input id="prop-rooms" type="number" min="0" placeholder="2"></div>
+        </div>
+        <div class="field"><label>Lokacija</label><input id="prop-location" placeholder="npr. Centar, blizu parka"></div>
+        <div class="field"><label>Opis</label><textarea id="prop-desc" rows="3" placeholder="Kratak opis nekretnine, pogodnosti, stanje..."></textarea></div>
+
+        <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.14em;color:var(--muted);margin:14px 0 10px">Kontakt investitora</div>
+        <div class="field-row">
+          <div class="field"><label>Ime investitora</label><input id="prop-investor" placeholder="npr. Marko Marković"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Telefon</label><input id="prop-phone" placeholder="+381..."></div>
+          <div class="field"><label>WhatsApp</label><input id="prop-wa" placeholder="+381..."></div>
+        </div>
+
+        <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.14em;color:var(--muted);margin:14px 0 10px">Slike (max 5)</div>
+        <div id="prop-images-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:10px"></div>
+        <input type="file" id="prop-image-upload" accept="image/*" multiple style="display:none" onchange="handleImageUpload(event)">
+        <button class="btn btn-ghost" style="width:100%;margin-bottom:14px" onclick="document.getElementById('prop-image-upload').click()">📷 Dodaj slike</button>
+
+        <label style="display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;cursor:pointer;padding:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:14px">
+          <label class="tog"><input type="checkbox" id="prop-active" checked><span class="tog-s"></span></label>
+          <div><div style="font-weight:900">Aktivna (vidljiva gostima)</div><div style="font-size:9px;color:var(--muted);margin-top:2px">Isključi kad se nekretnina prodа</div></div>
+        </label>
+
+        <button class="btn btn-gold" style="width:100%;padding:13px;font-size:12px;justify-content:center" onclick="saveProperty()">Sačuvaj nekretninu</button>
+        <div class="form-msg" id="prop-msg"></div>
+      </div>
+    </div>
+
     <!-- ═══ LOYALTY ═══ -->
     <div id="page-loyalty" class="page">
       <div class="sec-header"><div><div class="sec-title">Loyalty nagrade</div><div class="sec-sub">Gosti koji su skupili 10 pečata</div></div></div>
@@ -570,6 +629,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="field-row">
       <div class="field"><label>Telefon</label><input id="edit-phone"></div>
       <div class="field"><label>WhatsApp</label><input id="edit-wa"></div>
+    </div>
+    <div class="field">
+      <label>⭐ Google Review link</label>
+      <input id="edit-review-url" placeholder="https://g.page/r/.../review">
     </div>
     <div class="field-row">
       <div class="field"><label>Lat</label><input id="edit-lat"></div>
@@ -762,13 +825,14 @@ const PAGE_META = {
   billing:['Naplata','Mesečna pretplata po partneru'],
   revenue:['Prihodi','Istorija naplate'],
   qr:['QR Generator','QR kodovi i partner URL-ovi'],
-  cityinfo:['City Info','Kategorije i mali biznisi']
+  cityinfo:['City Info','Kategorije i mali biznisi'],
+  properties:['Nekretnine','Vaš dom u Banji — direktna prodaja']
 };
 
 const LOADERS = {
   dashboard:loadDashboard, stats:loadStats, partners:loadPartners,
   stamps:loadStamps, loyalty:loadLoyalty, events:loadEvents,
-  billing:loadBilling, revenue:loadRevenue, qr:loadQR
+  billing:loadBilling, revenue:loadRevenue, qr:loadQR, properties:loadProperties
 };
 
 function nav(id, el){
@@ -1452,6 +1516,197 @@ async function tog(id,field,val){
   renderPartners(allPartners);
 }
 
+// ── Nekretnine (Vaš dom u Banji) ────────────────────────────────────
+let allProperties = [];
+let currentPropImages = [];
+
+const PROP_TYPE_LABELS = { apartment:'🏢 Stan', house:'🏠 Kuća', land:'🌳 Plac' };
+
+async function loadProperties(){
+  const {data, error} = await sb.from('properties').select('*').order('sort_order').order('created_at',{ascending:false});
+  if(error){ console.error('loadProperties error:', error); return; }
+  allProperties = data || [];
+  renderPropertiesList();
+}
+
+function renderPropertiesList(){
+  const list = document.getElementById('properties-list');
+  if(!allProperties.length){
+    list.innerHTML = '<div class="tbl-card" style="padding:30px;text-align:center"><p style="color:var(--muted);font-size:13px;font-weight:700">Nema unetih nekretnina. Klikni "+ Nova nekretnina" da dodaš prvu.</p></div>';
+    return;
+  }
+
+  list.innerHTML = allProperties.map(p=>{
+    const img = (p.images||[])[0];
+    const thumb = img
+      ? `<img src="${img}" style="width:64px;height:64px;border-radius:12px;object-fit:cover;flex-shrink:0">`
+      : `<div style="width:64px;height:64px;border-radius:12px;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0">${PROP_TYPE_LABELS[p.prop_type]?.split(' ')[0]||'🏡'}</div>`;
+
+    return `<div class="tbl-card" style="margin-bottom:10px;padding:14px;display:flex;align-items:center;gap:14px">
+      ${thumb}
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+          <span style="font-weight:900;font-size:13px">${esc(p.title)}</span>
+          ${!p.is_active ? '<span style="font-size:9px;font-weight:900;color:#fca5a5;background:rgba(239,68,68,0.12);padding:2px 8px;border-radius:999px">SAKRIVENO</span>' : ''}
+        </div>
+        <div style="font-size:11px;color:var(--muted);font-weight:700">
+          ${PROP_TYPE_LABELS[p.prop_type]||p.prop_type} · € ${Number(p.price_eur).toLocaleString('de-DE')}
+          ${p.area_m2 ? ' · '+p.area_m2+' m²' : ''}
+          ${p.location_text ? ' · '+esc(p.location_text) : ''}
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${(p.images||[]).length} slika · Investitor: ${esc(p.investor_name||'—')}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn btn-ghost btn-sm" onclick="editProperty('${p.id}')">✏️</button>
+        <button class="btn btn-red btn-sm" onclick="deleteProperty('${p.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openNewProperty(){
+  document.getElementById('prop-id').value='';
+  document.getElementById('prop-modal-title').textContent='🏡 Nova nekretnina';
+  document.getElementById('prop-title').value='';
+  document.getElementById('prop-type').value='apartment';
+  document.getElementById('prop-price').value='';
+  document.getElementById('prop-area').value='';
+  document.getElementById('prop-rooms').value='';
+  document.getElementById('prop-location').value='';
+  document.getElementById('prop-desc').value='';
+  document.getElementById('prop-investor').value='';
+  document.getElementById('prop-phone').value='';
+  document.getElementById('prop-wa').value='';
+  document.getElementById('prop-active').checked=true;
+  document.getElementById('prop-msg').textContent='';
+  currentPropImages = [];
+  renderPropImagesGrid();
+  openModal('modal-property');
+}
+
+function editProperty(id){
+  const p = allProperties.find(x=>x.id===id); if(!p) return;
+  document.getElementById('prop-id').value=p.id;
+  document.getElementById('prop-modal-title').textContent='✏️ '+p.title;
+  document.getElementById('prop-title').value=p.title||'';
+  document.getElementById('prop-type').value=p.prop_type||'apartment';
+  document.getElementById('prop-price').value=p.price_eur||'';
+  document.getElementById('prop-area').value=p.area_m2||'';
+  document.getElementById('prop-rooms').value=p.rooms||'';
+  document.getElementById('prop-location').value=p.location_text||'';
+  document.getElementById('prop-desc').value=p.description||'';
+  document.getElementById('prop-investor').value=p.investor_name||'';
+  document.getElementById('prop-phone').value=p.investor_phone||'';
+  document.getElementById('prop-wa').value=p.investor_whatsapp||'';
+  document.getElementById('prop-active').checked=p.is_active!==false;
+  document.getElementById('prop-msg').textContent='';
+  currentPropImages = [...(p.images||[])];
+  renderPropImagesGrid();
+  openModal('modal-property');
+}
+
+function renderPropImagesGrid(){
+  const grid = document.getElementById('prop-images-grid');
+  const slots = 5;
+  let html = '';
+  for(let i=0;i<slots;i++){
+    if(currentPropImages[i]){
+      html += `<div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:1px solid var(--border2)">
+        <img src="${currentPropImages[i]}" style="width:100%;height:100%;object-fit:cover">
+        <button onclick="removePropImage(${i})" style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.7);color:white;border:none;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+        ${i===0 ? '<span style="position:absolute;bottom:3px;left:3px;font-size:8px;font-weight:900;background:rgba(251,191,36,0.9);color:#1c1410;padding:2px 6px;border-radius:6px">GLAVNA</span>' : ''}
+      </div>`;
+    } else {
+      html += `<div style="aspect-ratio:1;border-radius:10px;border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:1.2rem">+</div>`;
+    }
+  }
+  grid.innerHTML = html;
+}
+
+function removePropImage(idx){
+  currentPropImages.splice(idx,1);
+  renderPropImagesGrid();
+}
+
+async function handleImageUpload(e){
+  const files = Array.from(e.target.files || []);
+  if(!files.length) return;
+
+  const remaining = 5 - currentPropImages.length;
+  const toUpload = files.slice(0, remaining);
+
+  if(files.length > remaining){
+    alert(`Možeš dodati još samo ${remaining} slika (max 5 ukupno).`);
+  }
+
+  for(const file of toUpload){
+    const ext = file.name.split('.').pop();
+    const fileName = `prop_${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
+
+    const {data, error} = await sb.storage.from('properties').upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
+
+    if(error){
+      console.error('Upload error:', error);
+      alert('Greška pri uploadu slike: ' + error.message);
+      continue;
+    }
+
+    const {data: urlData} = sb.storage.from('properties').getPublicUrl(fileName);
+    currentPropImages.push(urlData.publicUrl);
+  }
+
+  renderPropImagesGrid();
+  e.target.value = '';
+}
+
+async function saveProperty(){
+  const id = document.getElementById('prop-id').value;
+  const title = document.getElementById('prop-title').value.trim();
+  const price = parseInt(document.getElementById('prop-price').value)||0;
+  const msgEl = document.getElementById('prop-msg');
+
+  if(!title){ msgEl.textContent='⚠️ Naziv je obavezan.'; msgEl.className='form-msg err'; return; }
+  if(!price){ msgEl.textContent='⚠️ Cena je obavezna.'; msgEl.className='form-msg err'; return; }
+
+  const payload = {
+    title,
+    prop_type: document.getElementById('prop-type').value,
+    price_eur: price,
+    area_m2: parseFloat(document.getElementById('prop-area').value)||null,
+    rooms: parseInt(document.getElementById('prop-rooms').value)||null,
+    location_text: document.getElementById('prop-location').value.trim()||null,
+    description: document.getElementById('prop-desc').value.trim()||null,
+    investor_name: document.getElementById('prop-investor').value.trim()||null,
+    investor_phone: document.getElementById('prop-phone').value.trim()||null,
+    investor_whatsapp: document.getElementById('prop-wa').value.trim()||null,
+    images: currentPropImages,
+    is_active: document.getElementById('prop-active').checked,
+    updated_at: new Date().toISOString()
+  };
+
+  let error;
+  if(id){
+    ({error} = await sb.from('properties').update(payload).eq('id', id));
+  } else {
+    ({error} = await sb.from('properties').insert(payload));
+  }
+
+  if(error){ msgEl.textContent='⚠️ Greška: '+error.message; msgEl.className='form-msg err'; return; }
+
+  msgEl.textContent='✓ Sačuvano!'; msgEl.className='form-msg ok';
+  setTimeout(()=>{ closeModal('modal-property'); loadProperties(); }, 700);
+}
+
+async function deleteProperty(id){
+  if(!confirm('Obrisati ovu nekretninu? Slike u Storage-u ostaju (možeš ih ručno obrisati).')) return;
+  const {error} = await sb.from('properties').delete().eq('id', id);
+  if(error){ alert('Greška: '+error.message); return; }
+  loadProperties();
+}
+
 async function togPremium(id,val){
   const {error} = await sb.from('partners').update({is_premium:val, loyalty_enabled:val}).eq('id',id);
   if(error){ console.error('togPremium error:', error); return; }
@@ -1483,6 +1738,7 @@ function openEdit(id){
   document.getElementById('edit-pin').value='';
   document.getElementById('edit-phone').value=p.phone||'';
   document.getElementById('edit-wa').value=p.whatsapp||'';
+  document.getElementById('edit-review-url').value=p.google_review_url||'';
   document.getElementById('edit-lat').value=p.lat||'';
   document.getElementById('edit-lng').value=p.lng||'';
   document.getElementById('edit-note').value=p.admin_note||'';
@@ -1530,6 +1786,7 @@ async function saveEdit(){
     monthly_price:price,
     phone:document.getElementById('edit-phone').value.trim()||null,
     whatsapp:document.getElementById('edit-wa').value.trim()||null,
+    google_review_url:document.getElementById('edit-review-url').value.trim()||null,
     lat:parseFloat(document.getElementById('edit-lat').value)||null,
     lng:parseFloat(document.getElementById('edit-lng').value)||null,
     admin_note:document.getElementById('edit-note').value.trim()||null,
