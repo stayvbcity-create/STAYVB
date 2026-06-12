@@ -152,15 +152,24 @@ async function load(){
   const todayStr = now.toISOString().split('T')[0];
   const nowMins = now.getHours()*60 + now.getMinutes();
 
+  // Trenutni partner_code gosta (ako je dosao preko QR-a svog hotela)
+  const guestUnitId = (new URLSearchParams(window.location.search).get('id') || '').toUpperCase();
+
   // Uzmi sve partnere sa HH = true za danas + njihov sadržaj
   const { data:partners } = await sb
     .from('partners')
-    .select('id, name, type, hh_active, hh_start, hh_end, hh_date, lat, lng, whatsapp, phone, partner_content(hh_info)')
+    .select('id, name, type, partner_code, hh_active, hh_start, hh_end, hh_date, hh_visibility, lat, lng, whatsapp, phone, partner_content(hh_info)')
     .eq('hh_active', true)
     .eq('hh_date', todayStr)
     .eq('is_active', true);
 
-  const all = partners || [];
+  // Filtriraj po vidljivosti - ako je 'own_guests', prikazi samo gostu tog hotela
+  const all = (partners || []).filter(p => {
+    if((p.hh_visibility||'all') === 'own_guests'){
+      return p.partner_code === guestUnitId;
+    }
+    return true;
+  });
 
   // Podeli na aktivne i nadolazeće
   const active = all.filter(p => {
