@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="sr-Latn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>StayVB — Vaš dom u Banji</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0c2b26">
+<link rel="apple-touch-icon" href="icon192.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800&display=swap');
+*{box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f4faf6;color:#16302b;min-height:100vh;margin:0}
+.app{max-width:430px;margin:0 auto;min-height:100vh;padding-bottom:40px}
+
+.hero{position:relative;padding:58px 24px 76px;text-align:center;color:white;overflow:hidden;
+    background:linear-gradient(160deg,#0c2b26 0%,#134e42 50%,#0e6b5c 100%);
+    border-bottom-left-radius:2.75rem;border-bottom-right-radius:2.75rem;}
+.hero::before{content:"";position:absolute;inset:0;
+    background:radial-gradient(circle at 18% 12%,rgba(110,231,183,0.20),transparent 38%),
+                radial-gradient(circle at 85% 80%,rgba(56,189,178,0.16),transparent 42%);
+    pointer-events:none;}
+.hero-waves{position:absolute;bottom:-1px;left:0;width:100%;height:60px;z-index:1}
+.back-btn{position:absolute;top:16px;left:16px;width:36px;height:36px;border-radius:50%;
+    background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.16);
+    display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;
+    color:white;text-decoration:none;z-index:2}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:900;
+    text-transform:uppercase;letter-spacing:0.20em;color:#a7f3d0;margin:0 0 16px;
+    position:relative;z-index:2;padding:7px 14px;border-radius:999px;
+    background:rgba(110,231,183,0.10);border:1px solid rgba(110,231,183,0.22)}
+.hero-title{font-family:'Playfair Display',serif;font-size:1.65rem;font-weight:800;line-height:1.4;
+    margin:0 0 14px;letter-spacing:-0.01em;position:relative;z-index:2;
+    background:linear-gradient(135deg,#ecfdf5,#6ee7b7);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-sub{font-size:12.5px;color:rgba(255,255,255,0.68);font-weight:600;line-height:1.65;
+    max-width:300px;margin:0 auto;position:relative;z-index:2}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;margin-top:18px;padding:9px 18px;
+    border-radius:999px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);
+    font-size:10.5px;font-weight:900;color:#d1fae5;letter-spacing:0.04em;position:relative;z-index:2;
+    backdrop-filter:blur(6px)}
+
+.content{padding:0 16px;margin-top:-44px}
+
+.direct-strip{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:1.5rem;
+    background:linear-gradient(135deg,#ffffff,#f0fdfa);border:1px solid #ccfbf1;margin-bottom:16px;
+    box-shadow:0 8px 20px rgba(16,185,129,0.08)}
+.direct-strip .icon{font-size:1.5rem;flex-shrink:0}
+.direct-strip p{font-size:11.5px;font-weight:700;color:#0f766e;margin:0;line-height:1.55}
+.direct-strip strong{color:#065f46}
+
+.prop-card{background:white;border:1px solid #d1fae5;border-radius:1.85rem;margin-bottom:18px;
+    overflow:hidden;box-shadow:0 12px 28px rgba(16,150,129,0.10);position:relative}
+.prop-img-wrap{position:relative;width:100%;height:208px;background:#e6f7f1;overflow:hidden}
+.prop-img-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.prop-img-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+    font-size:2.6rem;background:linear-gradient(150deg,#ecfdf5,#d1fae5);color:#6ee7b7}
+.prop-badge{position:absolute;top:13px;left:13px;padding:7px 13px;border-radius:999px;
+    background:rgba(12,43,38,0.72);backdrop-filter:blur(6px);color:#a7f3d0;
+    font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;
+    display:flex;align-items:center;gap:5px}
+.prop-price{position:absolute;bottom:13px;right:13px;padding:9px 16px;border-radius:16px;
+    background:linear-gradient(135deg,#6ee7b7,#10b981);color:#0c2b26;
+    font-size:15px;font-weight:900;letter-spacing:-0.01em;
+    box-shadow:0 8px 18px rgba(16,185,129,0.35)}
+.prop-img-counter{position:absolute;bottom:13px;left:13px;padding:6px 11px;border-radius:999px;
+    background:rgba(12,43,38,0.55);color:white;font-size:10px;font-weight:800;
+    display:flex;align-items:center;gap:4px}
+
+.prop-body{padding:18px 20px 20px}
+.prop-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;
+    color:#0f3a32;margin:0 0 5px;letter-spacing:-0.01em;line-height:1.3}
+.prop-loc{font-size:11.5px;font-weight:700;color:#0d9488;margin:0 0 12px;
+    display:flex;align-items:center;gap:5px}
+.prop-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:13px}
+.prop-tag{padding:6px 12px;border-radius:999px;background:#f0fdfa;border:1px solid #d1fae5;
+    font-size:10.5px;font-weight:800;color:#0f766e;display:flex;align-items:center;gap:4px}
+.prop-desc{font-size:12.5px;color:#3f5b54;font-weight:500;line-height:1.6;margin:0 0 16px}
+
+.prop-btns{display:flex;gap:9px}
+.btn-prop{flex:1;padding:14px 8px;border-radius:15px;font-size:11px;font-weight:900;
+    text-transform:uppercase;letter-spacing:0.06em;cursor:pointer;font-family:inherit;
+    border:none;transition:transform 0.18s;text-decoration:none;
+    display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-prop:active{transform:scale(0.96)}
+.btn-call{background:#0f3a32;color:#a7f3d0}
+.btn-wa{background:linear-gradient(135deg,#25D366,#1da851);color:white}
+
+.empty-card{background:white;border:1px solid #d1fae5;border-radius:1.75rem;padding:44px 24px;
+    text-align:center;margin-top:24px}
+.empty-card .icon{font-size:2.6rem;margin-bottom:12px}
+.empty-card p{font-size:13px;color:#0d9488;font-weight:700;margin:0;line-height:1.6}
+
+.section-divider{display:flex;align-items:center;gap:10px;margin:22px 0 16px;padding:0 4px}
+.section-divider .line{flex:1;height:1px;background:linear-gradient(90deg,transparent,#a7f3d0,transparent)}
+.section-divider span{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.18em;color:#0d9488}
+
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.float-icon{display:inline-block;animation:floatY 3s ease-in-out infinite}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="hero">
+    <a href="javascript:history.back()" class="back-btn">←</a>
+    <p class="hero-eyebrow">💧 Direktna prodaja, bez posrednika</p>
+    <h1 class="hero-title">Vrnjačka Banja nije samo odmor,<br>može biti vaš dom.</h1>
+    <p class="hero-sub">Pažljivo odabrani stanovi od provеrenih investitora. Javite se direktno, bez čekanja i provizije.</p>
+    <div class="hero-badge"><span class="float-icon">🌿</span> <span id="hero-count">Učitavanje ponude...</span></div>
+
+    <svg class="hero-waves" viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,60 C240,110 480,10 720,55 C960,100 1200,20 1440,65 L1440,120 L0,120 Z" fill="#f4faf6" opacity="0.5"/>
+      <path d="M0,80 C240,40 480,110 720,75 C960,40 1200,100 1440,70 L1440,120 L0,120 Z" fill="#f4faf6"/>
+    </svg>
+  </div>
+
+  <div class="content">
+
+    <div class="direct-strip">
+      <span class="icon">🤝</span>
+      <p>Svi stanovi su u <strong>direktnoj prodaji</strong> od investitora, javite se odmah i izbegnite čekanje na agenciju.</p>
+    </div>
+
+    <div class="section-divider">
+      <div class="line"></div>
+      <span>Ponuda stanova</span>
+      <div class="line"></div>
+    </div>
+
+    <div id="properties-list">
+      <p style="text-align:center;padding:30px;color:#0d9488;font-weight:700;font-size:13px">Učitavanje ponude...</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const sb = C.db();
+let allProperties = [];
+
+function fmtPrice(eur){
+    return '€ ' + Number(eur).toLocaleString('de-DE');
+}
+
+function renderProperties(){
+    const list = document.getElementById('properties-list');
+
+    if(!allProperties.length){
+        list.innerHTML = `<div class="empty-card">
+            <div class="icon">🌿</div>
+            <p>Trenutno nema dostupnih stanova.<br>Vratite se uskoro, ponuda se redovno ažurira!</p>
+        </div>`;
+        return;
+    }
+
+    list.innerHTML = allProperties.map(p => {
+        const imgs = p.images || [];
+        const mainImg = imgs[0];
+        const imgCount = imgs.length;
+
+        const imgHtml = mainImg
+            ? `<img src="${mainImg}" alt="${esc(p.title)}" loading="lazy">`
+            : `<div class="prop-img-placeholder">🏢</div>`;
+
+        const tags = [];
+        if(p.area_m2) tags.push(`<span class="prop-tag">📐 ${p.area_m2} m²</span>`);
+        if(p.rooms) tags.push(`<span class="prop-tag">🛏 ${p.rooms} ${p.rooms===1?'soba':'sobe'}</span>`);
+
+        const phone = (p.investor_phone||'').replace(/[^0-9+]/g,'');
+        const wa = (p.investor_whatsapp||'').replace(/[^0-9+]/g,'');
+
+        return `<div class="prop-card">
+            <div class="prop-img-wrap">
+                ${imgHtml}
+                <span class="prop-badge">💧 Direktna prodaja</span>
+                ${imgCount>1 ? `<span class="prop-img-counter">📷 ${imgCount}</span>` : ''}
+                <span class="prop-price">${fmtPrice(p.price_eur)}</span>
+            </div>
+            <div class="prop-body">
+                <h3 class="prop-title">${esc(p.title)}</h3>
+                ${p.location_text ? `<p class="prop-loc">📍 ${esc(p.location_text)}</p>` : ''}
+                ${tags.length ? `<div class="prop-meta">${tags.join('')}</div>` : ''}
+                ${p.description ? `<p class="prop-desc">${esc(p.description)}</p>` : ''}
+                <div class="prop-btns">
+                    ${phone ? `<a href="tel:${phone}" class="btn-prop btn-call">📞 Pozovi</a>` : ''}
+                    ${wa ? `<a href="https://wa.me/${wa.replace('+','')}" target="_blank" class="btn-prop btn-wa">💬 WhatsApp</a>` : ''}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function esc(str){
+    if(!str) return '';
+    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function init(){
+    const { data } = await sb.from('properties')
+        .select('*')
+        .eq('is_active', true)
+        .eq('prop_type', 'apartment')
+        .order('sort_order')
+        .order('created_at', {ascending:false});
+
+    allProperties = data || [];
+    document.getElementById('hero-count').textContent = allProperties.length + ' ' + (allProperties.length===1 ? 'stan na čekanju' : 'stanova na čekanju');
+    renderProperties();
+}
+
+init();
+</script>
+</body>
+</html>
