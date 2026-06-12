@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="sr-Latn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>StayVB - Share Redirect</title>
+    <meta name="theme-color" content="#0f172a">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background:
+                radial-gradient(circle at top right, rgba(236,72,153,0.12), transparent 24%),
+                radial-gradient(circle at bottom left, rgba(245,158,11,0.12), transparent 24%),
+                linear-gradient(180deg, #020617 0%, #0f172a 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(15, 23, 42, 0.72);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.28);
+        }
+
+        .shine {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .shine::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -120%;
+            width: 55%;
+            height: 100%;
+            transform: skewX(-24deg);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+            animation: sweep 4.5s ease-in-out infinite;
+        }
+
+        @keyframes sweep {
+            0% { left: -120%; opacity: 0; }
+            12% { opacity: 0.35; }
+            30% { left: 160%; opacity: 0.3; }
+            31% { opacity: 0; }
+            100% { left: 160%; opacity: 0; }
+        }
+
+        .spin-ring {
+            width: 54px;
+            height: 54px;
+            border-radius: 999px;
+            border: 3px solid rgba(255,255,255,0.12);
+            border-top-color: #f59e0b;
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-5">
+    <div class="glass shine w-full max-w-md rounded-[2rem] p-8 text-center">
+        <div class="mx-auto mb-5 w-20 h-20 rounded-[1.6rem] bg-gradient-to-br from-fuchsia-500 to-amber-400 flex items-center justify-center text-4xl shadow-xl">
+            📸
+        </div>
+
+        <p class="text-[10px] uppercase tracking-[0.25em] font-black text-fuchsia-300 mb-3">StayVB Share</p>
+
+        <h1 class="text-2xl font-black tracking-tight mb-3">Otvaramo Instagram reel</h1>
+
+        <p id="statusText" class="text-sm text-slate-300 font-semibold leading-6 mb-6">
+            Pripremamo deljenje za Vaš smeštaj...
+        </p>
+
+        <div class="flex justify-center mb-6">
+            <div class="spin-ring"></div>
+        </div>
+
+        <div class="space-y-3 text-left text-xs font-bold text-slate-300 bg-white/5 border border-white/10 rounded-[1.4rem] p-4 mb-6">
+            <div class="flex items-center justify-between gap-3">
+                <span>Smeštaj</span>
+                <span id="unitLabel" class="text-white text-right">StayVB</span>
+            </div>
+            <div class="flex items-center justify-between gap-3">
+                <span>Sledeći korak</span>
+                <span class="text-amber-300 text-right">Podeli reel u story</span>
+            </div>
+            <div class="flex items-center justify-between gap-3">
+                <span>Nakon toga</span>
+                <span class="text-emerald-300 text-right">Pokaži domaćinu</span>
+            </div>
+        </div>
+
+        <a id="manualLink"
+           href="#"
+           target="_blank"
+           rel="noopener"
+           class="hidden w-full min-h-[56px] rounded-[1.4rem] bg-gradient-to-r from-fuchsia-500 to-amber-400 text-white font-black uppercase tracking-wide text-xs shadow-lg flex items-center justify-center">
+            Otvori ručno Instagram reel
+        </a>
+
+        <p class="mt-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+            Ako se Instagram ne otvori automatski, kliknite dugme iznad.
+        </p>
+    </div>
+
+    <script>
+        const supabaseClient = C.db();
+
+        function getParam(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name) || '';
+        }
+
+        async function logGuestShareAttempt(payload) {
+            try {
+                await supabaseClient.from('guest_shares').insert([payload]);
+            } catch (err) {
+                console.error('Greška pri upisu guest_shares:', err);
+            }
+        }
+
+        async function startShareFlow() {
+            const session = getParam('session');
+            const unit = getParam('unit');
+            const unitName = getParam('unit_name') || 'StayVB';
+            const target = getParam('target');
+
+            document.getElementById('unitLabel').innerText = unitName || 'StayVB';
+            document.getElementById('manualLink').href = target || '#';
+
+            if (!target) {
+                document.getElementById('statusText').innerText = 'Instagram reel link nije podešen za ovaj smeštaj.';
+                document.getElementById('manualLink').classList.add('hidden');
+                return;
+            }
+
+            await logGuestShareAttempt({
+                unit_id: unit || null,
+                unit_name: unitName || null,
+                guest_session: session || null,
+                target_url: target,
+                source: 'index_share_cta',
+                user_agent: navigator.userAgent || null
+            });
+
+            document.getElementById('statusText').innerText = 'Preusmeravamo Vas na Instagram. Podelite reel u story i pokažite domaćinu.';
+            document.getElementById('manualLink').classList.remove('hidden');
+
+            setTimeout(() => {
+                window.location.href = target;
+            }, 900);
+        }
+
+        window.addEventListener('load', startShareFlow);
+    </script>
+</body>
+</html>
