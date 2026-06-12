@@ -773,6 +773,29 @@ async function autoStamp(partnerId, isPremium){
     }
 }
 
+// ── Praćenje poseta ───────────────────────────────────────────────
+async function trackVisit(){
+    try{
+        const token = C.getOrCreateGuestToken();
+        let guestId = null;
+        const {data:g} = await sb.from('guests').select('id').eq('token',token).maybeSingle();
+        if(g) guestId = g.id;
+
+        let partnerId = null;
+        if(currentUnitId){
+            const {data:p} = await sb.from('partners').select('id').eq('partner_code',currentUnitId).maybeSingle();
+            if(p) partnerId = p.id;
+        }
+
+        await sb.from('analytics_clicks').insert({
+            partner_id: partnerId,
+            guest_id: guestId,
+            action: 'page_visit',
+            device_type: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
+        });
+    } catch(e){ console.log('trackVisit skip:', e.message); }
+}
+
 async function loadPartnerData(){
     if(!currentUnitId) return;
 
@@ -1095,6 +1118,8 @@ async function startApp(lang){
 
     document.getElementById('loader').style.display = 'flex';
     document.getElementById('content').style.display = 'none';
+
+    trackVisit();
 
     try{ await sb.from('partners').select('id').limit(1); } catch(e){}
 
