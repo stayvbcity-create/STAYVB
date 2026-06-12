@@ -326,11 +326,19 @@
             animation:sweepShine 7s ease-in-out infinite;pointer-events:none;}
         .property-cta-icon{font-size:1.8rem;flex-shrink:0;position:relative;z-index:2;
             filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3))}
-        .property-cta-text{flex:1;font-family:Georgia,serif;font-size:13.5px;font-weight:700;
+        .property-cta-text{flex:1;font-family:Georgia,serif;font-size:13px;font-weight:700;
             line-height:1.45;color:#a7f3d0;letter-spacing:-0.01em;position:relative;z-index:2}
-        .property-cta-arrow{font-size:1.1rem;color:#6ee7b7;flex-shrink:0;position:relative;z-index:2;
-            transition:transform 0.2s}
-        .property-cta:active .property-cta-arrow{transform:translateX(3px)}
+        .property-cta-link{display:block;margin-top:6px;font-family:'Inter',sans-serif;
+            font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;
+            color:#6ee7b7;opacity:0.9}
+        .property-cta-arrow-wrap{position:relative;z-index:2;flex-shrink:0;width:38px;height:38px;
+            border-radius:50%;background:rgba(110,231,183,0.14);border:1.5px solid rgba(110,231,183,0.35);
+            display:flex;align-items:center;justify-content:center;
+            animation:ctaArrowPulse 2s ease-in-out infinite}
+        .property-cta-arrow{font-size:1.15rem;color:#6ee7b7;font-weight:900;
+            animation:ctaArrowNudge 1.4s ease-in-out infinite}
+        @keyframes ctaArrowPulse{0%,100%{box-shadow:0 0 0 0 rgba(110,231,183,0.25)}50%{box-shadow:0 0 0 7px rgba(110,231,183,0)}}
+        @keyframes ctaArrowNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
 
         /* Referral kartica */
         .referral-card{position:relative;overflow:hidden;padding:18px;border-radius:2rem;
@@ -357,7 +365,11 @@
         .referral-btn:active{transform:scale(0.97);}
 
         /* Loyalty traka */
-        .loyalty-bar{background:linear-gradient(135deg,#1e1b4b,#312e81);border:1px solid rgba(167,139,250,0.25);border-radius:1.5rem;padding:14px 16px;color:white;}
+        .loyalty-combo{background:linear-gradient(135deg,#1e1b4b,#312e81);border:1px solid rgba(167,139,250,0.25);
+            border-radius:1.6rem;overflow:hidden;color:white;}
+        .loyalty-combo-top{padding:14px 16px 12px;}
+        .loyalty-combo-bottom{padding:0 8px 8px;}
+        .loyalty-combo .treasure-strip{border-radius:1.25rem;margin:0;}
         .loyalty-progress{height:6px;background:rgba(255,255,255,0.10);border-radius:999px;margin-top:10px;overflow:hidden;}
         .loyalty-fill{height:100%;background:linear-gradient(90deg,#a78bfa,#fbbf24);border-radius:999px;transition:width 0.6s ease;}
     </style>
@@ -443,25 +455,25 @@
                     </div>
                 </div>
 
-                <!-- Loyalty traka -->
-                <div id="loyalty-section" class="loyalty-bar fade-in hidden">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-                        <span style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.6)">⭐ Loyalty pečati</span>
-                        <span id="loyalty-count" style="font-size:13px;font-weight:900;color:#fbbf24">0/10</span>
+                <!-- Loyalty + Nagradna igra - jedinstvena celina -->
+                <div id="loyalty-section" class="loyalty-combo fade-in hidden">
+                    <div class="loyalty-combo-top">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                            <span style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.6)">⭐ Loyalty pečati</span>
+                            <span id="loyalty-count" style="font-size:13px;font-weight:900;color:#fbbf24">0/10</span>
+                        </div>
+                        <div class="loyalty-progress"><div class="loyalty-fill" id="loyalty-fill" style="width:0%"></div></div>
+                        <p style="font-size:10px;color:rgba(255,255,255,0.45);margin-top:6px;font-weight:700">Skupi 10 pečata i osvoji nagradu!</p>
                     </div>
-                    <div class="loyalty-progress"><div class="loyalty-fill" id="loyalty-fill" style="width:0%"></div></div>
-                    <p style="font-size:10px;color:rgba(255,255,255,0.45);margin-top:6px;font-weight:700">Skupi 10 pečata i osvoji nagradu!</p>
-                </div>
-
-                <!-- Nagradna igra -->
-                <div id="treasure-strip-wrap">
-                <div onclick="goTo('stamp.html')" class="treasure-strip fade-in">
-                    <div class="treasure-strip-left">
-                        <span class="treasure-strip-title">Nagradna igra · Skupi pečate</span>
+                    <div id="treasure-strip-wrap" class="loyalty-combo-bottom">
+                        <div onclick="goTo('stamp.html')" class="treasure-strip fade-in">
+                            <div class="treasure-strip-left">
+                                <span class="treasure-strip-title">Nagradna igra · Skupi pečate</span>
+                            </div>
+                            <div class="treasure-strip-icon">💰</div>
+                        </div>
                     </div>
-                    <div class="treasure-strip-icon">💰</div>
                 </div>
-                </div><!-- end treasure-strip-wrap -->
 
                 <!-- Happy Hour -->
                 <div onclick="goTo('happy-hour.html')" class="feature-card action-card delay-1 hh-card fade-in">
@@ -550,8 +562,13 @@
                 <a href="nekretnine.html" class="property-cta fade-in">
                     <div class="property-cta-shine"></div>
                     <div class="property-cta-icon">🌿</div>
-                    <div class="property-cta-text">Vrnjačka Banja nije samo odmor, može biti vaš dom</div>
-                    <div class="property-cta-arrow">→</div>
+                    <div class="property-cta-text">
+                        Vrnjačka Banja nije samo odmor, može biti vaš dom
+                        <span class="property-cta-link">Pogledajte nekretnine</span>
+                    </div>
+                    <div class="property-cta-arrow-wrap">
+                        <div class="property-cta-arrow">→</div>
+                    </div>
                 </a>
 
                 <!-- City Info Modal -->
