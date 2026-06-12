@@ -322,8 +322,20 @@ function renderHH(){
       <p class="panel-card-title">Podešavanje</p>
       <div class="field-group"><label class="field-label">Datum</label><input type="date" class="field-input" id="hh-date" value="${partner.hh_date||today}" min="${today}"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="field-group"><label class="field-label">Od</label><input type="time" class="field-input" id="hh-start" value="${partner.hh_start?.slice(0,5)||'17:00'}"></div>
-        <div class="field-group"><label class="field-label">Do</label><input type="time" class="field-input" id="hh-end" value="${partner.hh_end?.slice(0,5)||'19:00'}"></div>
+        <div class="field-group"><label class="field-label">Od (sat:min)</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select class="field-input" id="hh-start-h" style="text-align:center"></select>
+            <span style="font-weight:900;color:rgba(255,255,255,0.4)">:</span>
+            <select class="field-input" id="hh-start-m" style="text-align:center"></select>
+          </div>
+        </div>
+        <div class="field-group"><label class="field-label">Do (sat:min)</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select class="field-input" id="hh-end-h" style="text-align:center"></select>
+            <span style="font-weight:900;color:rgba(255,255,255,0.4)">:</span>
+            <select class="field-input" id="hh-end-m" style="text-align:center"></select>
+          </div>
+        </div>
       </div>
       <p style="font-size:10px;color:rgba(255,255,255,0.35);font-weight:700;margin:8px 0 0">⏱ Happy Hour može trajati najviše 4 sata, jednom dnevno.</p>
     </div>
@@ -333,13 +345,43 @@ function renderHH(){
     </div>
     <button class="btn-primary" onclick="saveHH()">💾 Sačuvaj i aktiviraj</button>
     <p class="save-msg" id="hh-msg"></p>`;
+
+  // Popuni sat/minut select-ove
+  const startTime = (partner.hh_start?.slice(0,5)||'17:00').split(':');
+  const endTime   = (partner.hh_end?.slice(0,5)||'19:00').split(':');
+  fillTimeSelect('hh-start-h','hh-start-m', parseInt(startTime[0]), parseInt(startTime[1]));
+  fillTimeSelect('hh-end-h','hh-end-m', parseInt(endTime[0]), parseInt(endTime[1]));
+}
+
+// Popuni select za sat (0-23) i minut (00/15/30/45)
+function fillTimeSelect(hourId, minId, selH, selM){
+  const hourEl = document.getElementById(hourId);
+  const minEl = document.getElementById(minId);
+  if(!hourEl || !minEl) return;
+
+  hourEl.innerHTML = Array.from({length:24}, (_,h) =>
+    `<option value="${h}" ${h===selH?'selected':''}>${String(h).padStart(2,'0')}h</option>`
+  ).join('');
+
+  const minOptions = [0,15,30,45];
+  // Ako sačuvani minut nije u standardnim opcijama, dodaj ga
+  if(!minOptions.includes(selM)) minOptions.push(selM);
+  minOptions.sort((a,b)=>a-b);
+
+  minEl.innerHTML = minOptions.map(m =>
+    `<option value="${m}" ${m===selM?'selected':''}>${String(m).padStart(2,'0')}</option>`
+  ).join('');
 }
 
 async function saveHH(){
   const active = document.getElementById('hh-active').checked;
   const date   = document.getElementById('hh-date').value;
-  const start  = document.getElementById('hh-start').value;
-  const end    = document.getElementById('hh-end').value;
+  const startH = parseInt(document.getElementById('hh-start-h').value);
+  const startM = parseInt(document.getElementById('hh-start-m').value);
+  const endH   = parseInt(document.getElementById('hh-end-h').value);
+  const endM   = parseInt(document.getElementById('hh-end-m').value);
+  const start  = String(startH).padStart(2,'0') + ':' + String(startM).padStart(2,'0');
+  const end    = String(endH).padStart(2,'0') + ':' + String(endM).padStart(2,'0');
   const info   = document.getElementById('hh-info').value;
   const msgEl  = document.getElementById('hh-msg');
 
@@ -611,19 +653,29 @@ async function renderEvents(){
       <div class="field-group"><label class="field-label">Naziv</label><input class="field-input" id="ev-title" placeholder="npr. Živa muzika"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div class="field-group"><label class="field-label">Datum</label><input type="date" class="field-input" id="ev-date" min="${today}"></div>
-        <div class="field-group"><label class="field-label">Vreme</label><input type="time" class="field-input" id="ev-time"></div>
+        <div class="field-group"><label class="field-label">Vreme (sat:min)</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select class="field-input" id="ev-time-h" style="text-align:center"></select>
+            <span style="font-weight:900;color:rgba(255,255,255,0.4)">:</span>
+            <select class="field-input" id="ev-time-m" style="text-align:center"></select>
+          </div>
+        </div>
       </div>
       <div class="field-group"><label class="field-label">Lokacija</label><input class="field-input" id="ev-loc" placeholder="Gde se događa?"></div>
       <div class="field-group"><label class="field-label">Opis (opciono)</label><textarea class="field-input" id="ev-desc" placeholder="Kratak opis..."></textarea></div>
       <button class="btn-primary" onclick="addEvent()">+ Dodaj događaj</button>
       <p class="save-msg" id="ev-msg"></p>
     </div>`;
+
+  fillTimeSelect('ev-time-h','ev-time-m', 18, 0);
 }
 
 async function addEvent(){
   const title = document.getElementById('ev-title').value.trim();
   const date  = document.getElementById('ev-date').value;
-  const time  = document.getElementById('ev-time').value;
+  const h = document.getElementById('ev-time-h').value;
+  const m = document.getElementById('ev-time-m').value;
+  const time  = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
   const loc   = document.getElementById('ev-loc').value.trim();
   const desc  = document.getElementById('ev-desc').value.trim();
   if(!title || !date){ document.getElementById('ev-msg').textContent = '⚠️ Naziv i datum su obavezni.'; return; }
