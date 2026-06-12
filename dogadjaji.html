@@ -100,7 +100,7 @@ async function load(){
 
   const { data:events } = await sb
     .from('events')
-    .select('*, partners(name, type, partner_code)')
+    .select('*, partners(name, type, partner_code, phone, whatsapp, lat, lng, google_review_url)')
     .gte('event_date', todayStr)
     .lte('event_date', in14)
     .eq('is_active', true)
@@ -144,14 +144,23 @@ async function load(){
     else label = new Date(date).toLocaleDateString(LANG==='sr'?'sr-RS':LANG==='en'?'en-GB':LANG, {weekday:'short',day:'numeric',month:'short'});
 
     html += `<div class="day-group"><p class="day-label">${label}</p>`;
-    html += evts.map(e => `
+    html += evts.map(e => {
+      const p = e.partners;
+      const contact = p?.whatsapp || p?.phone || '';
+      return `
       <div class="event-card">
         ${e.event_time ? `<div class="event-time">🕐 ${C.escapeHtml(e.event_time.slice(0,5))}</div>` : ''}
         <h3 class="event-title">${C.escapeHtml(e.title)}</h3>
         ${e.location ? `<p class="event-loc">📍 ${C.escapeHtml(e.location)}</p>` : ''}
         ${e.description ? `<p class="event-desc">${C.escapeHtml(e.description)}</p>` : ''}
-        ${e.partners ? `<div class="event-partner">🏢 ${C.escapeHtml(e.partners.name)}</div>` : ''}
-      </div>`).join('');
+        ${p ? `<div class="event-partner" style="margin-top:8px">🏢 Organizator: ${C.escapeHtml(p.name)}</div>` : ''}
+        <div style="display:flex;gap:8px;margin-top:10px">
+          ${p?.lat && p?.lng ? `<a href="radar.html?highlight=${encodeURIComponent(p.partner_code||'')}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;font-size:11px;font-weight:900;color:#1d4ed8;text-decoration:none;text-transform:uppercase;letter-spacing:0.06em">🗺️ Mapa</a>` : ''}
+          ${contact ? `<a href="${contact.startsWith('+') ? 'https://wa.me/'+contact.replace(/\D/g,'') : 'tel:'+contact}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:12px;font-size:11px;font-weight:900;color:#7c3aed;text-decoration:none;text-transform:uppercase;letter-spacing:0.06em">${contact.startsWith('+')?'💬':'📞'} Kontakt</a>` : ''}
+          ${p?.google_review_url ? `<a href="${p.google_review_url}" target="_blank" style="flex:0 0 44px;display:flex;align-items:center;justify-content:center;padding:11px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;color:#d97706;font-size:14px;text-decoration:none">⭐</a>` : ''}
+        </div>
+      </div>`;
+    }).join('');
     html += '</div>';
   }
 
