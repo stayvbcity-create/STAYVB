@@ -314,6 +314,24 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         </div>
       </div>
 
+      <!-- Posete sistemu -->
+      <div class="charts-grid" style="margin-bottom:16px">
+        <div class="chart-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div class="chart-title" style="margin:0">Posete sistemu — dnevno</div>
+            <span id="visits-total-badge" style="font-size:11px;font-weight:900;color:#3b82f6"></span>
+          </div>
+          <div class="chart-wrap" style="height:180px"><canvas id="chart-visits-stats"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div class="chart-title" style="margin:0">Top partneri — najviše posета</div>
+            <span id="visits-period-label" style="font-size:10px;color:var(--muted);font-weight:700">poslednjih 30 dana</span>
+          </div>
+          <div id="visits-by-partner"></div>
+        </div>
+      </div>
+
       <!-- Treći red: tip partnera + top lista -->
       <div class="charts-grid">
         <div class="chart-card">
@@ -431,6 +449,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- ═══ QR ═══ -->
     <div id="page-qr" class="page">
       <div class="sec-header"><div><div class="sec-title">QR Generator</div><div class="sec-sub">QR kodovi i partner URL-ovi</div></div></div>
+      <div class="search-row">
+        <input class="search-input" id="qr-search" placeholder="🔍  Pretraži po nazivu, kodu ili PIN-u..." oninput="filterQR()">
+        <select class="filter-select" id="qr-filter-type" onchange="filterQR()">
+          <option value="">Svi tipovi</option>
+          <option value="apartment">Apartman</option>
+          <option value="hotel">Hotel</option>
+          <option value="restaurant">Restoran</option>
+          <option value="attraction">Atrakcija</option>
+          <option value="business">Mali biznis</option>
+        </select>
+      </div>
       <div id="qr-list"></div>
     </div>
 
@@ -829,6 +858,8 @@ function setStatRange(days){
     const btn = document.getElementById('stat-range-'+d);
     if(btn) btn.style.opacity = d===days ? '1' : '0.45';
   });
+  const lbl = document.getElementById('visits-period-label');
+  if(lbl) lbl.textContent = 'poslednjih ' + days + ' dana';
   loadStatsCharts();
 }
 
@@ -1070,6 +1101,82 @@ async function loadStatsCharts(){
       y:{ticks:{color:'rgba(255,255,255,0.35)',font:{size:9},precision:0},grid:{color:'rgba(255,255,255,0.05)'}}
     }
   });
+
+  // ── Posete sistemu ──────────────────────────────────────────────
+  const {data:visitData} = await sb.from('analytics_clicks')
+    .select('created_at,partner_id,partners(name,partner_code)')
+    .eq('action','page_visit')
+    .gte('created_at', fromStr);
+
+  const visitsByDay = {};
+  labelsFull.forEach(d=>{ visitsByDay[d]=0; });
+  const visitsByPartner = {};
+  let visitsNoPartner = 0;
+
+  (visitData||[]).forEach(v=>{
+    const d = v.created_at?.split('T')[0];
+    if(d && visitsByDay[d]!==undefined) visitsByDay[d]++;
+
+    if(v.partner_id && v.partners){
+      const key = v.partners.name + '|' + (v.partners.partner_code||'');
+      visitsByPartner[key] = (visitsByPartner[key]||0)+1;
+    } else {
+      visitsNoPartner++;
+    }
+  });
+
+  const visitArr = labelsFull.map(d=>visitsByDay[d]||0);
+  const totalVisits = visitArr.reduce((a,b)=>a+b,0);
+
+  const vBadge = document.getElementById('visits-total-badge');
+  if(vBadge) vBadge.textContent = totalVisits + ' poseta';
+
+  renderChart('chart-visits-stats','line',labels,[{
+    label:'Posete',
+    data:visitArr,
+    borderColor:'#3b82f6',
+    backgroundColor:'rgba(59,130,246,0.12)',
+    borderWidth:2.5,
+    pointRadius,
+    pointHoverRadius:5,
+    pointBackgroundColor:'#3b82f6',
+    tension:0.4,
+    fill:true
+  }],{
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'rgba(255,255,255,0.35)',font:{size:9},maxTicksLimit:8},grid:{color:'rgba(255,255,255,0.04)'}},
+      y:{ticks:{color:'rgba(255,255,255,0.35)',font:{size:9},precision:0},grid:{color:'rgba(255,255,255,0.05)'}}
+    }
+  });
+
+  // Top partneri po posetama
+  const sortedVisits = Object.entries(visitsByPartner).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxVisits = sortedVisits[0]?.[1] || 1;
+  const vbpEl = document.getElementById('visits-by-partner');
+  if(vbpEl){
+    let html = sortedVisits.map(([key,count])=>{
+      const [name,code] = key.split('|');
+      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span class="p-code" style="min-width:42px;text-align:center;font-size:10px">${esc(code)}</span>
+        <div style="flex:1">
+          <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-bottom:4px">
+            <span style="color:var(--text)">${esc(name)}</span>
+            <span style="color:#3b82f6">${count}</span>
+          </div>
+          <div style="height:5px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden">
+            <div style="height:100%;background:#3b82f6;border-radius:999px;width:${Math.round(count/maxVisits*100)}%;opacity:0.8"></div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    if(visitsNoPartner > 0){
+      html += `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--muted);font-weight:700">
+        ${visitsNoPartner} poseta bez QR koda (direktan pristup)
+      </div>`;
+    }
+    vbpEl.innerHTML = html || '<p style="font-size:12px;color:var(--muted);font-weight:600">Nema podataka za ovaj period.</p>';
+  }
 }
 
 // ── Partneri ──────────────────────────────────────────────────────
@@ -1668,10 +1775,33 @@ async function saveAssignment(){
 }
 
 // ── QR ────────────────────────────────────────────────────────────
+let allQrPartners = [];
+
 async function loadQR(){
   const {data}=await sb.from('partners').select('id,name,type,partner_code,access_token,pin').eq('is_active',true).order('partner_code');
+  allQrPartners = data||[];
+  renderQRList(allQrPartners);
+}
+
+function filterQR(){
+  const q = (document.getElementById('qr-search')?.value||'').toLowerCase();
+  const type = document.getElementById('qr-filter-type')?.value||'';
+  renderQRList(allQrPartners.filter(p=>
+    (!q || p.name.toLowerCase().includes(q) || (p.partner_code||'').includes(q) || (p.pin||'').includes(q)) &&
+    (!type || p.type===type)
+  ));
+}
+
+function renderQRList(data){
   const base=location.origin+'/';
-  document.getElementById('qr-list').innerHTML=(data||[]).map(p=>{
+  const list = document.getElementById('qr-list');
+
+  if(!data.length){
+    list.innerHTML = '<div class="tbl-card" style="padding:24px;text-align:center"><p style="color:var(--muted);font-size:13px;font-weight:700">Nema rezultata.</p></div>';
+    return;
+  }
+
+  list.innerHTML=data.map(p=>{
     const gUrl=(p.type==='apartment'||p.type==='hotel')?`${base}index.html?id=${p.partner_code}`:`${base}stamp.html?code=${p.partner_code}`;
     const pUrl=`${base}partner.html?t=${p.access_token}`;
     return `<div class="tbl-card" style="margin-bottom:12px;padding:18px">
@@ -1694,7 +1824,8 @@ async function loadQR(){
       </div>
     </div>`;
   }).join('');
-  (data||[]).forEach(p=>{
+
+  data.forEach(p=>{
     const url=(p.type==='apartment'||p.type==='hotel')?`${base}index.html?id=${p.partner_code}`:`${base}stamp.html?code=${p.partner_code}`;
     QRCode.toCanvas(document.createElement('canvas'),url,{width:110,margin:1},(err,canvas)=>{
       if(!err){const el=document.getElementById('qr-'+p.id);if(el){el.innerHTML='';el.appendChild(canvas);}}
