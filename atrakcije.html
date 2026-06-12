@@ -45,9 +45,10 @@ body{top:0!important}
 .attr-desc{font-size:13px;color:#475569;font-weight:600;line-height:1.55;margin:0 0 12px}
 .attr-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .attr-tag{padding:5px 10px;border-radius:999px;background:#f0fdfa;border:1px solid #d1fae5;font-size:10px;font-weight:800;color:#065f46}
-.attr-btns{display:flex;gap:8px}
-.btn-sm{flex:1;padding:12px 8px;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;font-family:inherit;border:none;transition:transform 0.18s;text-decoration:none;display:flex;align-items:center;justify-content:center}
+.attr-btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn-sm{flex:1 1 auto;min-width:70px;padding:12px 8px;border-radius:14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;font-family:inherit;border:none;transition:transform 0.18s;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px}
 .btn-sm:active{transform:scale(0.97)}
+.btn-review{flex:0 0 auto;width:46px;background:#fffbeb;border:1px solid #fde68a;color:#d97706;font-size:16px}
 .btn-book{background:linear-gradient(135deg,#10b981,#059669);color:white}
 .btn-wa{background:#f0fdfa;color:#065f46;border:1px solid #d1fae5}
 
@@ -202,6 +203,8 @@ function renderList(){
           <div class="attr-icon">${icon}</div>
         </div>
         ${pc.short_desc ? `<p class="attr-desc">${C.escapeHtml(pc.short_desc)}</p>` : ''}
+        ${pc.address ? `<p style="font-size:11px;font-weight:700;color:#0f766e;margin:0 0 10px;display:flex;align-items:center;gap:5px">📍 ${C.escapeHtml(pc.address)}</p>` : ''}
+        ${p.phone ? `<p style="font-size:11px;font-weight:700;color:#475569;margin:0 0 10px;display:flex;align-items:center;gap:5px">📞 ${C.escapeHtml(p.phone)}</p>` : ''}
         <div class="attr-meta">
           ${pc.working_hours ? `<span class="attr-tag">🕐 ${C.escapeHtml(pc.working_hours)}</span>` : ''}
           ${p.loyalty_enabled ? '<span class="attr-tag">⭐ Pečat</span>' : ''}
@@ -209,7 +212,9 @@ function renderList(){
         </div>
         <div class="attr-btns">
           ${p.has_booking ? `<button class="btn-sm btn-book" onclick="openBooking('${p.id}','${C.escapeHtml(p.name)}')">📅 Rezerviši</button>` : ''}
+          ${p.lat && p.lng ? `<a href="radar.html?highlight=${encodeURIComponent(p.partner_code||'')}" class="btn-sm" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8">🗺️ Mapa</a>` : ''}
           ${wa ? `<a href="${wa.startsWith('+')?'https://wa.me/'+wa.replace(/\D/g,''):'tel:'+wa}" class="btn-sm btn-wa">💬 Kontakt</a>` : ''}
+          ${p.google_review_url ? `<a href="${p.google_review_url}" target="_blank" class="btn-sm btn-review">⭐</a>` : ''}
         </div>
       </div>`;
   }).join('');
@@ -355,7 +360,7 @@ async function init(){
   buildLangPills();
   const { data:partners } = await sb
     .from('partners')
-    .select('id, name, type, hh_active, loyalty_enabled, has_booking, phone, whatsapp, partner_content(short_desc, category, working_hours)')
+    .select('id, name, type, hh_active, loyalty_enabled, has_booking, phone, whatsapp, lat, lng, partner_code, google_review_url, partner_content(short_desc, category, working_hours, address)')
     .eq('type', 'attraction')
     .eq('is_active', true)
     .order('name');
