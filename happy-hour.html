@@ -158,7 +158,7 @@ async function load(){
   // Uzmi sve partnere sa HH = true za danas + njihov sadržaj
   const { data:partners } = await sb
     .from('partners')
-    .select('id, name, type, partner_code, hh_active, hh_start, hh_end, hh_date, hh_visibility, lat, lng, whatsapp, phone, partner_content(hh_info)')
+    .select('id, name, type, partner_code, hh_active, hh_start, hh_end, hh_date, hh_visibility, lat, lng, whatsapp, phone, google_review_url, partner_content(hh_info, address)')
     .eq('hh_active', true)
     .eq('hh_date', todayStr)
     .eq('is_active', true);
@@ -205,6 +205,7 @@ async function load(){
   } else {
     mainList.innerHTML = active.map(p => {
       const info = p.partner_content?.[0]?.hh_info || '';
+      const addr = p.partner_content?.[0]?.address || '';
       const rem = remainingLabel(p.hh_end, nowMins);
       const pct = progressPct(p.hh_start, p.hh_end, nowMins);
       const contact = p.whatsapp || p.phone || '';
@@ -222,15 +223,28 @@ async function load(){
             </div>
           </div>
           ${info ? `<p class="hh-info-text">${C.escapeHtml(info)}</p>` : ''}
+          ${addr ? `<p style="font-size:11px;font-weight:700;color:#92400e;margin:0 0 8px;display:flex;align-items:center;gap:5px">📍 ${C.escapeHtml(addr)}</p>` : ''}
           <div class="hh-time-bar">
             🕐 ${C.escapeHtml(p.hh_start||'')} — ${C.escapeHtml(p.hh_end||'')}
           </div>
           <div class="hh-progress"><div class="hh-progress-fill" style="width:${pct}%"></div></div>
-          ${contact ? `
-            <a href="${contact.startsWith('+') ? 'https://wa.me/'+contact.replace(/\D/g,'') : 'tel:'+contact}"
-               style="display:block;margin-top:12px;padding:12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;text-align:center;font-size:11px;font-weight:900;color:#c2410c;text-decoration:none;text-transform:uppercase;letter-spacing:0.10em">
-              📍 ${C.escapeHtml(p.name)}
-            </a>` : ''}
+          <div style="display:flex;gap:8px;margin-top:12px">
+            ${p.lat && p.lng ? `
+              <a href="radar.html?highlight=${encodeURIComponent(p.partner_code||'')}"
+                 style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;text-align:center;font-size:11px;font-weight:900;color:#1d4ed8;text-decoration:none;text-transform:uppercase;letter-spacing:0.08em">
+                🗺️ Mapa
+              </a>` : ''}
+            ${contact ? `
+              <a href="${contact.startsWith('+') ? 'https://wa.me/'+contact.replace(/\D/g,'') : 'tel:'+contact}"
+                 style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;text-align:center;font-size:11px;font-weight:900;color:#c2410c;text-decoration:none;text-transform:uppercase;letter-spacing:0.08em">
+                ${contact.startsWith('+') ? '💬' : '📞'} Kontakt
+              </a>` : ''}
+            ${p.google_review_url ? `
+              <a href="${p.google_review_url}" target="_blank"
+                 style="flex:0 0 46px;display:flex;align-items:center;justify-content:center;padding:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:14px;font-size:16px;color:#d97706;text-decoration:none">
+                ⭐
+              </a>` : ''}
+          </div>
         </div>`;
     }).join('');
   }
