@@ -23,7 +23,8 @@ body{top:0!important}
 .logout-btn{position:absolute;top:14px;right:14px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);font-size:10px;font-weight:900;color:rgba(255,255,255,0.5);cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:0.08em}
 
 /* PIN screen */
-#pin-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center}
+#pin-screen{min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center}
+#pin-screen:not(.hidden){display:flex}
 .pin-input{width:100%;max-width:260px;padding:18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:1.5rem;color:white;font-size:1.8rem;font-weight:900;text-align:center;font-family:inherit;letter-spacing:0.3em;outline:none}
 .pin-input:focus{border-color:rgba(251,191,36,0.40);background:rgba(255,255,255,0.08)}
 
@@ -99,7 +100,7 @@ textarea.field-input{resize:vertical;min-height:90px}
 
 <!-- Main App -->
 <!-- Suspendovan nalog -->
-<div id="suspended-screen" class="hidden" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;background:linear-gradient(145deg,#0f172a,#1a2540)">
+<div id="suspended-screen" class="hidden" style="min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;background:linear-gradient(145deg,#0f172a,#1a2540)">
   <div style="font-size:3rem;margin-bottom:20px">🔒</div>
   <h2 style="font-size:1.3rem;font-weight:900;color:#f87171;margin:0 0 10px;letter-spacing:-0.02em">Nalog je suspendovan</h2>
   <p style="font-size:13px;color:rgba(255,255,255,0.55);font-weight:600;line-height:1.6;max-width:280px;margin:0 0 28px">
@@ -109,6 +110,10 @@ textarea.field-input{resize:vertical;min-height:90px}
     📧 Kontakt: admin@stayvb.rs
   </div>
 </div>
+
+<style>
+#suspended-screen:not(.hidden){display:flex}
+</style>
 
 <div id="main-app" class="app hidden">
   <div class="header">
