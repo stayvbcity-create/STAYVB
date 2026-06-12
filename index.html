@@ -262,6 +262,8 @@
         .cta-btn:active,.cta-link:active{transform:scale(0.985);}
         .cta-blue{background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);color:white;}
         .cta-green{background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:white;}
+        .cta-review{background:white;color:#0f172a;border:1.5px solid #fbbf24;display:flex;align-items:center;justify-content:center;gap:8px}
+        .cta-review .stars{color:#fbbf24;font-size:14px;letter-spacing:1px}
         .cta-checkout{background:#fff1f2;color:#e11d48;border:2px dashed #fecdd3;box-shadow:none;font-size:12px;text-transform:uppercase;letter-spacing:0.12em;}
 
         /* Share card */
@@ -306,6 +308,29 @@
         .city-btn-call{flex:1;padding:10px;background:#0f172a;color:white;border:none;border-radius:12px;font-size:11px;font-weight:900;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px}
         .city-btn-wa{flex:1;padding:10px;background:#10b981;color:white;border:none;border-radius:12px;font-size:11px;font-weight:900;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px}
         .city-empty{text-align:center;padding:32px 20px;color:#94a3b8;font-size:13px;font-weight:700}
+
+        /* Nekretnine CTA - "Vaš dom u Banji" - zeleno/vodeni motiv */
+        .property-cta{position:relative;display:flex;align-items:center;gap:14px;
+            padding:20px 18px;border-radius:1.75rem;text-decoration:none;overflow:hidden;
+            background:linear-gradient(160deg,#0c2b26 0%,#134e42 50%,#0e6b5c 100%);
+            border:1px solid rgba(110,231,183,0.22);
+            box-shadow:0 14px 30px rgba(14,107,92,0.28);
+            margin:14px 0;}
+        .property-cta::before{content:"";position:absolute;inset:0;
+            background:radial-gradient(circle at 85% 20%,rgba(110,231,183,0.18),transparent 38%),
+                        radial-gradient(circle at 15% 85%,rgba(56,189,178,0.14),transparent 42%);
+            pointer-events:none;}
+        .property-cta-shine{position:absolute;top:-10%;left:-130%;width:60%;height:130%;
+            transform:skewX(-22deg);
+            background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);
+            animation:sweepShine 7s ease-in-out infinite;pointer-events:none;}
+        .property-cta-icon{font-size:1.8rem;flex-shrink:0;position:relative;z-index:2;
+            filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3))}
+        .property-cta-text{flex:1;font-family:Georgia,serif;font-size:13.5px;font-weight:700;
+            line-height:1.45;color:#a7f3d0;letter-spacing:-0.01em;position:relative;z-index:2}
+        .property-cta-arrow{font-size:1.1rem;color:#6ee7b7;flex-shrink:0;position:relative;z-index:2;
+            transition:transform 0.2s}
+        .property-cta:active .property-cta-arrow{transform:translateX(3px)}
 
         /* Referral kartica */
         .referral-card{position:relative;overflow:hidden;padding:18px;border-radius:2rem;
@@ -521,6 +546,14 @@
                     <div id="city-categories-grid" class="grid grid-cols-3 gap-3"></div>
                 </div>
 
+                <!-- Nekretnine - Vaš dom u Banji -->
+                <a href="nekretnine.html" class="property-cta fade-in">
+                    <div class="property-cta-shine"></div>
+                    <div class="property-cta-icon">🌿</div>
+                    <div class="property-cta-text">Vrnjačka Banja nije samo odmor, može biti vaš dom</div>
+                    <div class="property-cta-arrow">→</div>
+                </a>
+
                 <!-- City Info Modal -->
                 <div id="city-modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(15,23,42,0.92);backdrop-filter:blur(10px);align-items:flex-end;justify-content:center;padding:0">
                     <div style="background:white;border-top-left-radius:2rem;border-top-right-radius:2rem;width:100%;max-width:430px;max-height:85vh;overflow-y:auto">
@@ -566,6 +599,7 @@
                             </div>
                         </div>
                         <a id="wa-link" href="#" target="_blank" class="cta-link cta-green">💬 Pišite domaćinu / Host</a>
+                        <a id="review-link" href="#" target="_blank" class="cta-link cta-review hidden"><span class="stars">★★★★★</span> Ocenite nas na Google-u</a>
 
                         <!-- Referral kartica - samo premium -->
                         <div id="referral-card-wrap" class="hidden">
@@ -844,7 +878,7 @@ async function loadPartnerData(){
 
     const { data: partner, error } = await sb
         .from('partners')
-        .select('id, name, type, phone, whatsapp, loyalty_enabled, is_premium, referral_active, referral_code, referral_discount')
+        .select('id, name, type, phone, whatsapp, loyalty_enabled, is_premium, referral_active, referral_code, referral_discount, google_review_url')
         .eq('partner_code', currentUnitId)
         .eq('is_active', true)
         .maybeSingle();
@@ -876,6 +910,12 @@ async function loadPartnerData(){
     ownerPhone = partner.whatsapp || partner.phone || '';
     if(ownerPhone){
         document.getElementById('wa-link').href = 'https://wa.me/' + ownerPhone.replace(/\D/g,'') + '?text=' + encodeURIComponent('Zdravo, gost sam u '+partner.name+'.');
+    }
+
+    if(partner.google_review_url){
+        const reviewLink = document.getElementById('review-link');
+        reviewLink.href = partner.google_review_url;
+        reviewLink.classList.remove('hidden');
     }
 
     if(partner.is_premium){
