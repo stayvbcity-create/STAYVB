@@ -522,21 +522,110 @@ async function deleteEvent(id, btn){
 // ── Stats Tab ─────────────────────────────────────────────────────
 async function renderStats(){
   const el = document.getElementById('tab-stats');
-  const { count:scanCount } = await sb.from('analytics_clicks').select('*', {count:'exact', head:true}).eq('partner_id', partner.id).eq('action','qr_scan');
-  const { count:waCount } = await sb.from('analytics_clicks').select('*', {count:'exact', head:true}).eq('partner_id', partner.id).eq('action','wa_click');
-  const { count:stampCount } = await sb.from('stamps').select('*', {count:'exact', head:true}).eq('location_id', partner.id);
+  el.innerHTML = '<p style="text-align:center;padding:20px;color:rgba(255,255,255,0.4);font-weight:700;font-size:12px">Učitavanje...</p>';
 
-  el.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-      <div class="panel-card" style="text-align:center"><p class="panel-card-title">QR skeniranja</p><p style="font-size:2rem;font-weight:900;color:#fbbf24;margin:0">${scanCount||0}</p></div>
-      <div class="panel-card" style="text-align:center"><p class="panel-card-title">WhatsApp klikovi</p><p style="font-size:2rem;font-weight:900;color:#10b981;margin:0">${waCount||0}</p></div>
-      <div class="panel-card" style="text-align:center"><p class="panel-card-title">Loyalty pečati</p><p style="font-size:2rem;font-weight:900;color:#a78bfa;margin:0">${stampCount||0}</p></div>
-      <div class="panel-card" style="text-align:center"><p class="panel-card-title">Status</p><p style="font-size:1rem;font-weight:900;color:#6ee7b7;margin:0">${partner.is_active?'Aktivan':'Neaktivan'}</p></div>
+  const from30 = new Date(Date.now() - 30*24*60*60*1000).toISOString();
+
+  // Svi klikovi za ovog partnera u zadnjih 30 dana
+  const { data: clicks } = await sb.from('analytics_clicks')
+    .select('action,created_at')
+    .eq('partner_id', partner.id)
+    .gte('created_at', from30);
+
+  const { count: refCount } = await sb.from('referral_clicks')
+    .select('*', {count:'exact', head:true})
+    .eq('partner_id', partner.id)
+    .gte('created_at', from30);
+
+  const { count: stampCount } = await sb.from('stamps')
+    .select('*', {count:'exact', head:true})
+    .eq('location_id', partner.id);
+
+  // Agregacija po akciji
+  const counts = { page_visit:0, hh_view:0, radar_view:0, events_view:0, attr_view:0, qr_scan:0, wa_click:0, instagram_share:0 };
+  (clicks||[]).forEach(c=>{ if(counts[c.action]!==undefined) counts[c.action]++; });
+
+  const isApartOrHotel = partner.type==='apartment' || partner.type==='hotel';
+  const isRestaurant = partner.type==='restaurant';
+
+  let html = `
+    <div style="margin-bottom:6px"><p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.35);margin:0">Poslednjih 30 dana</p></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div class="panel-card" style="text-align:center;margin-bottom:0">
+        <p class="panel-card-title">👁 Pregledi profila</p>
+        <p style="font-size:2rem;font-weight:900;color:#3b82f6;margin:0">${counts.page_visit}</p>
+      </div>`;
+
+  if(isRestaurant){
+    html += `
+      <div class="panel-card" style="text-align:center;margin-bottom:0">
+        <p class="panel-card-title">🍹 Happy Hour pregledi</p>
+        <p style="font-size:2rem;font-weight:900;color:#fb923c;margin:0">${counts.hh_view}</p>
+      </div>`;
+  } else {
+    html += `
+      <div class="panel-card" style="text-align:center;margin-bottom:0">
+        <p class="panel-card-title">📡 Radar pregledi</p>
+        <p style="font-size:2rem;font-weight:900;color:#a78bfa;margin:0">${counts.radar_view}</p>
+      </div>`;
+  }
+
+  html += `</div>`;
+
+  // Premium sekcija - referral i instagram
+  if(partner.is_premium && isApartOrHotel){
+    html += `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div class="panel-card" style="text-align:center;margin-bottom:0;border-color:rgba(16,185,129,0.20);background:rgba(16,185,129,0.04)">
+        <p class="panel-card-title" style="color:#6ee7b7">🎁 Pozovi prijatelja</p>
+        <p style="font-size:2rem;font-weight:900;color:#6ee7b7;margin:0">${refCount||0}</p>
+        <p style="font-size:9px;color:rgba(255,255,255,0.35);font-weight:700;margin-top:2px">poziva poslato</p>
+      </div>
+      <div class="panel-card" style="text-align:center;margin-bottom:0;border-color:rgba(236,72,153,0.20);background:rgba(236,72,153,0.04)">
+        <p class="panel-card-title" style="color:#f9a8d4">📸 Instagram Share</p>
+        <p style="font-size:2rem;font-weight:900;color:#f9a8d4;margin:0">${counts.instagram_share}</p>
+        <p style="font-size:9px;color:rgba(255,255,255,0.35);font-weight:700;margin-top:2px">deljenja</p>
+      </div>
+    </div>`;
+  }
+
+  // Loyalty pečati - samo premium apartman/hotel
+  if(partner.is_premium && isApartOrHotel){
+    html += `
+    <div class="panel-card" style="text-align:center;margin-bottom:12px">
+      <p class="panel-card-title">⭐ Loyalty pečati skupljeno</p>
+      <p style="font-size:2rem;font-weight:900;color:#fbbf24;margin:0">${stampCount||0}</p>
+    </div>`;
+  }
+
+  // Ostali tipovi - prikazi atrakcije/dogadjaji preglede
+  if(partner.type==='attraction'){
+    html += `
+    <div class="panel-card" style="text-align:center;margin-bottom:12px">
+      <p class="panel-card-title">🎡 Pregledi u Atrakcijama</p>
+      <p style="font-size:2rem;font-weight:900;color:#34d399;margin:0">${counts.attr_view}</p>
+    </div>`;
+  }
+
+  html += `
+    <div class="panel-card" style="text-align:center;margin-bottom:12px">
+      <p class="panel-card-title">🎉 Pregledi u Događajima</p>
+      <p style="font-size:1.6rem;font-weight:900;color:#f87171;margin:0">${counts.events_view}</p>
     </div>
+
+    <div class="panel-card" style="margin-bottom:12px">
+      <p class="panel-card-title">Status naloga</p>
+      <p style="font-size:1rem;font-weight:900;color:${partner.is_active?'#6ee7b7':'#fca5a5'};margin:0">${partner.is_active?'✓ Aktivan':'✕ Suspendovan'}</p>
+      ${partner.is_premium ? '<p style="font-size:10px;font-weight:800;color:#fbbf24;margin-top:6px">⭐ Premium partner</p>' : ''}
+    </div>
+
     <div class="panel-card">
       <p class="panel-card-title">Moj partner URL</p>
       <div style="padding:10px 12px;background:rgba(0,0,0,0.3);border-radius:10px;font-family:monospace;font-size:10px;color:rgba(255,255,255,0.5);word-break:break-all">${location.href}</div>
     </div>`;
+
+  el.innerHTML = html;
 }
 
 function esc(s){ return C.escapeHtml(s); }
