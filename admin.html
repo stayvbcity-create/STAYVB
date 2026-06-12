@@ -175,7 +175,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 }
 </style>
 </head>
-<body> 
+<body>
 
 <!-- SIDEBAR -->
 <div class="sidebar">
@@ -268,6 +268,38 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <!-- KPI kartice -->
       <div class="stats-row" id="stats-grid"></div>
 
+      <!-- Per-partner analitika -->
+      <div class="chart-card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+          <div>
+            <div class="chart-title" style="margin:0 0 2px">Analitika po partneru</div>
+            <div style="font-size:11px;color:var(--muted)">Detaljan pregled klikova i poseta</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" id="pstat-range-7"  onclick="setPartnerStatRange(7)"  style="opacity:0.5">7 dana</button>
+            <button class="btn btn-ghost btn-sm" id="pstat-range-30" onclick="setPartnerStatRange(30)">30 dana</button>
+            <button class="btn btn-ghost btn-sm" id="pstat-range-90" onclick="setPartnerStatRange(90)" style="opacity:0.5">3 meseca</button>
+          </div>
+        </div>
+        <input class="search-input" id="partner-stat-search" placeholder="🔍  Pretraži partnera po nazivu ili kodu..." oninput="renderPartnerStatsTable()" style="margin-bottom:12px">
+        <div style="overflow-x:auto">
+          <table class="tbl" style="min-width:760px">
+            <thead><tr>
+              <th>Partner</th>
+              <th style="text-align:center">👁 Pregledi</th>
+              <th style="text-align:center">🍹 Happy Hour</th>
+              <th style="text-align:center">📡 Radar</th>
+              <th style="text-align:center">🎉 Događaji</th>
+              <th style="text-align:center">🎡 Atrakcije</th>
+              <th style="text-align:center">🎁 Referral</th>
+              <th style="text-align:center">📸 Instagram</th>
+              <th style="text-align:center">Ukupno</th>
+            </tr></thead>
+            <tbody id="partner-stats-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Glavni grafikon prihoda - puna sirina -->
       <div class="chart-card" style="margin-bottom:16px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
@@ -329,6 +361,24 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
             <span id="visits-period-label" style="font-size:10px;color:var(--muted);font-weight:700">poslednjih 30 dana</span>
           </div>
           <div id="visits-by-partner"></div>
+        </div>
+      </div>
+
+      <!-- Pozovi prijatelja + Instagram share -->
+      <div class="charts-grid" style="margin-bottom:16px">
+        <div class="chart-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div class="chart-title" style="margin:0">🎁 Pozovi prijatelja — korišćenja</div>
+            <span id="referral-total-badge" style="font-size:11px;font-weight:900;color:#6ee7b7"></span>
+          </div>
+          <div id="referral-by-partner"></div>
+        </div>
+        <div class="chart-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div class="chart-title" style="margin:0">📸 Instagram Share — korišćenja</div>
+            <span id="igshare-total-badge" style="font-size:11px;font-weight:900;color:#f9a8d4"></span>
+          </div>
+          <div id="igshare-by-partner"></div>
         </div>
       </div>
 
@@ -851,6 +901,8 @@ function renderChart(id, type, labels, datasets, extraOpts={}){
 
 // ── Statistike ────────────────────────────────────────────────────
 let currentStatRange = 30;
+let currentPartnerStatRange = 30;
+let partnerStatsData = []; // {id,name,code,type, page_visit, hh_view, radar_view, events_view, attr_view, referral, instagram_share, total}
 
 function setStatRange(days){
   currentStatRange = days;
@@ -861,6 +913,100 @@ function setStatRange(days){
   const lbl = document.getElementById('visits-period-label');
   if(lbl) lbl.textContent = 'poslednjih ' + days + ' dana';
   loadStatsCharts();
+}
+
+function setPartnerStatRange(days){
+  currentPartnerStatRange = days;
+  [7,30,90].forEach(d => {
+    const btn = document.getElementById('pstat-range-'+d);
+    if(btn) btn.style.opacity = d===days ? '1' : '0.45';
+  });
+  loadPartnerStatsTable();
+}
+
+async function loadPartnerStatsTable(){
+  const from = new Date(Date.now() - currentPartnerStatRange*24*60*60*1000).toISOString();
+
+  // Svi aktivni partneri
+  const {data:partners} = await sb.from('partners')
+    .select('id,name,partner_code,type')
+    .eq('is_active', true)
+    .order('partner_code');
+
+  // Svi analytics_clicks u periodu
+  const {data:clicks} = await sb.from('analytics_clicks')
+    .select('partner_id,action')
+    .gte('created_at', from)
+    .not('partner_id','is',null);
+
+  // Svi referral_clicks u periodu
+  const {data:refs} = await sb.from('referral_clicks')
+    .select('partner_id')
+    .gte('created_at', from)
+    .not('partner_id','is',null);
+
+  // Agregacija po partneru
+  const agg = {};
+  (partners||[]).forEach(p=>{
+    agg[p.id] = {
+      id:p.id, name:p.name, code:p.partner_code, type:p.type,
+      page_visit:0, hh_view:0, radar_view:0, events_view:0, attr_view:0,
+      referral:0, instagram_share:0
+    };
+  });
+
+  (clicks||[]).forEach(c=>{
+    const a = agg[c.partner_id];
+    if(!a) return;
+    if(a[c.action] !== undefined) a[c.action]++;
+  });
+
+  (refs||[]).forEach(r=>{
+    const a = agg[r.partner_id];
+    if(a) a.referral++;
+  });
+
+  partnerStatsData = Object.values(agg).map(a=>({
+    ...a,
+    total: a.page_visit + a.hh_view + a.radar_view + a.events_view + a.attr_view + a.referral + a.instagram_share
+  })).sort((a,b)=>b.total-a.total);
+
+  renderPartnerStatsTable();
+}
+
+function renderPartnerStatsTable(){
+  const q = (document.getElementById('partner-stat-search')?.value||'').toLowerCase();
+  const filtered = partnerStatsData.filter(p =>
+    !q || p.name.toLowerCase().includes(q) || (p.code||'').toLowerCase().includes(q)
+  );
+
+  const tbody = document.getElementById('partner-stats-tbody');
+  if(!tbody) return;
+
+  if(!filtered.length){
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--muted);font-weight:700">Nema rezultata.</td></tr>';
+    return;
+  }
+
+  const cell = (val, color) => val > 0
+    ? `<span style="font-weight:900;color:${color||'var(--text)'}">${val}</span>`
+    : `<span style="color:var(--muted);opacity:0.4">—</span>`;
+
+  tbody.innerHTML = filtered.map(p=>`
+    <tr>
+      <td>
+        <span class="p-code" style="margin-right:6px">${esc(p.code)}</span>
+        <span style="font-weight:800">${esc(p.name)}</span>
+      </td>
+      <td style="text-align:center">${cell(p.page_visit,'#3b82f6')}</td>
+      <td style="text-align:center">${cell(p.hh_view,'#fb923c')}</td>
+      <td style="text-align:center">${cell(p.radar_view,'#a78bfa')}</td>
+      <td style="text-align:center">${cell(p.events_view,'#f87171')}</td>
+      <td style="text-align:center">${cell(p.attr_view,'#34d399')}</td>
+      <td style="text-align:center">${cell(p.referral,'#6ee7b7')}</td>
+      <td style="text-align:center">${cell(p.instagram_share,'#f9a8d4')}</td>
+      <td style="text-align:center"><span style="font-weight:900;color:var(--gold);font-size:13px">${p.total}</span></td>
+    </tr>`).join('');
 }
 
 async function loadStats(){
@@ -934,6 +1080,7 @@ async function loadStats(){
   );
 
   await loadStatsCharts();
+  await loadPartnerStatsTable();
 }
 
 async function loadStatsCharts(){
@@ -1177,6 +1324,70 @@ async function loadStatsCharts(){
     }
     vbpEl.innerHTML = html || '<p style="font-size:12px;color:var(--muted);font-weight:600">Nema podataka za ovaj period.</p>';
   }
+
+  // ── Pozovi prijatelja (referral_clicks) ─────────────────────────
+  const {data:refData} = await sb.from('referral_clicks')
+    .select('partner_id,partners(name,partner_code)')
+    .gte('created_at', fromStr);
+
+  const refByPartner = {};
+  (refData||[]).forEach(r=>{
+    if(r.partner_id && r.partners){
+      const key = r.partners.name + '|' + (r.partners.partner_code||'');
+      refByPartner[key] = (refByPartner[key]||0)+1;
+    }
+  });
+  const totalRef = (refData||[]).length;
+  const refBadge = document.getElementById('referral-total-badge');
+  if(refBadge) refBadge.textContent = totalRef + ' poziva';
+
+  renderRankedList('referral-by-partner', refByPartner, '#6ee7b7', 'Nema korišćenja u ovom periodu.');
+
+  // ── Instagram Share (analytics_clicks action='instagram_share') ─
+  const {data:igData} = await sb.from('analytics_clicks')
+    .select('partner_id,partners(name,partner_code)')
+    .eq('action','instagram_share')
+    .gte('created_at', fromStr);
+
+  const igByPartner = {};
+  (igData||[]).forEach(r=>{
+    if(r.partner_id && r.partners){
+      const key = r.partners.name + '|' + (r.partners.partner_code||'');
+      igByPartner[key] = (igByPartner[key]||0)+1;
+    }
+  });
+  const totalIg = (igData||[]).length;
+  const igBadge = document.getElementById('igshare-total-badge');
+  if(igBadge) igBadge.textContent = totalIg + ' deljenja';
+
+  renderRankedList('igshare-by-partner', igByPartner, '#f9a8d4', 'Nema korišćenja u ovom periodu.');
+}
+
+// Pomoćna funkcija - renderuje rangiranu listu partnera sa progress barovima
+function renderRankedList(elId, dataMap, color, emptyMsg){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  const sorted = Object.entries(dataMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(!sorted.length){
+    el.innerHTML = `<p style="font-size:12px;color:var(--muted);font-weight:600">${emptyMsg}</p>`;
+    return;
+  }
+  const max = sorted[0][1] || 1;
+  el.innerHTML = sorted.map(([key,count])=>{
+    const [name,code] = key.split('|');
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <span class="p-code" style="min-width:42px;text-align:center;font-size:10px">${esc(code)}</span>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-bottom:4px">
+          <span style="color:var(--text)">${esc(name)}</span>
+          <span style="color:${color}">${count}</span>
+        </div>
+        <div style="height:5px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden">
+          <div style="height:100%;background:${color};border-radius:999px;width:${Math.round(count/max*100)}%;opacity:0.8"></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ── Partneri ──────────────────────────────────────────────────────
