@@ -671,7 +671,36 @@ const isStandalone = () => window.matchMedia('(display-mode: standalone)').match
 function esc(v){ return C.escapeHtml(v); }
 function getDate(){ const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); }
 function toMins(t){ if(!t) return 0; const p=String(t).split(':'); return parseInt(p[0]||0)*60+parseInt(p[1]||0); }
-function goTo(page){ window.location.href = page + '?id=' + encodeURIComponent(currentUnitId); }
+function goTo(page){
+    // Mapiranje stranica na action tipove za analitiku
+    const actionMap = {
+        'happy-hour.html': 'hh_view',
+        'radar.html': 'radar_view',
+        'dogadjaji.html': 'events_view',
+        'atrakcije.html': 'attr_view',
+        'stamp.html': 'stamp_view'
+    };
+    const action = actionMap[page];
+    if(action) trackAction(action);
+    window.location.href = page + '?id=' + encodeURIComponent(currentUnitId);
+}
+
+// Generička funkcija za praćenje akcija - ne blokira navigaciju
+function trackAction(action){
+    try{
+        const token = C.getOrCreateGuestToken();
+        sb.from('guests').select('id').eq('token',token).maybeSingle().then(({data:g})=>{
+            sb.from('partners').select('id').eq('partner_code',currentUnitId).maybeSingle().then(({data:p})=>{
+                sb.from('analytics_clicks').insert({
+                    partner_id: p?.id || null,
+                    guest_id: g?.id || null,
+                    action: action,
+                    device_type: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
+                });
+            });
+        });
+    } catch(e){ console.log('trackAction skip:', e.message); }
+}
 
 function getRemainingLabel(endTime, nowMins){
     let diff = toMins(endTime) - nowMins;
@@ -698,10 +727,24 @@ function orderService(type){
     window.location.href = 'https://wa.me/' + ownerPhone.replace(/\D/g,'') + '?text=' + encodeURIComponent(msg);
 }
 
-function shareStayVB(){
+async function shareStayVB(){
     if(!shareCampaignActive || !currentReelUrl){ alert('Ova akcija nije trenutno aktivna.'); return; }
     let gs = localStorage.getItem('stayvb_guest_session');
     if(!gs){ gs = 'g_'+Date.now(); localStorage.setItem('stayvb_guest_session', gs); }
+
+    // Track instagram share klik
+    try{
+        const token = C.getOrCreateGuestToken();
+        const {data:g} = await sb.from('guests').select('id').eq('token',token).maybeSingle();
+        const {data:p} = await sb.from('partners').select('id').eq('partner_code',currentUnitId).maybeSingle();
+        await sb.from('analytics_clicks').insert({
+            partner_id: p?.id || null,
+            guest_id: g?.id || null,
+            action: 'instagram_share',
+            device_type: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
+        });
+    } catch(e){ console.log('track ig share skip:', e.message); }
+
     window.location.href = 'share.html?session='+gs+'&unit='+encodeURIComponent(currentUnitId)+'&target='+encodeURIComponent(currentReelUrl);
 }
 
