@@ -45,6 +45,10 @@ body{top:0!important}
 .field-input:focus{border-color:rgba(251,191,36,0.40);background:rgba(255,255,255,0.08)}
 .field-input::placeholder{color:rgba(255,255,255,0.25)}
 textarea.field-input{resize:vertical;min-height:90px}
+select.field-input{background-color:#1e293b;-webkit-appearance:none;appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+select.field-input option{background:#1e293b;color:white}
 
 /* Cards */
 .panel-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:1.5rem;padding:16px;margin-bottom:12px}
@@ -318,6 +322,26 @@ function renderHH(){
         <label class="toggle"><input type="checkbox" id="hh-active" ${partner.hh_active?'checked':''}><span class="toggle-slider"></span></label>
       </div>
     </div>
+    ${partner.type==='hotel' ? `
+    <div class="panel-card" style="border-color:rgba(139,92,246,0.18);background:rgba(139,92,246,0.04)">
+      <p class="panel-card-title" style="color:#c4b5fd">👥 Kome je vidljivo</p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;border:1px solid ${(partner.hh_visibility||'all')==='all'?'rgba(139,92,246,0.4)':'rgba(255,255,255,0.08)'};background:${(partner.hh_visibility||'all')==='all'?'rgba(139,92,246,0.08)':'transparent'};cursor:pointer">
+          <input type="radio" name="hh-vis" value="all" ${(partner.hh_visibility||'all')==='all'?'checked':''} style="accent-color:#a78bfa">
+          <div>
+            <div style="font-weight:900;font-size:12px">Svi gosti u sistemu</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:700">Vidi se u Happy Hour sekciji svima, bilo gde u Vrnjačkoj Banji</div>
+          </div>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;border:1px solid ${(partner.hh_visibility||'all')==='own_guests'?'rgba(139,92,246,0.4)':'rgba(255,255,255,0.08)'};background:${(partner.hh_visibility||'all')==='own_guests'?'rgba(139,92,246,0.08)':'transparent'};cursor:pointer">
+          <input type="radio" name="hh-vis" value="own_guests" ${(partner.hh_visibility||'all')==='own_guests'?'checked':''} style="accent-color:#a78bfa">
+          <div>
+            <div style="font-weight:900;font-size:12px">Samo moji gosti</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:700">Vidljivo samo gostima koji su skenirali QR kod ovog hotela</div>
+          </div>
+        </label>
+      </div>
+    </div>` : ''}
     <div class="panel-card">
       <p class="panel-card-title">Podešavanje</p>
       <div class="field-group"><label class="field-label">Datum</label><input type="date" class="field-input" id="hh-date" value="${partner.hh_date||today}" min="${today}"></div>
@@ -383,6 +407,8 @@ async function saveHH(){
   const start  = String(startH).padStart(2,'0') + ':' + String(startM).padStart(2,'0');
   const end    = String(endH).padStart(2,'0') + ':' + String(endM).padStart(2,'0');
   const info   = document.getElementById('hh-info').value;
+  const visRadio = document.querySelector('input[name="hh-vis"]:checked');
+  const visibility = visRadio ? visRadio.value : (partner.hh_visibility || 'all');
   const msgEl  = document.getElementById('hh-msg');
 
   // Validacija - max 4 sata trajanja
@@ -403,9 +429,10 @@ async function saveHH(){
     }
   }
 
-  await sb.from('partners').update({hh_active:active, hh_date:date, hh_start:start, hh_end:end}).eq('id', partner.id);
+  await sb.from('partners').update({hh_active:active, hh_date:date, hh_start:start, hh_end:end, hh_visibility:visibility}).eq('id', partner.id);
   await sb.from('partner_content').update({hh_info:info, updated_at: new Date().toISOString()}).eq('partner_id', partner.id);
   partner.hh_active = active;
+  partner.hh_visibility = visibility;
   msgEl.style.color = '#6ee7b7';
   msgEl.textContent = '✓ Sačuvano!';
   setTimeout(() => msgEl.textContent = '', 2500);
@@ -663,6 +690,14 @@ async function renderEvents(){
       </div>
       <div class="field-group"><label class="field-label">Lokacija</label><input class="field-input" id="ev-loc" placeholder="Gde se događa?"></div>
       <div class="field-group"><label class="field-label">Opis (opciono)</label><textarea class="field-input" id="ev-desc" placeholder="Kratak opis..."></textarea></div>
+      ${partner.type==='hotel' ? `
+      <div class="field-group">
+        <label class="field-label">👥 Kome je vidljivo</label>
+        <select class="field-input" id="ev-visibility">
+          <option value="all">Svi gosti u sistemu</option>
+          <option value="own_guests">Samo moji gosti (hotel)</option>
+        </select>
+      </div>` : ''}
       <button class="btn-primary" onclick="addEvent()">+ Dodaj događaj</button>
       <p class="save-msg" id="ev-msg"></p>
     </div>`;
@@ -678,8 +713,10 @@ async function addEvent(){
   const time  = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
   const loc   = document.getElementById('ev-loc').value.trim();
   const desc  = document.getElementById('ev-desc').value.trim();
+  const visEl = document.getElementById('ev-visibility');
+  const visibility = visEl ? visEl.value : 'all';
   if(!title || !date){ document.getElementById('ev-msg').textContent = '⚠️ Naziv i datum su obavezni.'; return; }
-  await sb.from('events').insert({partner_id: partner.id, title, event_date:date, event_time:time||null, location:loc||null, description:desc||null, is_active:true});
+  await sb.from('events').insert({partner_id: partner.id, title, event_date:date, event_time:time||null, location:loc||null, description:desc||null, is_active:true, visibility});
   document.getElementById('ev-msg').textContent = '✓ Događaj dodat!';
   setTimeout(() => renderEvents(), 1000);
 }
