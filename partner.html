@@ -271,7 +271,7 @@ function renderStay(){
       <p class="panel-card-title" style="color:#f9a8d4">📸 Instagram Share kampanja</p>
       <div class="toggle-wrap">
         <div><div class="toggle-label">Aktivna kampanja</div><div class="toggle-sub">Gosti vide Share dugme na početnoj</div></div>
-        <label class="toggle"><input type="checkbox" id="s-share-active" ${pc.share_campaign_active?'checked':''}>\n        <span class="toggle-slider"></span></label>
+        <label class="toggle"><input type="checkbox" id="s-share-active" ${pc.share_campaign_active?'checked':''}><span class="toggle-slider"></span></label>
       </div>
       <div class="field-group"><label class="field-label">Instagram Reel URL</label><input class="field-input" id="s-reel-url" value="${esc(pc.instagram_reel_url||'')}" placeholder="https://www.instagram.com/reel/..."></div>
       <div class="field-group"><label class="field-label">Poklon opis (šta gost dobija)</label><input class="field-input" id="s-gift" value="${esc(pc.share_gift_text||'')}" placeholder="npr. čaša lokalnog vina"></div>
@@ -301,11 +301,17 @@ async function saveStay(){
     updates.service_prices = document.getElementById('s-services')?.value || '';
     updates.house_rules = document.getElementById('s-rules')?.value || '';
     updates.share_campaign_active = document.getElementById('s-share-active')?.checked || false;
-    updates.instagram_reel_url = document.getElementById('s-reel-url')?.value || '';
+
+    // Auto-fix Instagram URL - dodaj https:// ako nedostaje
+    let reelUrl = (document.getElementById('s-reel-url')?.value || '').trim();
+    if(reelUrl && !reelUrl.startsWith('http://') && !reelUrl.startsWith('https://')){
+      reelUrl = 'https://' + reelUrl.replace(/^\/+/, '');
+    }
+    updates.instagram_reel_url = reelUrl;
     updates.share_gift_text = document.getElementById('s-gift')?.value || '';
     updates.updated_at = new Date().toISOString();
   }
-  await sb.from('partner_content').update(updates).eq('partner_id', partner.id);
+  await sb.from('partner_content').upsert({partner_id: partner.id, ...updates}, {onConflict:'partner_id'});
   document.getElementById('stay-msg').textContent = '✓ Sačuvano!';
   setTimeout(() => document.getElementById('stay-msg').textContent = '', 2500);
 }
@@ -430,7 +436,7 @@ async function saveHH(){
   }
 
   await sb.from('partners').update({hh_active:active, hh_date:date, hh_start:start, hh_end:end, hh_visibility:visibility}).eq('id', partner.id);
-  await sb.from('partner_content').update({hh_info:info, updated_at: new Date().toISOString()}).eq('partner_id', partner.id);
+  await sb.from('partner_content').upsert({partner_id: partner.id, hh_info:info, updated_at: new Date().toISOString()}, {onConflict:'partner_id'});
   partner.hh_active = active;
   partner.hh_visibility = visibility;
   msgEl.style.color = '#6ee7b7';
@@ -481,7 +487,7 @@ async function activatePromo(){
   const monthYear = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const expiresAt = new Date(now.getTime() + days[plan]*24*60*60*1000).toISOString();
   await sb.from('billing').insert({partner_id:partner.id, type:'promotion', plan_tier:plan, amount_rsd:prices[plan], offer_text:offer, duration_days:days[plan], month_year:monthYear, expires_at:expiresAt});
-  await sb.from('partner_content').update({current_offer:offer, offer_expires_at:expiresAt, updated_at:new Date().toISOString()}).eq('partner_id', partner.id);
+  await sb.from('partner_content').upsert({partner_id: partner.id, current_offer:offer, offer_expires_at:expiresAt, updated_at:new Date().toISOString()}, {onConflict:'partner_id'});
   document.getElementById('promo-msg').textContent = '✓ Promocija aktivirana!';
   setTimeout(() => renderPromo(), 1500);
 }
@@ -555,13 +561,14 @@ async function toggleBooking(enabled){
 }
 
 async function saveInfo(){
-  await sb.from('partner_content').update({
+  await sb.from('partner_content').upsert({
+    partner_id: partner.id,
     short_desc: document.getElementById('i-short')?.value||'',
     description: document.getElementById('i-desc')?.value||'',
     working_hours: document.getElementById('i-hours')?.value||'',
     address: document.getElementById('i-addr')?.value||'',
     updated_at: new Date().toISOString()
-  }).eq('partner_id', partner.id);
+  }, {onConflict:'partner_id'});
   document.getElementById('info-msg').textContent = '✓ Sačuvano!';
   setTimeout(() => document.getElementById('info-msg').textContent = '', 2500);
 }
