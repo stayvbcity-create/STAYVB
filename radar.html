@@ -64,6 +64,11 @@ body{top:0!important}
 .stamp-pin-needle{width:3px;height:14px;background:#f59e0b;margin-top:-2px;border-radius:0 0 3px 3px}
 .stamp-pulse{position:absolute;top:-4px;left:-4px;right:-4px;bottom:-4px;border-radius:50%;border:2px solid rgba(245,158,11,0.5);animation:stampRadar 1.8s infinite}
 @keyframes stampRadar{0%{transform:scale(1);opacity:0.8}100%{transform:scale(1.6);opacity:0}}
+@keyframes hhBlink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.92)}}
+@keyframes userPulse{0%{transform:scale(0.6);opacity:0.9}70%{transform:scale(1);opacity:0.15}100%{transform:scale(0.6);opacity:0}}
+@keyframes userDotPulse{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,0.5)}50%{box-shadow:0 0 0 8px rgba(59,130,246,0.12)}}
+.user-pulse-ring{animation:userPulse 2.4s ease-out infinite}
+.user-dot{animation:userDotPulse 2.4s ease-in-out infinite}
 </style>
 </head>
 <body>
@@ -124,19 +129,59 @@ function buildLangPills(){
 let map, allMarkers = [], activeFilter = 'all';
 const ICONS = {restaurant:'🍽',hotel:'🏨',attraction:'🎡',business:'🛍',apartment:'🏠'};
 const COLORS = {restaurant:'#f97316',hotel:'#3b82f6',attraction:'#10b981',business:'#8b5cf6',apartment:'#64748b'};
+// Oblici po tipu - razlika u shape-u markera, ne samo boji
+const SHAPES = {
+  restaurant: 'M16 0C9.37 0 4 5.37 4 12c0 9 12 28 12 28S28 21 28 12C28 5.37 22.63 0 16 0z', // klasicna suza
+  hotel:      'M16 0C7.16 0 0 7.16 0 16c0 11 16 24 16 24s16-13 16-24C32 7.16 24.84 0 16 0zM16 22a6 6 0 110-12 6 6 0 010 12z', // suza sa rupom (donut vrh)
+  attraction: 'M16 1l5.5 10.5L32 13l-8 8.5L26 33l-10-5.5L6 33l2-11.5L0 13l10.5-1.5z', // zvezda-pin hibrid
+  business:   'M2 8h28v24a2 2 0 01-2 2H4a2 2 0 01-2-2V8z M2 8L16 0l14 8 M8 14h4v6H8z M20 14h4v6h-4z', // kucica/dom oblik
+  apartment:  'M16 0C9.37 0 4 5.37 4 12c0 9 12 28 12 28S28 21 28 12C28 5.37 22.63 0 16 0z'
+};
 
 function makePartnerIcon(type, isHH){
   const emoji = ICONS[type] || '📍';
   const color = isHH ? '#f97316' : (COLORS[type] || '#64748b');
-  const html = `<div style="position:relative">
-    <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+  let pinSvg;
+  if(type === 'hotel'){
+    // Hotel - hexagon shape (jedinstven oblik za smestaje)
+    pinSvg = `<svg width="36" height="44" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18 2L32 10V24L18 42L4 24V10L18 2Z" fill="${color}" stroke="white" stroke-width="2"/>
+      <circle cx="18" cy="15" r="9" fill="white" opacity="0.97"/>
+    </svg>`;
+  } else if(type === 'attraction'){
+    // Atrakcija - zvezdasti pin (istice se)
+    pinSvg = `<svg width="38" height="44" viewBox="0 0 38 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M19 0l4.5 9.5L34 11l-7.5 7.5L28.5 30 19 24.5 9.5 30 11 18.5 3.5 11l10.5-1.5z" fill="${color}" stroke="white" stroke-width="2"/>
+      <circle cx="19" cy="13" r="8" fill="white" opacity="0.97"/>
+    </svg>`;
+  } else if(type === 'business'){
+    // Mali biznis - kvadratni pin sa zaokruzenim ivicama
+    pinSvg = `<svg width="34" height="42" viewBox="0 0 34 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="2" width="30" height="30" rx="8" fill="${color}" stroke="white" stroke-width="2"/>
+      <path d="M17 32L26 42H8L17 32Z" fill="${color}"/>
+      <circle cx="17" cy="17" r="8" fill="white" opacity="0.97"/>
+    </svg>`;
+  } else {
+    // Apartman / restoran - klasican pin (suza)
+    pinSvg = `<svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M16 0C9.37 0 4 5.37 4 12c0 9 12 28 12 28S28 21 28 12C28 5.37 22.63 0 16 0z" fill="${color}" stroke="white" stroke-width="1.5"/>
       <circle cx="16" cy="12" r="8" fill="white" opacity="0.95"/>
-    </svg>
-    <span style="position:absolute;top:4px;left:50%;transform:translateX(-50%);font-size:13px">${emoji}</span>
-    ${isHH ? '<div style="position:absolute;top:-6px;right:-6px;background:#f97316;color:white;font-size:8px;font-weight:900;padding:2px 5px;border-radius:999px;border:1.5px solid white">HH</div>' : ''}
+    </svg>`;
+  }
+
+  const sizeMap = {
+    hotel: [36,44,18,15], attraction: [38,44,19,13],
+    business: [34,42,17,17], restaurant: [32,40,16,12], apartment: [32,40,16,12]
+  };
+  const [w,h,emojiX,emojiY] = sizeMap[type] || [32,40,16,12];
+
+  const html = `<div style="position:relative">
+    ${pinSvg}
+    <span style="position:absolute;top:${emojiY-8}px;left:${emojiX}px;transform:translateX(-50%);font-size:14px">${emoji}</span>
+    ${isHH ? '<div style="position:absolute;top:-6px;right:-6px;background:#f97316;color:white;font-size:8px;font-weight:900;padding:2px 5px;border-radius:999px;border:1.5px solid white;animation:hhBlink 1.5s ease-in-out infinite">HH</div>' : ''}
   </div>`;
-  return L.divIcon({html, className:'', iconSize:[32,40], iconAnchor:[16,40], popupAnchor:[0,-40]});
+  return L.divIcon({html, className:'', iconSize:[w,h], iconAnchor:[w/2,h], popupAnchor:[0,-h]});
 }
 
 function makeStampIcon(color){
@@ -264,12 +309,31 @@ async function init(){
   // Pokušaj geolokacija korisnika
   if(navigator.geolocation){
     navigator.geolocation.getCurrentPosition(pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      // 100m krug oko korisnika - stvarna geografska udaljenost
+      L.circle([lat, lng], {
+        radius: 100,
+        color: '#3b82f6',
+        weight: 1.5,
+        opacity: 0.35,
+        fillColor: '#3b82f6',
+        fillOpacity: 0.08,
+        dashArray: '4,6'
+      }).addTo(map);
+
+      // Animirani pulsirajuci dot - dvostruki sloj (ring + dot)
       const userIcon = L.divIcon({
-        html:'<div style="width:16px;height:16px;border-radius:50%;background:#3b82f6;border:3px solid white;box-shadow:0 2px 8px rgba(59,130,246,0.6)"></div>',
-        className:'', iconSize:[16,16], iconAnchor:[8,8]
+        html: `<div style="position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center">
+          <div class="user-pulse-ring" style="position:absolute;width:36px;height:36px;border-radius:50%;background:rgba(59,130,246,0.35)"></div>
+          <div class="user-dot" style="position:relative;width:16px;height:16px;border-radius:50%;background:#3b82f6;border:3px solid white"></div>
+        </div>`,
+        className:'', iconSize:[36,36], iconAnchor:[18,18]
       });
-      L.marker([pos.coords.latitude, pos.coords.longitude], {icon:userIcon}).addTo(map);
-      map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+      L.marker([lat, lng], {icon:userIcon, zIndexOffset: 1000}).addTo(map);
+
+      map.setView([lat, lng], 16);
     }, () => {});
   }
 }
