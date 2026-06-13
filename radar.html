@@ -375,6 +375,8 @@ async function init(){
     const hasActivePromo = pc.current_offer
       && (!pc.offer_expires_at || new Date(pc.offer_expires_at) > now);
 
+    console.log(`[RADAR] ${p.name} (${p.type}): hh_active=${isHHNow}, current_offer="${pc.current_offer}", offer_expires_at=${pc.offer_expires_at}, hasActivePromo=${hasActivePromo}, hh_info="${pc.hh_info}"`);
+
     const marker = L.marker([p.lat, p.lng], {icon: makePartnerIcon(p.type, isHHNow, hasActivePromo)})
       .on('click', () => openSheet({
         ...p,
@@ -444,6 +446,7 @@ async function init(){
   // Pokušaj geolokacija korisnika
   if(navigator.geolocation){
     navigator.geolocation.getCurrentPosition(pos => {
+      console.log('Geolokacija OK:', pos.coords.latitude, pos.coords.longitude);
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
 
@@ -481,7 +484,11 @@ async function init(){
       L.marker([lat, lng], {icon:userIcon, zIndexOffset: 1000}).addTo(map);
 
       map.setView([lat, lng], 16);
-    }, () => {});
+    }, (err) => {
+      console.error('Geolokacija greška:', err.code, err.message);
+    }, { enableHighAccuracy: true, timeout: 10000 });
+  } else {
+    console.warn('Geolokacija nije podržana u ovom browseru');
   }
 }
 
@@ -495,7 +502,6 @@ init();
     STAYVB_LANG.onWidgetReady();
   }
 </script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
