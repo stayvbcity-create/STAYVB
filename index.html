@@ -1207,7 +1207,16 @@ window.addEventListener('appinstalled', () => { deferredPrompt = null; closeInst
 
 async function startApp(lang){
     const params = new URLSearchParams(window.location.search);
-    currentUnitId = (params.get('id') || '').toUpperCase();
+    const urlUnitId = (params.get('id') || '').toUpperCase();
+
+    if(urlUnitId){
+        // Gost je otvorio link sa ?id= - sacuvaj za buduce pokretanje iz instalirane app-e
+        currentUnitId = urlUnitId;
+        try{ localStorage.setItem('stayvb_unit_id', urlUnitId); }catch(e){}
+    } else {
+        // Nema ?id= u URL-u (npr. otvoreno iz instalirane PWA ikonice) - koristi sacuvani
+        try{ currentUnitId = localStorage.getItem('stayvb_unit_id') || ''; }catch(e){ currentUnitId = ''; }
+    }
 
     updateLangPills(lang || '');
 
