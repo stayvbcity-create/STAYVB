@@ -49,6 +49,14 @@ body{top:0!important}
 .sheet-name{font-size:1.2rem;font-weight:900;color:#0f172a;margin:0 0 4px;letter-spacing:-0.02em}
 .sheet-type{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:#94a3b8;margin:0 0 10px}
 .sheet-info{font-size:13px;color:#475569;font-weight:600;line-height:1.55;margin:0 0 14px}
+
+/* Sheet promo/HH kartice - vrišti stil */
+.sheet-promo-card{margin:10px 0 14px;padding:14px 16px;border-radius:1.2rem;position:relative;overflow:hidden}
+.sheet-promo-red{background:linear-gradient(135deg,#ef4444,#b91c1c);box-shadow:0 8px 24px rgba(220,38,38,0.30)}
+.sheet-promo-orange{background:linear-gradient(135deg,#fb923c,#ea580c);box-shadow:0 8px 24px rgba(249,115,22,0.30)}
+.sheet-promo-label{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.85);margin:0 0 6px}
+.sheet-promo-text{font-size:14px;font-weight:800;color:white;margin:0;line-height:1.4}
+.sheet-promo-time{font-size:11px;font-weight:800;color:rgba(255,255,255,0.85);margin:6px 0 0}
 .sheet-btn{display:block;width:100%;padding:14px;text-align:center;background:#0f172a;color:white;border-radius:1.2rem;font-size:12px;font-weight:900;text-decoration:none;text-transform:uppercase;letter-spacing:0.10em;margin-bottom:8px}
 .sheet-btn.wa{background:linear-gradient(135deg,#10b981,#059669)}
 .sheet-btn.stamp-btn{background:linear-gradient(135deg,#f59e0b,#d97706);color:#0f172a}
@@ -66,31 +74,72 @@ body{top:0!important}
 @keyframes stampRadar{0%{transform:scale(1);opacity:0.8}100%{transform:scale(1.6);opacity:0}}
 @keyframes hhBlink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.92)}}
 
-/* Promo tooltip - tekst iznad pina za mali biznis akcije */
+/* WOW marker animacije - HH i Akcije */
+@keyframes markerBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes glowPulse{0%,100%{transform:scale(1);opacity:0.55}50%{transform:scale(1.35);opacity:0.15}}
+.marker-glow-ring{animation:glowPulse 1.6s ease-in-out infinite}
+.marker-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);white-space:nowrap;
+  color:white;font-size:9px;font-weight:900;padding:3px 8px;border-radius:999px;
+  border:2px solid white;box-shadow:0 3px 10px rgba(0,0,0,0.35);letter-spacing:0.02em;z-index:10}
+.marker-badge-hh{background:linear-gradient(135deg,#fb923c,#ea580c);animation:hhBlink 1.3s ease-in-out infinite}
+.marker-badge-promo{background:linear-gradient(135deg,#f87171,#dc2626);animation:hhBlink 1.1s ease-in-out infinite}
+
+/* Promo / HH tooltip - VRIŠTI verzija */
 .leaflet-tooltip.promo-tooltip{
-  background:linear-gradient(135deg,#fde047,#fbbf24);
-  color:#78350f;
-  border:1.5px solid #f59e0b;
-  border-radius:10px;
-  padding:5px 10px;
-  font-size:10.5px;
-  font-weight:900;
-  font-family:'Inter',sans-serif;
-  box-shadow:0 4px 12px rgba(217,119,6,0.35);
-  max-width:140px;
-  text-align:center;
+  background:transparent;
+  border:none;
+  box-shadow:none;
+  padding:0;
+  max-width:155px;
   white-space:normal;
-  line-height:1.25;
-  animation:promoFloat 2.4s ease-in-out infinite;
 }
-.leaflet-tooltip.promo-tooltip::before{
-  border-top-color:#f59e0b !important;
+.leaflet-tooltip.promo-tooltip::before{display:none}
+.promo-tt-inner{
+  font-family:'Inter',sans-serif;
+  font-size:11px;
+  font-weight:900;
+  text-align:center;
+  line-height:1.3;
+  padding:7px 11px;
+  border-radius:12px;
+  color:white;
+  position:relative;
+  animation:promoFloat 1.8s ease-in-out infinite, promoGlow 1.6s ease-in-out infinite;
 }
+.promo-tooltip-red .promo-tt-inner{
+  background:linear-gradient(135deg,#ef4444,#b91c1c,#f87171,#dc2626);
+  background-size:300% 300%;
+  animation:promoFloat 1.8s ease-in-out infinite, promoGlow 1.6s ease-in-out infinite, gradientShift 2.4s ease infinite;
+  box-shadow:0 6px 18px rgba(220,38,38,0.55);
+}
+.promo-tooltip-orange .promo-tt-inner{
+  background:linear-gradient(135deg,#fb923c,#ea580c,#fdba74,#f97316);
+  background-size:300% 300%;
+  animation:promoFloat 1.8s ease-in-out infinite, promoGlow 1.6s ease-in-out infinite, gradientShift 2.4s ease infinite;
+  box-shadow:0 6px 18px rgba(249,115,22,0.55);
+}
+@keyframes gradientShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes promoGlow{0%,100%{filter:drop-shadow(0 0 2px rgba(255,255,255,0.4))}50%{filter:drop-shadow(0 0 8px rgba(255,255,255,0.9))}}
 @keyframes promoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @keyframes userPulse{0%{transform:scale(0.6);opacity:0.9}70%{transform:scale(1);opacity:0.15}100%{transform:scale(0.6);opacity:0}}
 @keyframes userDotPulse{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,0.5)}50%{box-shadow:0 0 0 8px rgba(59,130,246,0.12)}}
 .user-pulse-ring{animation:userPulse 2.4s ease-out infinite}
 .user-dot{animation:userDotPulse 2.4s ease-in-out infinite}
+
+/* Radijus 100m label */
+.leaflet-tooltip.radius-label{
+  background:rgba(59,130,246,0.92);
+  color:white;
+  border:none;
+  border-radius:999px;
+  padding:3px 9px;
+  font-size:9px;
+  font-weight:900;
+  font-family:'Inter',sans-serif;
+  box-shadow:0 2px 8px rgba(59,130,246,0.4);
+  white-space:nowrap;
+}
+.leaflet-tooltip.radius-label::before{display:none}
 </style>
 </head>
 <body>
@@ -161,32 +210,29 @@ const SHAPES = {
   apartment:  'M16 0C9.37 0 4 5.37 4 12c0 9 12 28 12 28S28 21 28 12C28 5.37 22.63 0 16 0z'
 };
 
-function makePartnerIcon(type, isHH){
+function makePartnerIcon(type, isHH, isPromo){
   const emoji = ICONS[type] || '📍';
-  const color = isHH ? '#f97316' : (COLORS[type] || '#64748b');
+  const isHot = isHH || isPromo; // "vrišti" mod
+  const color = isHot ? (isPromo ? '#dc2626' : '#f97316') : (COLORS[type] || '#64748b');
 
   let pinSvg;
   if(type === 'hotel'){
-    // Hotel - hexagon shape (jedinstven oblik za smestaje)
     pinSvg = `<svg width="36" height="44" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M18 2L32 10V24L18 42L4 24V10L18 2Z" fill="${color}" stroke="white" stroke-width="2"/>
       <circle cx="18" cy="15" r="9" fill="white" opacity="0.97"/>
     </svg>`;
   } else if(type === 'attraction'){
-    // Atrakcija - zvezdasti pin (istice se)
     pinSvg = `<svg width="38" height="44" viewBox="0 0 38 44" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M19 0l4.5 9.5L34 11l-7.5 7.5L28.5 30 19 24.5 9.5 30 11 18.5 3.5 11l10.5-1.5z" fill="${color}" stroke="white" stroke-width="2"/>
       <circle cx="19" cy="13" r="8" fill="white" opacity="0.97"/>
     </svg>`;
   } else if(type === 'business'){
-    // Mali biznis - kvadratni pin sa zaokruzenim ivicama
     pinSvg = `<svg width="34" height="42" viewBox="0 0 34 42" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="2" y="2" width="30" height="30" rx="8" fill="${color}" stroke="white" stroke-width="2"/>
       <path d="M17 32L26 42H8L17 32Z" fill="${color}"/>
       <circle cx="17" cy="17" r="8" fill="white" opacity="0.97"/>
     </svg>`;
   } else {
-    // Apartman / restoran - klasican pin (suza)
     pinSvg = `<svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M16 0C9.37 0 4 5.37 4 12c0 9 12 28 12 28S28 21 28 12C28 5.37 22.63 0 16 0z" fill="${color}" stroke="white" stroke-width="1.5"/>
       <circle cx="16" cy="12" r="8" fill="white" opacity="0.95"/>
@@ -197,14 +243,37 @@ function makePartnerIcon(type, isHH){
     hotel: [36,44,18,15], attraction: [38,44,19,13],
     business: [34,42,17,17], restaurant: [32,40,16,12], apartment: [32,40,16,12]
   };
-  const [w,h,emojiX,emojiY] = sizeMap[type] || [32,40,16,12];
+  let [w,h,emojiX,emojiY] = sizeMap[type] || [32,40,16,12];
 
-  const html = `<div style="position:relative">
-    ${pinSvg}
-    <span style="position:absolute;top:${emojiY-8}px;left:${emojiX}px;transform:translateX(-50%);font-size:14px">${emoji}</span>
-    ${isHH ? '<div style="position:absolute;top:-6px;right:-6px;background:#f97316;color:white;font-size:8px;font-weight:900;padding:2px 5px;border-radius:999px;border:1.5px solid white;animation:hhBlink 1.5s ease-in-out infinite">HH</div>' : ''}
+  // "Vrišti" mod - veci pin + glow prsten + jaci badge
+  let glowHtml = '';
+  let badgeHtml = '';
+  const pad = isHot ? 14 : 0; // dodatni prostor oko pina za glow/badge
+
+  if(isHot){
+    const glowColor = isPromo ? 'rgba(220,38,38,0.45)' : 'rgba(249,115,22,0.45)';
+    const glowSize = w + 26;
+    glowHtml = `<div class="marker-glow-ring" style="position:absolute;left:50%;top:${emojiY}px;width:${glowSize}px;height:${glowSize}px;margin-left:-${glowSize/2}px;margin-top:-${glowSize/2}px;border-radius:50%;background:${glowColor};pointer-events:none;z-index:0"></div>`;
+
+    badgeHtml = isPromo
+      ? `<div class="marker-badge marker-badge-promo">🎯 AKCIJA</div>`
+      : `<div class="marker-badge marker-badge-hh">🔥 HH</div>`;
+  }
+
+  const totalW = w + pad*2;
+  const totalH = h + pad;
+
+  const html = `<div style="position:relative;width:${totalW}px;height:${totalH}px">
+    <div style="position:absolute;left:${pad}px;top:0;${isHot?'animation:markerBounce 1.8s ease-in-out infinite':''}">
+      ${glowHtml}
+      <div style="position:relative;z-index:1">
+        ${pinSvg}
+        <span style="position:absolute;top:${emojiY-8}px;left:${emojiX}px;transform:translateX(-50%);font-size:${isHot?16:14}px">${emoji}</span>
+        ${badgeHtml}
+      </div>
+    </div>
   </div>`;
-  return L.divIcon({html, className:'', iconSize:[w,h], iconAnchor:[w/2,h], popupAnchor:[0,-h]});
+  return L.divIcon({html, className:'', iconSize:[totalW,totalH], iconAnchor:[totalW/2,h], popupAnchor:[0,-h]});
 }
 
 function makeStampIcon(color){
@@ -247,11 +316,20 @@ function openSheet(data){
   btns += `<a href="${mapsUrl}" class="sheet-btn" target="_blank">📍 ${t('directions')}</a>`;
 
   document.getElementById('sheet-content').innerHTML = `
-    ${data.hh_active ? `<div style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:#fff7ed;border:1px solid #fed7aa;font-size:10px;font-weight:900;color:#c2410c;margin-bottom:10px">🔥 ${t('hh_active')}</div>` : ''}
     ${isStamp ? `<div style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:#fffbeb;border:1px solid #fde68a;font-size:10px;font-weight:900;color:#92400e;margin-bottom:10px">⭐ ${t('stamp_loc')}</div>` : ''}
     <h3 class="sheet-name">${C.escapeHtml(data.name)}</h3>
     <p class="sheet-type">${isStamp ? t('stamp_loc') : (data.type||'')}</p>
-    ${data.current_offer ? `<div style="margin:10px 0;padding:10px 12px;border-radius:12px;background:#fef3c7;border:1px solid #fde68a"><p style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:#92400e;margin:0 0 4px">🎯 Aktuelna akcija</p><p style="font-size:12px;font-weight:700;color:#78350f;margin:0">${C.escapeHtml(data.current_offer)}</p></div>` : ''}
+    ${data.current_offer ? `
+      <div class="sheet-promo-card sheet-promo-red">
+        <p class="sheet-promo-label">🎯 Aktuelna akcija</p>
+        <p class="sheet-promo-text">${C.escapeHtml(data.current_offer)}</p>
+      </div>` : ''}
+    ${data.hh_active ? `
+      <div class="sheet-promo-card sheet-promo-orange">
+        <p class="sheet-promo-label">🔥 Happy Hour traje sada!</p>
+        ${data.hh_info ? `<p class="sheet-promo-text">${C.escapeHtml(data.hh_info)}</p>` : ''}
+        ${data.hh_start && data.hh_end ? `<p class="sheet-promo-time">⏰ ${C.escapeHtml(data.hh_start)} — ${C.escapeHtml(data.hh_end)}</p>` : ''}
+      </div>` : ''}
     ${data.description ? `<p class="sheet-info">${C.escapeHtml(data.description)}</p>` : ''}
     ${btns}`;
 
@@ -280,7 +358,7 @@ async function init(){
   // Učitaj partnere - SAMO restorani, atrakcije, mali biznisi (bez hotela/apartmana)
   const { data:partners } = await sb
     .from('partners')
-    .select('id, name, type, lat, lng, hh_active, hh_start, hh_end, hh_date, phone, whatsapp, partner_content(short_desc, current_offer, offer_expires_at)')
+    .select('id, name, type, lat, lng, hh_active, hh_start, hh_end, hh_date, phone, whatsapp, partner_content(short_desc, current_offer, offer_expires_at, hh_info)')
     .eq('is_active', true)
     .not('lat', 'is', null)
     .in('type', ['restaurant','attraction','business']);
@@ -297,22 +375,37 @@ async function init(){
     const hasActivePromo = pc.current_offer
       && (!pc.offer_expires_at || new Date(pc.offer_expires_at) > now);
 
-    const marker = L.marker([p.lat, p.lng], {icon: makePartnerIcon(p.type, isHHNow)})
+    const marker = L.marker([p.lat, p.lng], {icon: makePartnerIcon(p.type, isHHNow, hasActivePromo)})
       .on('click', () => openSheet({
         ...p,
         hh_active: isHHNow,
         description: pc.short_desc || '',
         current_offer: hasActivePromo ? pc.current_offer : '',
+        hh_info: pc.hh_info || '',
         isStamp: false
       }));
 
-    // Tooltip iznad pina - prikazuje promociju za mali biznis (ili HH info za ostale)
+    // Tooltip iznad pina - vrišti za promo (crveno) i HH (narandžasto)
     if(hasActivePromo){
-      marker.bindTooltip(C.escapeHtml(pc.current_offer), {
+      marker.bindTooltip(`<div class="promo-tt-inner">🎯 ${C.escapeHtml(pc.current_offer)}</div>`, {
         permanent: true,
         direction: 'top',
-        offset: [0, -38],
-        className: 'promo-tooltip'
+        offset: [0, -14],
+        className: 'promo-tooltip promo-tooltip-red'
+      });
+    } else if(isHHNow && pc.hh_info){
+      marker.bindTooltip(`<div class="promo-tt-inner">🔥 ${C.escapeHtml(pc.hh_info)}</div>`, {
+        permanent: true,
+        direction: 'top',
+        offset: [0, -14],
+        className: 'promo-tooltip promo-tooltip-orange'
+      });
+    } else if(isHHNow){
+      marker.bindTooltip(`<div class="promo-tt-inner">🔥 Happy Hour aktivan!</div>`, {
+        permanent: true,
+        direction: 'top',
+        offset: [0, -14],
+        className: 'promo-tooltip promo-tooltip-orange'
       });
     }
 
@@ -355,7 +448,7 @@ async function init(){
       const lng = pos.coords.longitude;
 
       // 100m krug oko korisnika - stvarna geografska udaljenost
-      L.circle([lat, lng], {
+      const radiusCircle = L.circle([lat, lng], {
         radius: 100,
         color: '#3b82f6',
         weight: 1.5,
@@ -364,6 +457,18 @@ async function init(){
         fillOpacity: 0.08,
         dashArray: '4,6'
       }).addTo(map);
+
+      // Label "Radijus 100m" na ivici kruga
+      radiusCircle.bindTooltip('Radijus 100m', {
+        permanent: true,
+        direction: 'right',
+        className: 'radius-label',
+        offset: [0,0]
+      });
+      // Pozicioniraj tooltip na ivicu kruga (istocno od centra)
+      const earthRadius = 6378137;
+      const dLng = (100 / (earthRadius * Math.cos(Math.PI*lat/180))) * (180/Math.PI);
+      radiusCircle.openTooltip([lat, lng + dLng]);
 
       // Animirani pulsirajuci dot - dvostruki sloj (ring + dot)
       const userIcon = L.divIcon({
