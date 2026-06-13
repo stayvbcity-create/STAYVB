@@ -153,7 +153,10 @@ async function load(){
   const nowMins = now.getHours()*60 + now.getMinutes();
 
   // Trenutni partner_code gosta (ako je dosao preko QR-a svog hotela)
-  const guestUnitId = (new URLSearchParams(window.location.search).get('id') || '').toUpperCase();
+  let guestUnitId = (new URLSearchParams(window.location.search).get('id') || '').toUpperCase();
+  if(!guestUnitId){
+    try{ guestUnitId = (localStorage.getItem('stayvb_unit_id') || '').toUpperCase(); }catch(e){}
+  }
 
   // Uzmi sve partnere sa HH = true za danas + njihov sadržaj
   const { data:partners } = await sb
