@@ -108,7 +108,10 @@ async function load(){
     .order('event_time', {ascending:true});
 
   // Trenutni partner_code gosta
-  const guestUnitId = (new URLSearchParams(window.location.search).get('id') || '').toUpperCase();
+  let guestUnitId = (new URLSearchParams(window.location.search).get('id') || '').toUpperCase();
+  if(!guestUnitId){
+    try{ guestUnitId = (localStorage.getItem('stayvb_unit_id') || '').toUpperCase(); }catch(e){}
+  }
 
   // Filtriraj po vidljivosti - 'own_guests' samo za gosta tog hotela
   const all = (events || []).filter(e => {
