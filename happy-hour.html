@@ -207,7 +207,8 @@ async function load(){
       </div>`;
   } else {
     mainList.innerHTML = active.map(p => {
-      const info = p.partner_content?.[0]?.hh_info || '';
+      const info = p.partner_content?.[0]?.hh_info || p.partner_content?.hh_info || '';
+      console.log(`[HH] ${p.name}: partner_content=`, p.partner_content, '| hh_info=', info);
       const addr = p.partner_content?.[0]?.address || '';
       const rem = remainingLabel(p.hh_end, nowMins);
       const pct = progressPct(p.hh_start, p.hh_end, nowMins);
