@@ -371,13 +371,13 @@ async function init(){
   const todayStr = now.toISOString().split('T')[0];
   const nowMins = now.getHours()*60 + now.getMinutes();
 
-  // Učitaj partnere - SAMO restorani, atrakcije, mali biznisi (bez hotela/apartmana)
+  // Učitaj partnere - restorani, atrakcije, mali biznisi + hoteli/restorani koji imaju aktivan HH
   const { data:partners } = await sb
     .from('partners')
-    .select('id, name, type, lat, lng, hh_active, hh_start, hh_end, hh_date, phone, whatsapp, partner_content(short_desc, current_offer, offer_expires_at, hh_info)')
+    .select('id, name, type, lat, lng, hh_active, hh_start, hh_end, hh_date, phone, whatsapp, partner_code, partner_content(short_desc, current_offer, offer_expires_at, hh_info)')
     .eq('is_active', true)
     .not('lat', 'is', null)
-    .in('type', ['restaurant','attraction','business']);
+    .in('type', ['restaurant','attraction','business','hotel']);
 
   (partners||[]).forEach(p => {
     if(!p.lat || !p.lng) return;
@@ -403,6 +403,9 @@ async function init(){
     // Proslijedi objekte sa detaljima za badge
     const hhObj = isHHNow ? { rem: hhRemLabel } : false;
     const promoObj = hasActivePromo ? { text: pc.current_offer } : false;
+
+    // Hoteli se prikazuju SAMO ako imaju aktivan HH ili promo
+    if(p.type === 'hotel' && !hhObj && !promoObj) return;
 
     const marker = L.marker([p.lat, p.lng], {icon: makePartnerIcon(p.type, hhObj, promoObj)})
       .on('click', () => openSheet({
