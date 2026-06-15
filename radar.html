@@ -445,10 +445,34 @@ async function init(){
     marker.addTo(map);
   });
 
-  // Učitaj stamp lokacije
+  // Učitaj stamp lokacije - preskoči ako partner već ima HH/promo marker
+  const partnerIdsOnMap = new Set((partners||[]).filter(p => {
+    if(p.type === 'hotel') {
+      const pc = p.partner_content?.[0] || {};
+      const isHH = p.hh_active && p.hh_date === todayStr;
+      const hasPromo = pc.current_offer && (!pc.offer_expires_at || new Date(pc.offer_expires_at) > now);
+      return isHH || hasPromo;
+    }
+    return true;
+  }).map(p => p.id));
+
   const { data:stampLocs } = await sb.rpc('get_radar_stamps');
   (stampLocs||[]).forEach(loc => {
     if(!loc.lat || !loc.lng) return;
+
+    // Ako ovaj partner već ima marker na mapi (HH/promo), dodaj stamp info u taj marker
+    // umesto da kreiramo novi koji bi se preklapao
+    if(loc.partner_id && partnerIdsOnMap.has(loc.partner_id)){
+      // Nađi postojeći marker i dodaj stamp podatke
+      const existing = allMarkers.find(m => m.data.id === loc.partner_id);
+      if(existing){
+        existing.data.isStampAlso = true;
+        existing.data.stampCode = loc.partner_code;
+        existing.data.stampColor = loc.icon_color;
+      }
+      return; // Ne dodavaj novi marker
+    }
+
     const marker = L.marker([loc.lat, loc.lng], {icon: makeStampIcon(loc.icon_color)})
       .on('click', () => openSheet({
         ...loc,
