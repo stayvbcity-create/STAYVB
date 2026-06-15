@@ -414,6 +414,21 @@
     </div>
 
     <!-- LOADER -->
+    <!-- Push permission modal -->
+    <div id="push-permission-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;padding:0 0 24px">
+      <div style="background:linear-gradient(145deg,#1e293b,#0f172a);border:1px solid rgba(255,255,255,0.10);border-radius:1.75rem;padding:24px 20px;max-width:420px;width:calc(100% - 32px);text-align:center">
+        <div style="font-size:2rem;margin-bottom:12px">📍</div>
+        <h3 style="font-size:1.1rem;font-weight:900;color:white;margin:0 0 8px">Obaveštenja u blizini</h3>
+        <p style="font-size:13px;color:rgba(255,255,255,0.65);font-weight:600;line-height:1.6;margin:0 0 20px">
+          Kad budete <strong style="color:#fbbf24">unutar 100m</strong> od restorana ili biznisa sa aktivnom ponudom, dobićete <strong style="color:#fbbf24">jedno obaveštenje</strong> — ne više.
+        </p>
+        <div style="display:flex;gap:10px">
+          <button id="push-deny-btn" style="flex:1;padding:13px;border-radius:14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Ne hvala</button>
+          <button id="push-allow-btn" style="flex:2;padding:13px;border-radius:14px;background:linear-gradient(135deg,#fbbf24,#f59e0b);border:none;color:#1c1410;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit">✓ Uključi obaveštenja</button>
+        </div>
+      </div>
+    </div>
+
     <div id="loader" class="flex flex-col items-center justify-center h-screen">
         <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-900"></div>
         <p class="text-[10px] mt-4 font-bold text-slate-400 uppercase tracking-widest text-center px-4 italic">Sinhronizacija sa StayVB bazom...</p>
@@ -1061,9 +1076,117 @@ function showInstallBanner(mode){
 }
 function closeInstallPrompt(){ document.getElementById('pwa-install-prompt').style.display = 'none'; }
 
+const VAPID_PUBLIC_KEY = 'BA_YvYK4o_m1ypXkgGB_zHsRuHHB2hgfyOBZssZ6s6p_Qp-4_Da9EhxrVRm7ilXWQAPjBT45YE31l9dzgPoFisE';
+
 async function registerSW(){
     if(!('serviceWorker' in navigator)) return;
-    try{ await navigator.serviceWorker.register('./sw.js', {scope:'./'}); }catch(e){}
+    try{
+        const reg = await navigator.serviceWorker.register('./sw.js', {scope:'./'});
+
+        // Slušaj poruke od SW (GET_LOCATION za geofencing)
+        navigator.serviceWorker.addEventListener('message', async e => {
+            if(e.data?.type === 'GET_LOCATION'){
+                try{
+                    navigator.geolocation.getCurrentPosition(pos => {
+                        e.ports[0].postMessage({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                    }, () => e.ports[0].postMessage(null), { timeout:5000, maximumAge:60000 });
+                }catch{ e.ports[0].postMessage(null); }
+            }
+        });
+
+        // Tražimo push dozvolu 3 sekunde posle učitavanja (kad je korisnik već angažovan)
+        setTimeout(() => setupPushNotifications(reg), 3000);
+
+    }catch(e){ console.log('SW reg error:', e); }
+}
+
+async function setupPushNotifications(reg){
+    if(!('PushManager' in window)) return;
+    if(Notification.permission === 'denied') return;
+
+    let permission = Notification.permission;
+    if(permission === 'default'){
+        if(!currentUnitId) return;
+
+        // Prikaži custom dialog pre browser prompt-a
+        const agreed = await showPushDialog();
+        if(!agreed) return;
+
+        permission = await Notification.requestPermission();
+    }
+    if(permission !== 'granted') return;
+
+    try{
+        // Dohvati postojeću ili kreiraj novu subscription
+        let sub = await reg.pushManager.getSubscription();
+        if(!sub){
+            sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+            });
+        }
+
+        // Sačuvaj subscription u bazi
+        const subJson = sub.toJSON();
+        const guestToken = localStorage.getItem('stayvb_guest_token') || '';
+        const unitId = localStorage.getItem('stayvb_unit_id') || currentUnitId || '';
+
+        await sb.from('push_subscriptions').upsert({
+            guest_token: guestToken,
+            partner_code: unitId,
+            endpoint: subJson.endpoint,
+            p256dh: subJson.keys?.p256dh || '',
+            auth: subJson.keys?.auth || '',
+            user_agent: navigator.userAgent.slice(0,200),
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'endpoint' });
+
+        console.log('Push subscription registrovana ✓');
+
+        // Pokreni geolocation forwarding prema SW - svakih 5 minuta
+        startLocationForwarding();
+
+    }catch(e){ console.log('Push setup error:', e); }
+}
+
+// Periodično šalji lokaciju SW-u za geofencing
+let locationForwardInterval = null;
+function startLocationForwarding(){
+    if(locationForwardInterval) clearInterval(locationForwardInterval);
+    if(!navigator.geolocation) return;
+
+    const sendLocation = () => {
+        navigator.geolocation.getCurrentPosition(pos => {
+            navigator.serviceWorker.ready.then(reg => {
+                reg.active?.postMessage({
+                    type: 'LOCATION_UPDATE',
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude
+                });
+            });
+        }, ()=>{}, { timeout:8000, maximumAge:120000, enableHighAccuracy:false });
+    };
+
+    sendLocation(); // Odmah pošalji
+    locationForwardInterval = setInterval(sendLocation, 5 * 60 * 1000); // Svakih 5 min
+}
+
+// Helper - konvertuj VAPID public key
+function showPushDialog(){
+    return new Promise(resolve => {
+        const modal = document.getElementById('push-permission-modal');
+        if(!modal){ resolve(false); return; }
+        modal.style.display = 'flex';
+        document.getElementById('push-allow-btn').onclick = () => { modal.style.display='none'; resolve(true); };
+        document.getElementById('push-deny-btn').onclick  = () => { modal.style.display='none'; resolve(false); };
+    });
+}
+
+function urlBase64ToUint8Array(base64String){
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g,'+').replace(/_/g,'/');
+    const rawData = window.atob(base64);
+    return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
 }
 
 let cityCategories = [];
