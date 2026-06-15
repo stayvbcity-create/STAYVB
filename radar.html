@@ -90,36 +90,34 @@ body{top:0!important}
   border:none;
   box-shadow:none;
   padding:0;
-  max-width:130px;
-  white-space:normal;
+  white-space:nowrap;
   pointer-events:none;
 }
 .leaflet-tooltip.promo-tooltip::before{display:none}
 .promo-tt-inner{
   font-family:'Inter',sans-serif;
-  font-size:10px;
+  font-size:11px;
   font-weight:900;
   text-align:center;
-  line-height:1.25;
-  padding:5px 9px;
-  border-radius:10px;
+  line-height:1;
+  padding:6px 11px;
+  border-radius:20px;
   color:white;
-  white-space:normal;
-  word-break:break-word;
+  white-space:nowrap;
   display:inline-block;
-  max-width:130px;
+  letter-spacing:0.02em;
 }
 .promo-tooltip-red .promo-tt-inner{
   background:#dc2626;
-  box-shadow:0 4px 10px rgba(220,38,38,0.50);
-  animation:promoFloat 1.8s ease-in-out infinite;
+  box-shadow:0 3px 10px rgba(220,38,38,0.55),0 0 0 2px rgba(255,255,255,0.9);
+  animation:promoFloat 2s ease-in-out infinite;
 }
 .promo-tooltip-orange .promo-tt-inner{
-  background:#ea580c;
-  box-shadow:0 4px 10px rgba(234,88,12,0.50);
-  animation:promoFloat 1.8s ease-in-out infinite;
+  background:linear-gradient(135deg,#ea580c,#f97316);
+  box-shadow:0 3px 10px rgba(234,88,12,0.55),0 0 0 2px rgba(255,255,255,0.9);
+  animation:promoFloat 2s ease-in-out infinite;
 }
-@keyframes promoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes promoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @keyframes userPulse{0%{transform:scale(0.6);opacity:0.9}70%{transform:scale(1);opacity:0.15}100%{transform:scale(0.6);opacity:0}}
 @keyframes userDotPulse{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,0.5)}50%{box-shadow:0 0 0 8px rgba(59,130,246,0.12)}}
 .user-pulse-ring{animation:userPulse 2.4s ease-out infinite}
@@ -444,15 +442,16 @@ async function init(){
         className: 'promo-tooltip promo-tooltip-red'
       });
     } else if(isHHNow){
-      // Kratko odbrojavanje
       const endMins = toMins(p.hh_end);
       let diff = endMins - nowMins;
       if(diff < 0) diff += 1440;
-      const remShort = diff < 60 ? `${diff}min` : `${Math.floor(diff/60)}h${diff%60>0?diff%60+'m':''}`;
-      marker.bindTooltip(`<div class="promo-tt-inner">🔥 HH · ${remShort}</div>`, {
+      const h = Math.floor(diff/60);
+      const m = diff % 60;
+      const remShort = h > 0 ? `${h}h ${m > 0 ? m+'m' : ''}`.trim() : `${m}min`;
+      marker.bindTooltip(`<div class="promo-tt-inner">🔥 Happy Hour · ${remShort}</div>`, {
         permanent: true,
         direction: 'top',
-        offset: [0, -54],
+        offset: [0, -58],
         className: 'promo-tooltip promo-tooltip-orange'
       });
     }
