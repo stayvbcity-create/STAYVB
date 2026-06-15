@@ -498,6 +498,7 @@ async function saveHH(){
   await sb.from('partner_content').upsert({partner_id: partner.id, hh_info:info, updated_at: new Date().toISOString()}, {onConflict:'partner_id'});
   partner.hh_active = active;
   partner.hh_visibility = visibility;
+
   msgEl.style.color = '#6ee7b7';
   msgEl.textContent = '✓ Sačuvano!';
   setTimeout(() => msgEl.textContent = '', 2500);
@@ -547,6 +548,7 @@ async function activatePromo(){
   const expiresAt = new Date(now.getTime() + days[plan]*24*60*60*1000).toISOString();
   await sb.from('billing').insert({partner_id:partner.id, type:'promotion', plan_tier:plan, amount_rsd:prices[plan], offer_text:offer, duration_days:days[plan], month_year:monthYear, expires_at:expiresAt});
   await sb.from('partner_content').upsert({partner_id: partner.id, current_offer:offer, offer_expires_at:expiresAt, updated_at:new Date().toISOString()}, {onConflict:'partner_id'});
+
   document.getElementById('promo-msg').textContent = '✓ Promocija aktivirana!';
   setTimeout(() => renderPromo(), 1500);
 }
@@ -967,6 +969,16 @@ async function renderStats(){
       <button class="stats-share-btn" onclick="shareStatsScreenshot()">📤 Podeli</button>
     </div>
 
+    <!-- Push notifikacije kartica -->
+    <div class="panel-card" style="margin-top:14px;border-color:rgba(99,102,241,0.25);background:rgba(99,102,241,0.05)">
+      <p class="panel-card-title" style="color:#a5b4fc">🔔 Pošalji obaveštenje gostima</p>
+      <p style="font-size:11px;color:rgba(255,255,255,0.45);font-weight:600;line-height:1.5;margin-bottom:12px">Pošalji ručnu poruku gostima (koristite umereno — za važne obavesti, ne svaki dan).</p>
+      <div class="field-group"><label class="field-label">Naslov</label><input class="field-input" id="push-title" placeholder="npr. Posebna ponuda večeras!" maxlength="50"></div>
+      <div class="field-group"><label class="field-label">Poruka</label><textarea class="field-input" id="push-body" placeholder="npr. Happy Hour od 18-20h, piće -30%!" maxlength="120" style="min-height:70px"></textarea></div>
+      <button class="btn-primary" onclick="sendPushToGuests()" style="background:linear-gradient(135deg,#6366f1,#4f46e5)">🔔 Pošalji svim gostima</button>
+      <p class="save-msg" id="push-msg"></p>
+    </div>
+
     <div class="panel-card" style="margin-top:12px">
       <p class="panel-card-title">Status naloga</p>
       <p style="font-size:1rem;font-weight:900;color:${partner.is_active?'#6ee7b7':'#fca5a5'};margin:0">${partner.is_active?'✓ Aktivan':'✕ Suspendovan'}</p>
@@ -1039,6 +1051,46 @@ function animateNumber(el, target, duration){
 }
 
 // Web Share API za statistike
+async function sendPushToGuests(){
+  const title = document.getElementById('push-title').value.trim();
+  const body  = document.getElementById('push-body').value.trim();
+  const msgEl = document.getElementById('push-msg');
+
+  if(!title){ msgEl.textContent='⚠️ Unesite naslov.'; msgEl.style.color='#fca5a5'; return; }
+  if(!body) { msgEl.textContent='⚠️ Unesite poruku.';  msgEl.style.color='#fca5a5'; return; }
+
+  msgEl.textContent='⏳ Šaljem...'; msgEl.style.color='rgba(255,255,255,0.5)';
+
+  try{
+    // Pozovi Edge Function
+    const res = await fetch('https://zapmsxvwxjeoglpzldhl.supabase.co/functions/v1/send-push', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcG1zeHZ3eGplb2dscHpsZGhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMjY4NDQsImV4cCI6MjA5NjcwMjg0NH0.szTiMlsQJZCgbFE89eRn1YIN133smnEkPhVmcaVmGqM` },
+      body: JSON.stringify({
+        partner_code: partner.partner_code,
+        title,
+        message: body,
+        type: 'manual',
+        url: `./index.html?id=${partner.partner_code}`
+      })
+    });
+
+    const data = await res.json();
+    if(res.ok){
+      msgEl.textContent = `✓ Poslato ${data.sent} gostima!`;
+      msgEl.style.color = '#6ee7b7';
+      document.getElementById('push-title').value = '';
+      document.getElementById('push-body').value = '';
+    } else {
+      msgEl.textContent = `⚠️ Greška: ${data.error || 'Pokušajte ponovo'}`;
+      msgEl.style.color = '#fca5a5';
+    }
+  }catch(e){
+    msgEl.textContent = '⚠️ Mrežna greška. Pokušajte ponovo.';
+    msgEl.style.color = '#fca5a5';
+  }
+}
+
 async function shareStatsScreenshot(){
   const heroNum = document.getElementById('hero-number')?.textContent || '0';
   const text = `📊 StayVB statistika za ${partner.name}\n\nUkupan doseg poslednjih 30 dana: ${heroNum}\n\n#StayVB #VrnjackaBanja`;
