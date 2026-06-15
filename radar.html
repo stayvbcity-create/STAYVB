@@ -212,7 +212,7 @@ const SHAPES = {
 
 function makePartnerIcon(type, isHH, isPromo){
   const emoji = ICONS[type] || '📍';
-  const isHot = isHH || isPromo; // "vrišti" mod
+  const isHot = !!(isHH || isPromo);
   const color = isHot ? (isPromo ? '#dc2626' : '#f97316') : (COLORS[type] || '#64748b');
 
   let pinSvg;
@@ -255,9 +255,16 @@ function makePartnerIcon(type, isHH, isPromo){
     const glowSize = w + 26;
     glowHtml = `<div class="marker-glow-ring" style="position:absolute;left:50%;top:${emojiY}px;width:${glowSize}px;height:${glowSize}px;margin-left:-${glowSize/2}px;margin-top:-${glowSize/2}px;border-radius:50%;background:${glowColor};pointer-events:none;z-index:0"></div>`;
 
-    badgeHtml = isPromo
-      ? `<div class="marker-badge marker-badge-promo">🎯 AKCIJA</div>`
-      : `<div class="marker-badge marker-badge-hh">🔥 HH</div>`;
+    if(isPromo){
+      // Promo: prikaži % popusta ako postoji u tekstu
+      const discMatch = (isPromo.text||'').match(/(\d+)\s*%/);
+      const discLabel = discMatch ? `-${discMatch[1]}%` : 'POPUST';
+      badgeHtml = `<div class="marker-badge marker-badge-promo">🎯 ${discLabel}</div>`;
+    } else if(isHH){
+      // HH: prikaži odbrojavanje
+      const hhRemLabel = isHH.rem || 'HH';
+      badgeHtml = `<div class="marker-badge marker-badge-hh">🔥 ${hhRemLabel}</div>`;
+    }
   }
 
   const totalW = w + pad*2;
@@ -278,14 +285,24 @@ function makePartnerIcon(type, isHH, isPromo){
 
 function makeStampIcon(color){
   const c = color || '#f59e0b';
-  const html = `<div class="stamp-pin-wrap">
-    <div style="position:relative">
-      <div class="stamp-pulse" style="border-color:${c}66"></div>
-      <div class="stamp-pin-icon" style="background:${c}22;border-color:${c}">⭐</div>
+  const html = `<div style="position:relative;width:50px;height:62px;display:flex;flex-direction:column;align-items:center">
+    <!-- Pulsirajuci prsten -->
+    <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:50px;height:50px;border-radius:50%;background:${c}30;animation:glowPulse 1.8s ease-in-out infinite"></div>
+    <!-- Zlatan krug sa zvezdom -->
+    <div style="position:relative;z-index:2;width:44px;height:44px;border-radius:50%;
+      background:linear-gradient(135deg,#fde68a,#f59e0b,#d97706);
+      border:3px solid white;
+      box-shadow:0 6px 18px rgba(217,119,6,0.50),0 0 0 2px ${c};
+      display:flex;align-items:center;justify-content:center;font-size:22px;
+      animation:markerBounce 2s ease-in-out infinite">
+      ⭐
     </div>
-    <div class="stamp-pin-needle" style="background:${c}"></div>
+    <!-- Strelica dole -->
+    <div style="width:3px;height:14px;background:linear-gradient(180deg,${c},transparent);margin-top:-2px;border-radius:2px"></div>
+    <!-- PEČAT label -->
+    <div style="position:absolute;top:-16px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#f59e0b,#d97706);color:white;font-size:8px;font-weight:900;padding:3px 8px;border-radius:999px;white-space:nowrap;border:1.5px solid white;box-shadow:0 3px 8px rgba(217,119,6,0.40);letter-spacing:0.08em">PEČAT</div>
   </div>`;
-  return L.divIcon({html, className:'', iconSize:[38,52], iconAnchor:[19,52], popupAnchor:[0,-52]});
+  return L.divIcon({html, className:'', iconSize:[50,62], iconAnchor:[25,62], popupAnchor:[0,-62]});
 }
 
 function setFilter(f){
@@ -298,8 +315,7 @@ function setFilter(f){
       || (f === 'hh' && data.hh_active)
       || (f === 'stamp' && data.isStamp)
       || (f === 'promo' && data.hasActivePromo)
-      || (f === data.type);
-    if(show) marker.addTo(map);
+      || (f === data.type);    if(show) marker.addTo(map);
     else map.removeLayer(marker);
   });
 }
@@ -370,14 +386,25 @@ async function init(){
       return s < e ? nowMins >= s && nowMins <= e : nowMins >= s || nowMins <= e;
     })();
 
+    // HH odbrojavanje za badge
+    let hhRemLabel = '';
+    if(isHHNow && p.hh_end){
+      const endMins = toMins(p.hh_end);
+      let diff = endMins - nowMins;
+      if(diff < 0) diff += 1440;
+      if(diff < 60) hhRemLabel = diff + 'min';
+      else hhRemLabel = Math.floor(diff/60) + 'h' + (diff%60 > 0 ? (diff%60) + 'm' : '');
+    }
+
     const pc = p.partner_content?.[0] || {};
-    // Aktivna promocija - mora imati tekst i ne biti istekla
     const hasActivePromo = pc.current_offer
       && (!pc.offer_expires_at || new Date(pc.offer_expires_at) > now);
 
-    console.log(`[RADAR] ${p.name} (${p.type}): hh_active=${isHHNow}, current_offer="${pc.current_offer}", offer_expires_at=${pc.offer_expires_at}, hasActivePromo=${hasActivePromo}, hh_info="${pc.hh_info}"`);
+    // Proslijedi objekte sa detaljima za badge
+    const hhObj = isHHNow ? { rem: hhRemLabel } : false;
+    const promoObj = hasActivePromo ? { text: pc.current_offer } : false;
 
-    const marker = L.marker([p.lat, p.lng], {icon: makePartnerIcon(p.type, isHHNow, hasActivePromo)})
+    const marker = L.marker([p.lat, p.lng], {icon: makePartnerIcon(p.type, hhObj, promoObj)})
       .on('click', () => openSheet({
         ...p,
         hh_active: isHHNow,
@@ -411,7 +438,7 @@ async function init(){
       });
     }
 
-    allMarkers.push({ marker, data: {...p, hh_active:isHHNow, hasActivePromo, isStamp:false} });
+    allMarkers.push({ marker, data: {...p, hh_active:isHHNow, hasActivePromo:!!promoObj, isStamp:false} });
     marker.addTo(map);
   });
 
