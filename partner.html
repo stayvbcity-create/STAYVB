@@ -430,7 +430,11 @@ function renderHH(){
     </div>
     <div class="panel-card">
       <p class="panel-card-title">Opis ponude</p>
-      <div class="field-group"><textarea class="field-input" id="hh-info" placeholder="Šta nudite gostima u HH?">${esc(pc.hh_info||'')}</textarea></div>
+      <div class="field-group">
+        <label class="field-label">Opis ponude <span style="color:#f87171;font-size:9px">* OBAVEZNO — gosti vide ovaj tekst</span></label>
+        <textarea class="field-input" id="hh-info" placeholder="npr. Pivo 200 RSD, vino 150 RSD, kokteli -30%&#10;Upiši šta točno nudite — gosti to vide na karti!" style="min-height:100px">${esc(pc.hh_info||'')}</textarea>
+        ${!pc.hh_info ? `<p style="font-size:10px;color:#fbbf24;font-weight:700;margin-top:6px">⚠️ Nemaš upisanu ponudu — gosti na mapi vide samo "Pitajte osoblje". Upiši šta nudiš!</p>` : ''}
+      </div>
     </div>
     <button class="btn-primary" onclick="saveHH()">💾 Sačuvaj i aktiviraj</button>
     <p class="save-msg" id="hh-msg"></p>`;
