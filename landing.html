@@ -83,10 +83,8 @@ const ICONS = {hotel:'🏨', restaurant:'🍽', attraction:'🎡', business:'�
 const LABELS = {hotel:'Hotel', restaurant:'Restoran', attraction:'Atrakcija', business:'Mali biznis', apartment:'Apartman'};
 
 function goApp(){
-    const url = PARTNER_ID
-        ? `index.html?id=${encodeURIComponent(PARTNER_ID)}`
-        : 'index.html';
-    location.href = url;
+    // Vodič se otvara bez partner konteksta — gost je sa ulice
+    location.href = 'index.html';
 }
 
 async function init(){
@@ -98,7 +96,7 @@ async function init(){
     try{
         // Uzmi partnera
         const {data:p} = await sb.from('partners')
-            .select('id,name,type,phone,whatsapp')
+            .select('id,name,type,phone,whatsapp,google_review_url')
             .eq('partner_code', PARTNER_ID)
             .eq('is_active', true)
             .maybeSingle();
@@ -111,7 +109,7 @@ async function init(){
 
         // Uzmi content
         const {data:pc} = await sb.from('partner_content')
-            .select('extra_offer,service_prices')
+            .select('extra_offer,service_prices,current_offer,offer_expires_at,menu_url')
             .eq('partner_id', p.id)
             .maybeSingle();
 
@@ -126,18 +124,50 @@ async function init(){
         const cards = document.getElementById('cards');
         let html = '';
 
-        if(c.extra_offer){
+        // Aktivna akcija/promocija — prikaži istaknuto
+        const activeOffer = c.current_offer || c.extra_offer;
+        if(activeOffer){
+            const offerLabel = {
+                restaurant: '🔥 Aktuelna ponuda',
+                business:   '🎯 Posebna promocija',
+                attraction: '✨ Posebna ponuda',
+            }[p.type] || '🎯 Ponuda';
             html += `<div class="card-offer">
-              <div class="card-offer-label">🎯 Posebna ponuda</div>
-              <div class="card-offer-text">${esc(c.extra_offer)}</div>
+              <div class="card-offer-label">${offerLabel}</div>
+              <div class="card-offer-text">${esc(activeOffer)}</div>
+              ${c.offer_expires_at ? `<div style="font-size:10px;color:rgba(255,255,255,0.55);margin-top:8px;font-weight:700">⏰ Važi do: ${new Date(c.offer_expires_at).toLocaleDateString('sr-RS')}</div>` : ''}
             </div>`;
         }
 
+        // Cenovnik/meni — prikaži po tipu
         if(c.service_prices){
+            const priceLabel = {
+                restaurant: '🍽 Meni i cene',
+                business:   '📋 Naše usluge',
+                attraction: '🎟 Cene ulaznica',
+            }[p.type] || '📋 Cenovnik';
             html += `<div class="card-prices">
-              <div class="card-prices-label">📋 Cenovnik</div>
+              <div class="card-prices-label">${priceLabel}</div>
               <div class="card-prices-text">${esc(c.service_prices).replace(/\n/g,'<br>').replace(/\|/g,' · ')}</div>
             </div>`;
+        }
+
+        // Menu / ponuda link
+        if(c.menu_url){
+            const menuLabel = {
+                restaurant: '🍽 Pogledaj meni',
+                business:   '📋 Pogledaj ponudu',
+                attraction: '🎟 Cene i info',
+            }[p.type] || '🔗 Više informacija';
+            html += `<a href="${c.menu_url}" target="_blank" rel="noopener"
+               style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:1.4rem;background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(37,99,235,0.10));border:1px solid rgba(59,130,246,0.25);text-decoration:none">
+              <span style="font-size:1.4rem">🔗</span>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:900;color:#93c5fd">${menuLabel}</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:600;margin-top:2px">Otvara se u novom tabu</div>
+              </div>
+              <span style="font-size:18px;color:rgba(255,255,255,0.30)">→</span>
+            </a>`;
         }
 
         const phone = p.whatsapp || p.phone || '';
@@ -148,6 +178,18 @@ async function init(){
                 <div class="card-wa-title">WhatsApp kontakt</div>
                 <div class="card-wa-sub">${esc(phone)}</div>
               </div>
+            </a>`;
+        }
+
+        if(p.google_review_url){
+            html += `<a href="${p.google_review_url}" target="_blank" rel="noopener"
+               style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:1.4rem;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.22);text-decoration:none">
+              <span style="font-size:1.4rem">⭐</span>
+              <div>
+                <div style="font-size:13px;font-weight:900;color:#fbbf24">Oceni nas na Google-u</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.40);font-weight:600;margin-top:2px">Vaša ocena nam mnogo znači</div>
+              </div>
+              <span style="margin-left:auto;font-size:18px;opacity:0.5">→</span>
             </a>`;
         }
 
@@ -168,7 +210,7 @@ async function init(){
     } catch(e){
         console.error('landing error:', e);
         // Ako bilo šta padne — idi direktno na app
-        location.href = `index.html?id=${encodeURIComponent(PARTNER_ID)}`;
+        location.href = 'index.html';
     }
 }
 
