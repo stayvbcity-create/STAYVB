@@ -1389,16 +1389,142 @@ async function startApp(lang){
     }
 }
 
+// ── Provjera da li je gost poznat (ima token) ────────────────────
+function isKnownGuest() {
+    return !!localStorage.getItem('stayvb_guest_token');
+}
+
+// ── Mini landing za nepoznatog gosta koji skenira QR restorana/biznisa
+async function showPartnerLanding(partnerId) {
+    const { data: partner } = await sb
+        .from('partners')
+        .select('id, name, type, phone, whatsapp, description')
+        .eq('partner_code', partnerId)
+        .eq('is_active', true)
+        .maybeSingle();
+
+    const { data: pc } = partner ? await sb
+        .from('partner_content')
+        .select('wifi_name, extra_offer, service_prices')
+        .eq('partner_id', partner.id)
+        .maybeSingle() : { data: null };
+
+    const p = partner || {};
+    const c = pc || {};
+
+    const typeIcon = {hotel:'🏨',restaurant:'🍽',attraction:'🎡',business:'🛍',apartment:'🏠'}[p.type] || '📍';
+    const typeLabel = {hotel:'Hotel',restaurant:'Restoran',attraction:'Atrakcija',business:'Mali biznis',apartment:'Apartman'}[p.type] || 'Partner';
+
+    // Sakrij loader, prikaži landing
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('content').style.display = 'none';
+
+    const landing = document.createElement('div');
+    landing.id = 'partner-landing';
+    landing.style.cssText = 'position:fixed;inset:0;z-index:9990;overflow-y:auto;background:linear-gradient(145deg,#0f172a 0%,#162235 55%,#1f2937 100%);color:white;font-family:Inter,sans-serif;';
+
+    landing.innerHTML = `
+      <div style="max-width:430px;margin:0 auto;padding:0 0 40px">
+
+        <!-- Hero -->
+        <div style="padding:48px 24px 36px;text-align:center;position:relative">
+          <div style="width:80px;height:80px;border-radius:24px;background:rgba(251,191,36,0.12);border:1.5px solid rgba(251,191,36,0.35);display:flex;align-items:center;justify-content:center;font-size:2.2rem;margin:0 auto 16px">${typeIcon}</div>
+          <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.18em;color:rgba(255,255,255,0.45);margin-bottom:6px">${typeLabel} · Vrnjačka Banja</div>
+          <h1 style="font-size:1.8rem;font-weight:900;letter-spacing:-0.03em;margin:0 0 4px;color:white">${p.name || 'Partner'}</h1>
+        </div>
+
+        <div style="padding:0 18px;display:flex;flex-direction:column;gap:12px">
+
+          ${p.type === 'restaurant' && c.extra_offer ? `
+          <!-- Ponuda dana -->
+          <div style="padding:16px 18px;border-radius:1.4rem;background:linear-gradient(135deg,#7c3aed,#4f46e5);box-shadow:0 8px 24px rgba(124,58,237,0.35)">
+            <div style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.75);margin-bottom:6px">🎯 Posebna ponuda</div>
+            <div style="font-size:14px;font-weight:800;color:white;line-height:1.4">${c.extra_offer}</div>
+          </div>` : ''}
+
+          ${p.type === 'restaurant' && c.service_prices ? `
+          <!-- Cenovnik -->
+          <div style="padding:16px 18px;border-radius:1.4rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10)">
+            <div style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.45);margin-bottom:8px">📋 Cenovnik</div>
+            <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.85);line-height:1.7">${c.service_prices.replace(/
+/g,'<br>').replace(/\|/g,'<span style="color:rgba(255,255,255,0.25);margin:0 6px">|</span>')}</div>
+          </div>` : ''}
+
+          ${p.whatsapp || p.phone ? `
+          <!-- WhatsApp / poziv -->
+          <a href="https://wa.me/${(p.whatsapp||p.phone||'').replace(/\D/g,'')}?text=${encodeURIComponent('Zdravo, vidim vas na StayVB aplikaciji!')}"
+             style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:1.4rem;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);text-decoration:none">
+            <span style="font-size:1.5rem">📱</span>
+            <div>
+              <div style="font-size:13px;font-weight:900;color:#6ee7b7">Kontaktiraj putem WhatsApp</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.45);font-weight:700">${p.whatsapp || p.phone}</div>
+            </div>
+          </a>` : ''}
+
+          <!-- Divider -->
+          <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);margin:8px 0"></div>
+
+          <!-- CTA za celu aplikaciju -->
+          <div style="padding:18px;border-radius:1.4rem;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.20);text-align:center">
+            <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.55);margin-bottom:10px">Otkrijte sve što Vrnjačka Banja nudi</div>
+            <button onclick="enterFullApp()" style="width:100%;padding:14px;background:linear-gradient(135deg,#d97706,#f59e0b);color:#0f172a;border:none;border-radius:1rem;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;cursor:pointer;font-family:inherit">
+              🗺 Otvori vodič →
+            </button>
+            <div style="font-size:10px;color:rgba(255,255,255,0.30);margin-top:8px;font-weight:700">Događaji · Atrakcije · Happy Hour · Mapa</div>
+          </div>
+
+        </div>
+      </div>`;
+
+    document.body.appendChild(landing);
+
+    window.enterFullApp = function() {
+        landing.style.transition = 'opacity 0.3s ease';
+        landing.style.opacity = '0';
+        setTimeout(() => {
+            landing.remove();
+            const hasLang = localStorage.getItem('stayvb_lang');
+            if(hasLang === null) {
+                document.getElementById('lang-screen').style.display = 'flex';
+            } else {
+                startApp(hasLang);
+            }
+        }, 300);
+    };
+}
+
 window.addEventListener('load', async () => {
     await registerSW();
 
+    const params = new URLSearchParams(window.location.search);
+    const urlUnitId = (params.get('id') || '').toUpperCase();
     const hasLang = localStorage.getItem('stayvb_lang');
 
+    // Nepoznat gost (nema token) + skenira QR restorana/biznisa/atrakcije
+    // → prikaži mini landing za taj partner, ne punu aplikaciju
+    if(urlUnitId && !isKnownGuest()) {
+        const { data: partnerType } = await sb
+            .from('partners')
+            .select('type')
+            .eq('partner_code', urlUnitId)
+            .eq('is_active', true)
+            .maybeSingle();
+
+        const type = partnerType?.type;
+        // Za hotel i apartman odmah otvori punu app (gost koji dolazi na smestaj)
+        // Za restoran, biznis, atrakciju — prikaži landing
+        if(type && type !== 'hotel' && type !== 'apartment') {
+            await showPartnerLanding(urlUnitId);
+            return;
+        }
+    }
+
+    // Poznat gost ili hotel/apartman → normalan flow
     if(hasLang === null){
         document.getElementById('lang-screen').style.display = 'flex';
         document.getElementById('loader').style.display = 'none';
         document.getElementById('content').style.display = 'none';
-        return; // startApp() će biti pozvan iz stayvbSetLang()
+        return;
     }
 
     const ls = document.getElementById('lang-screen');
