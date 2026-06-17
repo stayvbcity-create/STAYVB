@@ -634,6 +634,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <label>⭐ Google Review link</label>
       <input id="edit-review-url" placeholder="https://g.page/r/.../review">
     </div>
+    <div class="field" id="edit-menu-wrap">
+      <label>🍽 Link na meni / ponudu</label>
+      <input id="edit-menu-url" placeholder="https://... (sajt, Glovo, PDF, Instagram...)">
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;font-weight:600">Prikazuje se gostima na landing stranici. Samo admin može da menja.</div>
+    </div>
     <div class="field-row">
       <div class="field"><label>Lat</label><input id="edit-lat"></div>
       <div class="field"><label>Lng</label><input id="edit-lng"></div>
@@ -1739,6 +1744,11 @@ function openEdit(id){
   document.getElementById('edit-phone').value=p.phone||'';
   document.getElementById('edit-wa').value=p.whatsapp||'';
   document.getElementById('edit-review-url').value=p.google_review_url||'';
+  // Učitaj menu_url iz partner_content
+  try{
+    const {data:pc}=await sb.from('partner_content').select('menu_url').eq('partner_id',p.id).maybeSingle();
+    document.getElementById('edit-menu-url').value=(pc?.menu_url)||'';
+  }catch(e){ document.getElementById('edit-menu-url').value=''; }
   document.getElementById('edit-lat').value=p.lat||'';
   document.getElementById('edit-lng').value=p.lng||'';
   document.getElementById('edit-note').value=p.admin_note||'';
@@ -1802,6 +1812,9 @@ async function saveEdit(){
   if(pin && pin.length===4) u.pin=pin;
   else if(pin && pin.length!==4){ const m=document.getElementById('edit-msg'); m.textContent='⚠️ PIN mora biti tačno 4 cifre.'; m.className='form-msg err'; return; }
   await sb.from('partners').update(u).eq('id',id);
+  // Sačuvaj menu_url u partner_content
+  const menuUrl=(document.getElementById('edit-menu-url')?.value||'').trim();
+  await sb.from('partner_content').upsert({partner_id:id, menu_url:menuUrl||null, updated_at:new Date().toISOString()},{onConflict:'partner_id'});
   const m=document.getElementById('edit-msg'); m.textContent='✓ Sačuvano!'; m.className='form-msg ok';
   setTimeout(async ()=>{
     closeModal('modal-edit');
@@ -2270,7 +2283,7 @@ function renderQRList(data){
   }
 
   list.innerHTML=data.map(p=>{
-    const gUrl=(p.type==='apartment'||p.type==='hotel')?`${base}index.html?id=${p.partner_code}`:`${base}landing.html?id=${p.partner_code}`;
+    const gUrl=(p.type==='apartment'||p.type==='hotel')?`${base}index.html?id=${p.partner_code}`:`${base}stamp.html?code=${p.partner_code}`;
     const pUrl=`${base}partner.html?t=${p.access_token}`;
     return `<div class="tbl-card" style="margin-bottom:12px;padding:18px">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
@@ -2294,7 +2307,7 @@ function renderQRList(data){
   }).join('');
 
   data.forEach(p=>{
-    const url=(p.type==='apartment'||p.type==='hotel')?`${base}index.html?id=${p.partner_code}`:`${base}landing.html?id=${p.partner_code}`;
+    const url=(p.type==='apartment'||p.type==='hotel')?`${base}index.html?id=${p.partner_code}`:`${base}stamp.html?code=${p.partner_code}`;
     QRCode.toCanvas(document.createElement('canvas'),url,{width:110,margin:1},(err,canvas)=>{
       if(!err){const el=document.getElementById('qr-'+p.id);if(el){el.innerHTML='';el.appendChild(canvas);}}
     });
