@@ -82,7 +82,13 @@ body{top:0!important}
   color:white;font-size:9px;font-weight:900;padding:3px 8px;border-radius:999px;
   border:2px solid white;box-shadow:0 3px 10px rgba(0,0,0,0.35);letter-spacing:0.02em;z-index:10}
 .marker-badge-hh{background:linear-gradient(135deg,#fb923c,#ea580c);animation:hhBlink 1.3s ease-in-out infinite}
-.marker-badge-promo{background:linear-gradient(135deg,#f87171,#dc2626);animation:hhBlink 1.1s ease-in-out infinite}
+.marker-badge-promo{
+  background:linear-gradient(135deg,#dc2626,#991b1b);
+  animation:hhBlink 1.1s ease-in-out infinite;
+  font-size:9px;font-weight:900;letter-spacing:0.04em;
+  padding:4px 9px;border-radius:999px;
+  box-shadow:0 2px 8px rgba(220,38,38,0.5),0 0 0 2px white;
+}
 
 /* Promo / HH tooltip - kompaktni badge iznad pina */
 .leaflet-tooltip.promo-tooltip{
@@ -96,26 +102,30 @@ body{top:0!important}
 .leaflet-tooltip.promo-tooltip::before{display:none}
 .promo-tt-inner{
   font-family:'Inter',sans-serif;
-  font-size:11px;
+  font-size:10px;
   font-weight:900;
   text-align:center;
-  line-height:1;
-  padding:6px 11px;
-  border-radius:20px;
+  line-height:1.2;
+  padding:6px 12px;
+  border-radius:999px;
   color:white;
   white-space:nowrap;
-  display:inline-block;
-  letter-spacing:0.02em;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  letter-spacing:0.03em;
+  text-transform:uppercase;
 }
 .promo-tooltip-red .promo-tt-inner{
-  background:#dc2626;
-  box-shadow:0 3px 10px rgba(220,38,38,0.55),0 0 0 2px rgba(255,255,255,0.9);
+  background:linear-gradient(135deg,#dc2626,#991b1b);
+  box-shadow:0 4px 14px rgba(220,38,38,0.60),0 0 0 2.5px white;
   animation:promoFloat 2s ease-in-out infinite;
 }
 .promo-tooltip-orange .promo-tt-inner{
-  background:linear-gradient(135deg,#ea580c,#f97316);
-  box-shadow:0 3px 10px rgba(234,88,12,0.55),0 0 0 2px rgba(255,255,255,0.9);
+  background:linear-gradient(135deg,#d97706,#f59e0b);
+  box-shadow:0 4px 14px rgba(217,119,6,0.60),0 0 0 2.5px white;
   animation:promoFloat 2s ease-in-out infinite;
+  color:#0f172a;
 }
 @keyframes promoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @keyframes userPulse{0%{transform:scale(0.6);opacity:0.9}70%{transform:scale(1);opacity:0.15}100%{transform:scale(0.6);opacity:0}}
@@ -335,9 +345,14 @@ function openSheet(data){
       </div>` : ''}
 
     ${data.current_offer ? `
-      <div class="sheet-promo-card sheet-promo-red" style="margin-top:8px">
-        <p class="sheet-promo-label">🎯 Aktuelna akcija</p>
-        <p class="sheet-promo-text">${C.escapeHtml(data.current_offer)}</p>
+      <div style="margin-top:10px;padding:16px;border-radius:1.4rem;background:linear-gradient(135deg,#7c3aed,#4f46e5);box-shadow:0 8px 24px rgba(124,58,237,0.40);position:relative;overflow:hidden">
+        <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.07)"></div>
+        <div style="position:absolute;bottom:-30px;left:10px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.05)"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;position:relative">
+          <span style="font-size:1.2rem">🎯</span>
+          <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.80);background:rgba(255,255,255,0.15);padding:3px 8px;border-radius:999px">Posebna akcija</span>
+        </div>
+        <p style="font-size:15px;font-weight:800;color:white;margin:0;line-height:1.4;position:relative">${C.escapeHtml(data.current_offer)}</p>
       </div>` : ''}
 
     ${isStampAlso ? `
