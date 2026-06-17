@@ -17,56 +17,41 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
 *{box-sizing:border-box}
 body{font-family:'Inter',sans-serif;background:linear-gradient(145deg,#0f172a 0%,#1a2540 100%);color:white;min-height:100vh;margin:0;top:0!important}
-
-/* ── Google Translate hide ── */
 #google_translate_element{display:none!important}
 .goog-te-banner-frame,.skiptranslate{display:none!important}
 body.translated-ltr,body.translated-rtl{margin-top:0!important}
-
-/* ── Lang pills ── */
 .lang-pills-bar{position:fixed;top:14px;right:14px;display:flex;flex-wrap:wrap;gap:4px;max-width:170px;justify-content:flex-end;z-index:9990}
 .lang-pill{padding:3px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);cursor:pointer;line-height:0}
 .lang-pill img{width:26px;height:17px;object-fit:cover;border-radius:3px;display:block;opacity:0.75}
 .lang-pill.active{border-color:rgba(251,191,36,0.60);background:rgba(251,191,36,0.20)}
 .lang-pill.active img{opacity:1}
-
 .app{max-width:430px;margin:0 auto;min-height:100vh;padding:24px 20px 40px}
-
 .stamps-row{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;padding:4px 0}
 .star{font-size:1.5rem;line-height:1;transition:all 0.3s ease;filter:grayscale(1) opacity(0.18)}
-.star.filled{filter:none;animation:none}
+.star.filled{filter:none}
 .star.new-stamp{animation:stampPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards}
 @keyframes stampPop{0%{transform:scale(0);opacity:0}60%{transform:scale(1.3)}100%{transform:scale(1);opacity:1}}
-
 .card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);border-radius:1.5rem;padding:20px}
 .gold-card{background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid rgba(251,191,36,0.25);border-radius:2rem;padding:22px 20px}
-
 .progress-track{height:8px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden;width:100%}
 .progress-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#f59e0b,#fbbf24);transition:width 0.6s ease}
-
 .loc-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);margin-bottom:6px;transition:background 0.15s}
 .loc-item:active{background:rgba(255,255,255,0.08)}
-.loc-icon{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
-.loc-icon.earned{background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.30)}
-.loc-icon.empty{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08)}
 .loc-name{font-size:13px;font-weight:800;color:white;flex:1}
 .loc-date{font-size:10px;color:rgba(255,255,255,0.40);margin-top:2px}
 .loc-badge{font-size:9px;font-weight:900;padding:3px 8px;border-radius:6px;white-space:nowrap}
 .lb-earned{background:rgba(16,185,129,0.15);color:#6ee7b7;border:1px solid rgba(16,185,129,0.25)}
 .lb-missing{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.30)}
-
 .btn-gold{width:100%;padding:16px;background:linear-gradient(135deg,#d97706,#f59e0b);color:#0f172a;border:none;border-radius:1.2rem;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;cursor:pointer;font-family:inherit;transition:transform 0.18s;box-shadow:0 10px 24px rgba(245,158,11,0.30)}
 .btn-gold:active{transform:scale(0.97)}
 .btn-gold:disabled{opacity:0.6;cursor:not-allowed}
 .btn-scan{width:100%;padding:16px;background:linear-gradient(135deg,#7c3aed,#8b5cf6);color:white;border:none;border-radius:1.2rem;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;cursor:pointer;font-family:inherit;transition:transform 0.18s;box-shadow:0 10px 24px rgba(139,92,246,0.30);display:flex;align-items:center;justify-content:center;gap:8px}
 .btn-scan:active{transform:scale(0.97)}
 .btn-ghost{width:100%;padding:14px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.10);border-radius:1.2rem;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:0.08em}
-
 .tabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.10);margin-bottom:20px}
 .tab-btn{flex:1;padding:12px 8px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;color:rgba(255,255,255,0.40);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.18s;text-align:center}
 .tab-btn.active{color:#fbbf24;border-bottom-color:#fbbf24}
 .tab-content{display:none}.tab-content.active{display:block}
-
 #scanner-modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.95);flex-direction:column;align-items:center;justify-content:center;padding:20px}
 #scanner-modal.open{display:flex}
 #scanner-video{width:100%;max-width:320px;border-radius:1.5rem;border:2px solid rgba(251,191,36,0.40)}
@@ -80,23 +65,19 @@ body.translated-ltr,body.translated-rtl{margin-top:0!important}
 .scanner-line{position:absolute;left:10%;right:10%;height:2px;background:rgba(251,191,36,0.7);animation:scanLine 2s ease-in-out infinite;box-shadow:0 0 8px rgba(251,191,36,0.8)}
 @keyframes scanLine{0%{top:10%}100%{top:90%}}
 #scanner-result{margin-top:16px;padding:12px 20px;border-radius:12px;background:rgba(255,255,255,0.08);font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);text-align:center;min-height:42px;display:flex;align-items:center;justify-content:center}
-
 .form-input{width:100%;padding:13px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:14px;color:white;font-size:14px;font-weight:700;font-family:inherit;outline:none;margin-bottom:10px}
 .form-input::placeholder{color:rgba(255,255,255,0.25)}
 .form-input:focus{border-color:rgba(251,191,36,0.40)}
 .form-label{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.40);margin-bottom:6px;display:block}
-
 .divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);margin:16px 0}
 .msg{font-size:11px;font-weight:800;min-height:16px;text-align:center;margin-top:8px;color:#6ee7b7}
 .msg.err{color:#f87171}
-
 /* ── Email onboarding modal ── */
-#email-modal{display:none;position:fixed;inset:0;z-index:9995;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center}
+#email-modal{display:none;position:fixed;inset:0;z-index:9995;background:rgba(0,0,0,0.80);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center}
 #email-modal.open{display:flex}
-.email-sheet{width:100%;max-width:430px;background:linear-gradient(160deg,#1e293b 0%,#0f172a 100%);border:1px solid rgba(255,255,255,0.10);border-radius:2rem 2rem 0 0;padding:32px 24px 40px;animation:sheetUp 0.35s cubic-bezier(0.22,1,0.36,1)}
+.email-sheet{width:100%;max-width:430px;background:linear-gradient(160deg,#1e293b 0%,#0f172a 100%);border:1px solid rgba(255,255,255,0.10);border-radius:2rem 2rem 0 0;padding:32px 24px 48px;animation:sheetUp 0.35s cubic-bezier(0.22,1,0.36,1)}
 @keyframes sheetUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
 .email-icon{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,rgba(251,191,36,0.15),rgba(245,158,11,0.08));border:1px solid rgba(251,191,36,0.30);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 20px}
-.email-skip{width:100%;padding:13px;margin-top:10px;background:transparent;border:1px solid rgba(255,255,255,0.10);border-radius:1.2rem;color:rgba(255,255,255,0.40);font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:0.08em}
 .consent-row{display:flex;align-items:flex-start;gap:10px;margin:12px 0 4px}
 .consent-row input[type=checkbox]{width:18px;height:18px;border-radius:5px;accent-color:#f59e0b;margin-top:1px;flex-shrink:0;cursor:pointer}
 .consent-text{font-size:11px;color:rgba(255,255,255,0.45);font-weight:600;line-height:1.5}
@@ -104,7 +85,6 @@ body.translated-ltr,body.translated-rtl{margin-top:0!important}
 </style>
 </head>
 <body>
-
 <div id="google_translate_element" style="display:none"></div>
 <div class="lang-pills-bar" id="lang-pills"></div>
 
@@ -112,25 +92,24 @@ body.translated-ltr,body.translated-rtl{margin-top:0!important}
   <div id="main-screen"></div>
 </div>
 
-<!-- Email onboarding modal -->
+<!-- Email onboarding modal — BEZ PRESKOCI, OBAVEZNO -->
 <div id="email-modal">
   <div class="email-sheet">
     <div class="email-icon">✉️</div>
-    <h2 style="font-size:1.25rem;font-weight:900;color:#fbbf24;text-align:center;margin:0 0 8px;letter-spacing:-0.02em">Ostavi kontakt</h2>
+    <h2 style="font-size:1.25rem;font-weight:900;color:#fbbf24;text-align:center;margin:0 0 8px;letter-spacing:-0.02em">Dobrodošli u loyalty program!</h2>
     <p style="font-size:12.5px;color:rgba(255,255,255,0.55);font-weight:600;text-align:center;line-height:1.6;margin:0 0 24px;max-width:300px;margin-left:auto;margin-right:auto">
-      Jednom mesečno šaljemo kratki newsletter sa događajima i posebnim ponudama iz Vrnjačke Banje.
+      Unesite email da biste koristili loyalty pečate. Jednom mesečno šaljemo newsletter sa posebnim ponudama iz Vrnjačke Banje.
     </p>
-    <label class="form-label">Tvoja email adresa</label>
+    <label class="form-label">Vaša email adresa</label>
     <input class="form-input" id="onboard-email" type="email" placeholder="ime@example.com" autocomplete="email" inputmode="email" style="margin-bottom:0">
     <p class="msg err" id="onboard-msg" style="min-height:14px;margin-bottom:4px"></p>
     <div class="consent-row">
       <input type="checkbox" id="onboard-consent" checked>
       <label for="onboard-consent" class="consent-text">
-        Slažem se da primam <strong>mesečni newsletter</strong> o dešavanjima u Vrnjačkoj Banji. Mogu se odjaviti u svakom trenutku.
+        Slažem se da primam <strong>mesečni newsletter</strong> o dešavanjima u Vrnjačkoj Banji.
       </label>
     </div>
-    <button class="btn-gold" onclick="submitEmail()" style="margin-top:16px">Prijavi se →</button>
-    <button class="email-skip" onclick="skipEmail()">Preskoči</button>
+    <button class="btn-gold" id="email-submit-btn" onclick="submitEmail()" style="margin-top:20px">Potvrdi i nastavi →</button>
   </div>
 </div>
 
@@ -157,9 +136,7 @@ const sb = C.db();
 const params = new URLSearchParams(location.search);
 const LOCATION_CODE = (params.get('code') || '').toUpperCase();
 const GOAL = C.LOYALTY_GOAL;
-let scannerStream = null;
-let scannerActive = false;
-let scanCanvas, scanCtx;
+let scannerStream = null, scannerActive = false, scanCanvas, scanCtx;
 
 // ── Lang pills ────────────────────────────────────────────────────
 const LANGS_MAP = {'':'rs','en':'gb','de':'de','ru':'ru','bg':'bg','zh-CN':'cn'};
@@ -176,69 +153,89 @@ function buildLangPills(){
 }
 document.addEventListener('DOMContentLoaded', buildLangPills);
 
-// ── Email onboarding ──────────────────────────────────────────────
-const EMAIL_SKIP_KEY = 'stayvb_email_asked';
+// ── Email modal — OBAVEZAN, bez preskakanja ───────────────────────
+const EMAIL_DONE_KEY = 'stayvb_email_done';
 
 function shouldShowEmailModal(guest){
-  if(localStorage.getItem(EMAIL_SKIP_KEY)) return false;
+  if(localStorage.getItem(EMAIL_DONE_KEY)) return false;
   if(guest && guest.email) return false;
   return true;
 }
-function openEmailModal(){ document.getElementById('email-modal').classList.add('open'); setTimeout(()=>document.getElementById('onboard-email').focus(),400); }
-function closeEmailModal(){ document.getElementById('email-modal').classList.remove('open'); }
+function openEmailModal(){
+  document.getElementById('email-modal').classList.add('open');
+  setTimeout(() => document.getElementById('onboard-email').focus(), 400);
+}
+function closeEmailModal(){
+  document.getElementById('email-modal').classList.remove('open');
+}
 
 async function submitEmail(){
-  const emailInput = document.getElementById('onboard-email');
+  const input = document.getElementById('onboard-email');
   const msg = document.getElementById('onboard-msg');
   const consent = document.getElementById('onboard-consent').checked;
-  const email = emailInput.value.trim().toLowerCase();
-  if(!email){ msg.textContent='⚠️ Upiši email adresu.'; return; }
-  const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if(!emailRx.test(email)){ msg.textContent='⚠️ Email adresa nije ispravna.'; return; }
-  if(!consent){ msg.textContent='⚠️ Označi pristanak za slanje newsletter-a.'; return; }
+  const email = input.value.trim().toLowerCase();
+  const btn = document.getElementById('email-submit-btn');
+
+  if(!email){ msg.textContent='⚠️ Unesite email adresu.'; return; }
+  const rx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if(!rx.test(email)){ msg.textContent='⚠️ Email adresa nije ispravna.'; return; }
+  if(!consent){ msg.textContent='⚠️ Označi pristanak za newsletter.'; return; }
+
   msg.textContent='';
-  const btn = document.querySelector('#email-modal .btn-gold');
   btn.textContent='Čuvam...'; btn.disabled=true;
+
   const token = C.getOrCreateGuestToken();
-  const {error} = await sb.from('guests').update({email, newsletter_consent:true, newsletter_consent_at:new Date().toISOString()}).eq('token',token);
-  if(error){ msg.textContent='⚠️ Greška. Pokušaj ponovo.'; btn.textContent='Prijavi se →'; btn.disabled=false; return; }
-  localStorage.setItem(EMAIL_SKIP_KEY,'1');
+
+  // Kreiraj gosta ako ne postoji
+  let guestId;
+  const {data:eg} = await sb.from('guests').select('id').eq('token',token).maybeSingle();
+  if(eg){
+    guestId = eg.id;
+  } else {
+    const {data:ng} = await sb.from('guests').insert({token, lang: LANG||'sr'}).select('id').single();
+    if(ng) guestId = ng.id;
+  }
+
+  const {error} = await sb.from('guests')
+    .update({email, newsletter_consent:true, newsletter_consent_at: new Date().toISOString()})
+    .eq('token', token);
+
+  if(error){
+    msg.textContent='⚠️ Greška. Pokušaj ponovo.';
+    btn.textContent='Potvrdi i nastavi →'; btn.disabled=false;
+    return;
+  }
+
+  localStorage.setItem(EMAIL_DONE_KEY,'1');
   closeEmailModal();
-  showToast('✓ Prijavljeni ste na newsletter!', true);
+  showToast('✓ Dobrodošli u loyalty program!', true);
 }
-function skipEmail(){ localStorage.setItem(EMAIL_SKIP_KEY,'skip'); closeEmailModal(); }
 
 // ── Helpers ───────────────────────────────────────────────────────
 function esc(v){ return C.escapeHtml(v); }
 function fmtDate(d){ return d ? new Date(d).toLocaleDateString('sr-RS') : ''; }
 
-// ── Render grid ───────────────────────────────────────────────────
 function renderGrid(count, isNew){
   let html = '<div class="stamps-row">';
   for(let i=0;i<GOAL;i++){
     const filled = i < count;
     const isNewCell = filled && i === count-1 && isNew;
-    html += `<span class="star ${filled?'filled':''} ${isNewCell?'new-stamp':''}">${'⭐'}</span>`;
+    html += `<span class="star ${filled?'filled':''} ${isNewCell?'new-stamp':''}">⭐</span>`;
   }
-  html += '</div>';
-  return html;
+  return html + '</div>';
 }
 
-// ── Glavni ekran ──────────────────────────────────────────────────
 async function renderMain(){
   const token = C.getOrCreateGuestToken();
-  let guest = null;
   const {data:g} = await sb.from('guests').select('id,stamp_count,reward_status').eq('token',token).maybeSingle();
-  guest = g;
-  const count = guest?.stamp_count || 0;
+  const count = g?.stamp_count || 0;
   const pct = Math.min(Math.round(count/GOAL*100),100);
   const {data:allLocs} = await sb.from('stamp_locations').select('id,name,type,location_code').eq('is_active',true).order('sort_order').order('name');
-  let earnedLocIds = [];
-  let stampDates = {};
-  if(guest?.id){
-    const {data:stamps} = await sb.from('stamps').select('location_id,created_at').eq('guest_id',guest.id);
+  let earnedLocIds = [], stampDates = {};
+  if(g?.id){
+    const {data:stamps} = await sb.from('stamps').select('location_id,created_at').eq('guest_id',g.id);
     earnedLocIds = (stamps||[]).map(s=>s.location_id);
-    (stamps||[]).forEach(s=>{ stampDates[s.location_id] = s.created_at; });
+    (stamps||[]).forEach(s=>{ stampDates[s.location_id]=s.created_at; });
   }
   const screen = document.getElementById('main-screen');
   screen.innerHTML = `
@@ -251,13 +248,13 @@ async function renderMain(){
       <span style="font-size:1.3rem;font-weight:900;color:#fbbf24">${count}/${GOAL}</span>
     </div>
     <div class="gold-card" style="margin-bottom:14px;padding:16px 18px">
-      ${renderGrid(count, false)}
+      ${renderGrid(count,false)}
       <div class="progress-track" style="margin-top:10px"><div class="progress-fill" style="width:${pct}%"></div></div>
       <div style="display:flex;justify-content:space-between;margin-top:6px">
         <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.30);text-transform:uppercase;letter-spacing:0.12em">Skupljeno</span>
-        <span style="font-size:9px;font-weight:900;color:rgba(255,255,255,0.45)">${GOAL-count > 0 ? GOAL-count+' do nagrade' : '🎁 Kompletno!'}</span>
+        <span style="font-size:9px;font-weight:900;color:rgba(255,255,255,0.45)">${GOAL-count>0?GOAL-count+' do nagrade':'🎁 Kompletno!'}</span>
       </div>
-      ${count >= GOAL ? `<div style="margin-top:10px;padding:10px 12px;background:rgba(251,191,36,0.10);border:1px solid rgba(251,191,36,0.20);border-radius:10px;text-align:center;font-size:11px;font-weight:800;color:#fbbf24">🎁 Skupio/la si sve pečate! Idi na tab Nagrada.</div>` : ''}
+      ${count>=GOAL?`<div style="margin-top:10px;padding:10px 12px;background:rgba(251,191,36,0.10);border:1px solid rgba(251,191,36,0.20);border-radius:10px;text-align:center;font-size:11px;font-weight:800;color:#fbbf24">🎁 Skupio/la si sve pečate! Idi na tab Nagrada.</div>`:''}
     </div>
     <button class="btn-scan" onclick="openScanner()" style="margin-bottom:12px">📷 Skeniraj QR kod lokacije</button>
     <div class="tabs">
@@ -266,30 +263,26 @@ async function renderMain(){
     </div>
     <div id="tab-lokacije" class="tab-content active">
       <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.35);margin-bottom:12px">${earnedLocIds.length} od ${(allLocs||[]).length} skupljeno</p>
-      ${(allLocs||[]).map(loc => {
-        const earned = earnedLocIds.includes(loc.id);
-        const date = stampDates[loc.id];
-        const isPartner = loc.type === 'partner';
-        const radarUrl = 'radar.html?highlight=' + encodeURIComponent(loc.location_code);
+      ${(allLocs||[]).map(loc=>{
+        const earned=earnedLocIds.includes(loc.id);
+        const date=stampDates[loc.id];
+        const radarUrl='radar.html?highlight='+encodeURIComponent(loc.location_code);
         return `<div class="loc-item" style="cursor:pointer" onclick="window.location.href='${radarUrl}'">
           <span style="font-size:1.1rem;flex-shrink:0;${earned?'':'filter:grayscale(1) opacity(0.25)'}">⭐</span>
           <div style="flex:1;min-width:0">
             <div class="loc-name" style="font-size:12px">${esc(loc.name)}</div>
-            ${earned&&date?`<div class="loc-date">Skupljeno ${fmtDate(date)}</div>`:`<div class="loc-date">${isPartner?'Partner lokacija':'Javna lokacija'}</div>`}
+            ${earned&&date?`<div class="loc-date">Skupljeno ${fmtDate(date)}</div>`:`<div class="loc-date">${loc.type==='partner'?'Partner lokacija':'Javna lokacija'}</div>`}
           </div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <span class="loc-badge ${earned?'lb-earned':'lb-missing'}">${earned?'✓':'Nije'}</span>
-            <span style="font-size:14px;opacity:0.35">📍</span>
-          </div>
+          <span class="loc-badge ${earned?'lb-earned':'lb-missing'}">${earned?'✓':'Nije'}</span>
         </div>`;
-      }).join('') || '<p style="font-size:12px;color:rgba(255,255,255,0.35);font-weight:700;text-align:center;padding:20px">Nema aktivnih lokacija.</p>'}
+      }).join('')||'<p style="font-size:12px;color:rgba(255,255,255,0.35);font-weight:700;text-align:center;padding:20px">Nema aktivnih lokacija.</p>'}
     </div>
     <div id="tab-nagrada" class="tab-content">
-      ${count >= GOAL
-        ? `<div class="card" style="text-align:center;margin-bottom:14px">
+      ${count>=GOAL
+        ?`<div class="card" style="text-align:center;margin-bottom:14px">
             <div style="font-size:2.5rem;margin-bottom:10px">🎁</div>
             <h3 style="font-size:1.1rem;font-weight:900;color:#fbbf24;margin:0 0 6px">Čestitamo!</h3>
-            <p style="font-size:12px;color:rgba(255,255,255,0.6);font-weight:600;margin:0">Skupio/la si ${GOAL} pečata! Unesi kontakt da preuzmeš nagradu.</p>
+            <p style="font-size:12px;color:rgba(255,255,255,0.6);font-weight:600;margin:0">Skupio/la si ${GOAL} pečata! Unesi kontakt.</p>
           </div>
           <div id="reward-form">
             <label class="form-label">Tvoje ime</label>
@@ -299,10 +292,10 @@ async function renderMain(){
             <button class="btn-gold" onclick="submitReward()">🎁 Pošalji zahtev</button>
             <p class="msg" id="reward-msg"></p>
           </div>`
-        : `<div style="text-align:center;padding:32px 20px">
+        :`<div style="text-align:center;padding:32px 20px">
             <div style="font-size:3rem;margin-bottom:14px">⭐</div>
             <p style="font-size:14px;font-weight:900;color:#fbbf24;margin:0 0 8px">Još ${GOAL-count} pečata do nagrade!</p>
-            <p style="font-size:12px;color:rgba(255,255,255,0.5);font-weight:600;line-height:1.6;margin:0">Poseti lokacije sa radar mape i skeniraj QR kod na svakom mestu da skupiš pečat.</p>
+            <p style="font-size:12px;color:rgba(255,255,255,0.5);font-weight:600;line-height:1.6;margin:0">Poseti lokacije na radar mapi i skeniraj QR kod.</p>
           </div>`
       }
     </div>
@@ -311,154 +304,110 @@ async function renderMain(){
     </div>`;
 }
 
-// ── Tab switch ─────────────────────────────────────────────────────
-function switchTab(id, btn){
+function switchTab(id,btn){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
   if(btn) btn.classList.add('active');
   document.getElementById('tab-'+id)?.classList.add('active');
 }
 
-// ── QR stamp ───────────────────────────────────────────────────────
 async function processCode(code){
-  if(!code) return {ok:false, msg:'Nevažeći QR kod.'};
+  if(!code) return {ok:false,msg:'Nevažeći QR kod.'};
   const token = C.getOrCreateGuestToken();
-  const {data:loc} = await sb.from('stamp_locations').select('id,name,is_active').eq('location_code', code.toUpperCase()).maybeSingle();
-  if(!loc || !loc.is_active) return {ok:false, msg:'Nevažeći kod. Kontaktiraj osoblje.'};
+  const {data:loc} = await sb.from('stamp_locations').select('id,name,is_active').eq('location_code',code.toUpperCase()).maybeSingle();
+  if(!loc||!loc.is_active) return {ok:false,msg:'Nevažeći kod.'};
   let guestId;
   const {data:eg} = await sb.from('guests').select('id').eq('token',token).maybeSingle();
-  if(eg){ guestId = eg.id; }
+  if(eg){ guestId=eg.id; }
   else {
-    const {data:ng} = await sb.from('guests').insert({token, lang:localStorage.getItem('stayvb_lang')||'sr'}).select('id').single();
-    if(ng) guestId = ng.id;
+    const {data:ng} = await sb.from('guests').insert({token,lang:LANG||'sr'}).select('id').single();
+    if(ng) guestId=ng.id;
   }
-  if(!guestId) return {ok:false, msg:'Greška. Pokušaj ponovo.'};
-  const {error} = await sb.from('stamps').insert({guest_id:guestId, location_id:loc.id});
-  const isDup = error?.code === '23505';
-  if(error && !isDup) return {ok:false, msg:'Greška. Pokušaj ponovo.'};
-  return {ok:true, isDup, name:loc.name};
+  if(!guestId) return {ok:false,msg:'Greška. Pokušaj ponovo.'};
+  const {error} = await sb.from('stamps').insert({guest_id:guestId,location_id:loc.id});
+  const isDup = error?.code==='23505';
+  if(error&&!isDup) return {ok:false,msg:'Greška. Pokušaj ponovo.'};
+  return {ok:true,isDup,name:loc.name};
 }
 
-// ── Scanner ────────────────────────────────────────────────────────
 function openScanner(){
   document.getElementById('scanner-modal').classList.add('open');
-  document.getElementById('scanner-result').textContent = 'Čekam QR kod...';
-  document.getElementById('scanner-result').style.color = 'rgba(255,255,255,0.6)';
-  if(!scanCanvas){ scanCanvas = document.createElement('canvas'); scanCtx = scanCanvas.getContext('2d'); }
+  document.getElementById('scanner-result').textContent='Čekam QR kod...';
+  if(!scanCanvas){ scanCanvas=document.createElement('canvas'); scanCtx=scanCanvas.getContext('2d'); }
   navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
-    .then(stream => {
-      scannerStream = stream; scannerActive = true;
-      const video = document.getElementById('scanner-video');
-      video.srcObject = stream; video.play();
-      requestAnimationFrame(scanFrame);
-    })
-    .catch(() => {
-      document.getElementById('scanner-result').textContent = 'Kamera nije dostupna.';
-      document.getElementById('scanner-result').style.color = '#f87171';
-    });
+    .then(stream=>{ scannerStream=stream; scannerActive=true; const v=document.getElementById('scanner-video'); v.srcObject=stream; v.play(); requestAnimationFrame(scanFrame); })
+    .catch(()=>{ document.getElementById('scanner-result').textContent='Kamera nije dostupna.'; });
 }
-
 function scanFrame(){
   if(!scannerActive) return;
-  const video = document.getElementById('scanner-video');
-  if(video.readyState === video.HAVE_ENOUGH_DATA){
-    scanCanvas.width = video.videoWidth; scanCanvas.height = video.videoHeight;
-    scanCtx.drawImage(video, 0, 0);
-    const imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-    const code = jsQR(imageData.data, imageData.width, imageData.height, {inversionAttempts:'dontInvert'});
+  const v=document.getElementById('scanner-video');
+  if(v.readyState===v.HAVE_ENOUGH_DATA){
+    scanCanvas.width=v.videoWidth; scanCanvas.height=v.videoHeight;
+    scanCtx.drawImage(v,0,0);
+    const id=scanCtx.getImageData(0,0,scanCanvas.width,scanCanvas.height);
+    const code=jsQR(id.data,id.width,id.height,{inversionAttempts:'dontInvert'});
     if(code){
-      let extractedCode = code.data;
-      try{ const u = new URL(code.data); extractedCode = u.searchParams.get('code') || code.data; } catch(e){}
-      document.getElementById('scanner-result').textContent = '✓ Kod prepoznat! Obrađujem...';
-      document.getElementById('scanner-result').style.color = '#6ee7b7';
-      scannerActive = false; closeScanner(); handleScannedCode(extractedCode); return;
+      let c=code.data;
+      try{const u=new URL(code.data);c=u.searchParams.get('code')||code.data;}catch(e){}
+      scannerActive=false; closeScanner(); handleScannedCode(c); return;
     }
   }
   requestAnimationFrame(scanFrame);
 }
-
 function closeScanner(){
-  scannerActive = false;
-  if(scannerStream){ scannerStream.getTracks().forEach(t=>t.stop()); scannerStream = null; }
-  document.getElementById('scanner-video').srcObject = null;
+  scannerActive=false;
+  if(scannerStream){scannerStream.getTracks().forEach(t=>t.stop());scannerStream=null;}
+  document.getElementById('scanner-video').srcObject=null;
   document.getElementById('scanner-modal').classList.remove('open');
 }
-
 async function handleScannedCode(code){
-  document.getElementById('main-screen').innerHTML = `
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center">
-      <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-bottom-color:#fbbf24;border-radius:50%;animation:spin 0.8s linear infinite"></div>
-      <p style="font-size:11px;margin-top:16px;color:rgba(255,255,255,0.5);font-weight:700;text-transform:uppercase;letter-spacing:0.14em">Obrađujem pečat...</p>
-    </div>
-    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
-  const result = await processCode(code);
-  if(!result.ok){
-    document.getElementById('main-screen').innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;text-align:center;gap:14px">
-        <div style="font-size:3rem">❌</div>
-        <h2 style="font-size:1.2rem;font-weight:900;color:#f87171;margin:0">${esc(result.msg)}</h2>
-        <button class="btn-ghost" style="max-width:240px" onclick="renderMain()">← Nazad</button>
-      </div>`;
-    return;
-  }
+  document.getElementById('main-screen').innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center"><div style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-bottom-color:#fbbf24;border-radius:50%;animation:spin 0.8s linear infinite"></div><p style="font-size:11px;margin-top:16px;color:rgba(255,255,255,0.5);font-weight:700;text-transform:uppercase;letter-spacing:0.14em">Obrađujem pečat...</p></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+  const result=await processCode(code);
+  if(!result.ok){ document.getElementById('main-screen').innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;text-align:center;gap:14px"><div style="font-size:3rem">❌</div><h2 style="font-size:1.2rem;font-weight:900;color:#f87171;margin:0">${esc(result.msg)}</h2><button class="btn-ghost" style="max-width:240px" onclick="renderMain()">← Nazad</button></div>`; return; }
   await renderMain();
-  showToast(result.isDup ? 'Već imaš pečat sa ove lokacije ✓' : `⭐ Novi pečat: ${result.name}!`, !result.isDup);
+  showToast(result.isDup?'Već imaš pečat sa ove lokacije ✓':`⭐ Novi pečat: ${result.name}!`,!result.isDup);
 }
-
-function showToast(msg, isGood){
-  const t = document.createElement('div');
-  t.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:14px;font-size:12px;font-weight:900;z-index:10000;white-space:nowrap;animation:toastIn 0.3s ease;${isGood?'background:rgba(16,185,129,0.9);color:white':'background:rgba(245,158,11,0.9);color:#0f172a'}`;
-  t.textContent = msg;
-  document.body.appendChild(t);
-  const s = document.createElement('style');
-  s.textContent = '@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}';
-  document.head.appendChild(s);
-  setTimeout(()=>t.remove(), 3000);
+function showToast(msg,isGood){
+  const t=document.createElement('div');
+  t.style.cssText=`position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:14px;font-size:12px;font-weight:900;z-index:10000;white-space:nowrap;animation:toastIn 0.3s ease;${isGood?'background:rgba(16,185,129,0.9);color:white':'background:rgba(245,158,11,0.9);color:#0f172a'}`;
+  t.textContent=msg; document.body.appendChild(t);
+  const s=document.createElement('style'); s.textContent='@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}'; document.head.appendChild(s);
+  setTimeout(()=>t.remove(),3000);
 }
-
-// ── Nagrada forma ──────────────────────────────────────────────────
 async function submitReward(){
-  const name = document.getElementById('r-name')?.value.trim();
-  const phone = document.getElementById('r-phone')?.value.trim();
-  const msg = document.getElementById('reward-msg');
-  if(!name||!phone){ msg.textContent='⚠️ Popuni oba polja.'; msg.className='msg err'; return; }
-  const token = C.getOrCreateGuestToken();
-  const {error} = await sb.from('guests').update({reward_status:'pending', reward_phone:phone, reward_claimed:true}).eq('token',token);
-  if(error){ msg.textContent='⚠️ Greška. Pokušaj ponovo.'; msg.className='msg err'; return; }
-  document.getElementById('main-screen').innerHTML = `
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;gap:16px">
-      <div style="font-size:3.5rem">🎁</div>
-      <h2 style="font-size:1.4rem;font-weight:900;color:#fbbf24;margin:0">Zahtev poslat!</h2>
-      <p style="font-size:13px;color:rgba(255,255,255,0.6);font-weight:600;max-width:280px;line-height:1.6;margin:0">Kontaktiraćemo te uskoro sa nagradom.</p>
-      <a href="index.html" class="btn-gold" style="max-width:240px;display:block;text-align:center;text-decoration:none;padding:16px">← Nazad na vodič</a>
-    </div>`;
+  const name=document.getElementById('r-name')?.value.trim();
+  const phone=document.getElementById('r-phone')?.value.trim();
+  const msg=document.getElementById('reward-msg');
+  if(!name||!phone){msg.textContent='⚠️ Popuni oba polja.';msg.className='msg err';return;}
+  const token=C.getOrCreateGuestToken();
+  const {error}=await sb.from('guests').update({reward_status:'pending',reward_phone:phone,reward_claimed:true}).eq('token',token);
+  if(error){msg.textContent='⚠️ Greška.';msg.className='msg err';return;}
+  document.getElementById('main-screen').innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;gap:16px"><div style="font-size:3.5rem">🎁</div><h2 style="font-size:1.4rem;font-weight:900;color:#fbbf24;margin:0">Zahtev poslat!</h2><p style="font-size:13px;color:rgba(255,255,255,0.6);font-weight:600;max-width:280px;line-height:1.6;margin:0">Kontaktiraćemo te uskoro.</p><a href="index.html" class="btn-gold" style="max-width:240px;display:block;text-align:center;text-decoration:none;padding:16px">← Nazad na vodič</a></div>`;
 }
 
-// ── Boot ───────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   if(LOCATION_CODE){
-    const result = await processCode(LOCATION_CODE);
+    const result=await processCode(LOCATION_CODE);
     await renderMain();
-    if(result.ok && !result.isDup) showToast(`⭐ Novi pečat: ${result.name}!`, true);
-    else if(result.isDup) showToast('Već imaš pečat sa ove lokacije ✓', false);
-    else showToast(result.msg, false);
+    if(result.ok&&!result.isDup) showToast(`⭐ Novi pečat: ${result.name}!`,true);
+    else if(result.isDup) showToast('Već imaš pečat sa ove lokacije ✓',false);
+    else showToast(result.msg,false);
   } else {
     await renderMain();
   }
-
-  // Email modal — provjeri 900ms nakon učitavanja
-  const token = C.getOrCreateGuestToken();
-  const {data:guestCheck} = await sb.from('guests').select('email').eq('token',token).maybeSingle();
+  // Email modal — obavezan, provjeri 900ms nakon učitavanja
+  const token=C.getOrCreateGuestToken();
+  const {data:guestCheck}=await sb.from('guests').select('email').eq('token',token).maybeSingle();
   if(shouldShowEmailModal(guestCheck)){
-    setTimeout(openEmailModal, 900);
+    setTimeout(openEmailModal,900);
   }
 });
 </script>
 <script>
-  function googleTranslateElementInit(){
-    new google.translate.TranslateElement({pageLanguage:'sr',includedLanguages:'en,de,ru,bg,zh-CN',autoDisplay:false},'google_translate_element');
-    STAYVB_LANG.onWidgetReady();
-  }
+function googleTranslateElementInit(){
+  new google.translate.TranslateElement({pageLanguage:'sr',includedLanguages:'en,de,ru,bg,zh-CN',autoDisplay:false},'google_translate_element');
+  STAYVB_LANG.onWidgetReady();
+}
 </script>
 <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
