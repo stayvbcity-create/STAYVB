@@ -7,22 +7,13 @@
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
-<script src="lang-init.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="security-guard.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
 *{box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#020617,#0f172a);color:white;min-height:100vh;margin:0;top:0!important}
-#google_translate_element{display:none!important}
-.goog-te-banner-frame,.skiptranslate{display:none!important}
-body.translated-ltr,body.translated-rtl{margin-top:0!important}
-.lang-pills-bar{position:fixed;top:14px;right:14px;display:flex;flex-wrap:wrap;gap:4px;max-width:170px;justify-content:flex-end;z-index:9998}
-.lang-pill{padding:3px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);cursor:pointer;line-height:0}
-.lang-pill img{width:26px;height:17px;object-fit:cover;border-radius:3px;display:block;opacity:0.75}
-.lang-pill.active{border-color:rgba(251,191,36,0.60);background:rgba(251,191,36,0.20)}
-.lang-pill.active img{opacity:1}
+body{font-family:'Inter',sans-serif;background:linear-gradient(180deg,#020617,#0f172a);color:white;min-height:100vh;margin:0}
 #google_translate_element{display:none!important}
 .goog-te-banner-frame,.skiptranslate{display:none!important}
 body{top:0!important}
@@ -39,10 +30,10 @@ body{top:0!important}
 .pin-input:focus{border-color:rgba(251,191,36,0.40);background:rgba(255,255,255,0.08)}
 
 /* Tabs */
-.nav-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px 20px;background:rgba(0,0,0,0.20);border-bottom:1px solid rgba(255,255,255,0.06)}
-.tab{padding:10px 6px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.40);cursor:pointer;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);text-align:center;transition:all 0.18s;line-height:1.3}
-.tab .tab-icon{font-size:1.3rem;display:block;margin-bottom:4px}
-.tab.active{color:#fbbf24;background:rgba(251,191,36,0.10);border-color:rgba(251,191,36,0.30)}
+.tabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.08);overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:12px 16px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;color:rgba(255,255,255,0.4);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all 0.18s}
+.tab.active{color:#fbbf24;border-bottom-color:#fbbf24}
 
 /* Content area */
 .tab-content{display:none;padding:20px}
@@ -147,7 +138,6 @@ select.field-input option{background:#1e293b;color:white}
 </head>
 <body>
 <div id="google_translate_element" style="display:none"></div>
-<div class="lang-pills-bar" id="lang-pills"></div>
 
 <!-- PIN Screen -->
 <div id="pin-screen">
@@ -186,7 +176,7 @@ select.field-input option{background:#1e293b;color:white}
     <h1 style="font-size:1.4rem;font-weight:900;margin:0;letter-spacing:-0.03em;color:white" id="partner-name-header">Partner</h1>
   </div>
 
-  <div class="nav-grid" id="tabs-bar"></div>
+  <div class="tabs" id="tabs-bar"></div>
 
   <div id="tabs-content"></div>
 </div>
@@ -244,12 +234,6 @@ async function initApp(){
     document.getElementById('partner-name-header').textContent = partner.name || 'Partner';
     document.getElementById('partner-type-label').textContent = getTypeLabel(partner.type);
 
-    // Uvek dovuci svez red iz baze — osigurava is_premium i sve nove kolone
-    try {
-      const { data: fp } = await sb.from('partners').select('*').eq('id', partner.id).maybeSingle();
-      if(fp) partner = { ...partner, ...fp };
-    } catch(e){ console.log('freshPartner skip:', e.message); }
-
     // Učitaj sadržaj
     const { data:pc } = await sb.from('partner_content').select('*').eq('partner_id', partner.id).maybeSingle();
     partnerContent = pc || {};
@@ -274,16 +258,28 @@ function buildTabs(){
   const tabs = [];
 
   // Apartman/Hotel - Smeštaj
-  if(type === 'apartment' || type === 'hotel') tabs.push({id:'stay', label:'Smeštaj', icon:'🏠', render: renderStay});
-  if(type === 'hotel' || type === 'restaurant' || type === 'attraction') tabs.push({id:'hh', label:'Happy Hour', icon:'🍹', render: renderHH});
-  if(type === 'business') tabs.push({id:'promo', label:'Promocije', icon:'📢', render: renderPromo});
-  if(type === 'hotel' || type === 'attraction') tabs.push({id:'info', label:'Info', icon:'ℹ️', render: renderInfo});
-  if(partner.has_booking) tabs.push({id:'bookings', label:'Rezerv.', icon:'📅', render: renderBookings});
-  if(type === 'hotel' || type === 'restaurant' || type === 'attraction') tabs.push({id:'events', label:'Događaji', icon:'🎉', render: renderEvents});
-  tabs.push({id:'stats', label:'Statistike', icon:'📊', render: renderStats});
+  if(type === 'apartment' || type === 'hotel') tabs.push({id:'stay', label:'Smeštaj', render: renderStay});
+
+  // Hotel, Restoran, Atrakcija - Happy Hour
+  if(type === 'hotel' || type === 'restaurant' || type === 'attraction') tabs.push({id:'hh', label:'Happy Hour', render: renderHH});
+
+  // Mali biznis - Promocije
+  if(type === 'business') tabs.push({id:'promo', label:'Promocije', render: renderPromo});
+
+  // Hotel i Atrakcija - Info za Atrakcije sekciju
+  if(type === 'hotel' || type === 'attraction') tabs.push({id:'info', label:'Atrakcije Info', render: renderInfo});
+
+  // Booking - ako je omogućeno
+  if(partner.has_booking) tabs.push({id:'bookings', label:'Rezervacije', render: renderBookings});
+
+  // Hotel, Restoran, Atrakcija - Događaji
+  if(type === 'hotel' || type === 'restaurant' || type === 'attraction') tabs.push({id:'events', label:'Događaji', render: renderEvents});
+
+  // Svi - Statistike
+  tabs.push({id:'stats', label:'Statistike', render: renderStats});
 
   const tabsBar = document.getElementById('tabs-bar');
-  tabsBar.innerHTML = tabs.map((t,i) => `<button class="tab${i===0?' active':''}" onclick="switchTab('${t.id}',this)"><span class="tab-icon">${t.icon||'📋'}</span>${t.label}</button>`).join('');
+  tabsBar.innerHTML = tabs.map((t,i) => `<button class="tab${i===0?' active':''}" onclick="switchTab('${t.id}',this)">${t.label}</button>`).join('');
 
   const tabsContent = document.getElementById('tabs-content');
   tabsContent.innerHTML = tabs.map((t,i) => `<div id="tab-${t.id}" class="tab-content${i===0?' active':''}"></div>`).join('');
@@ -315,6 +311,14 @@ function renderStay(){
       <p class="panel-card-title">WiFi podaci</p>
       <div class="field-group"><label class="field-label">Naziv mreže</label><input class="field-input" id="s-wifi-name" value="${esc(pc.wifi_name||'')}"></div>
       <div class="field-group"><label class="field-label">Lozinka</label><input class="field-input" id="s-wifi-pass" value="${esc(pc.wifi_pass||'')}"></div>
+    </div>
+    <div class="panel-card">
+      <p class="panel-card-title">🍽 Meni / Ponuda</p>
+      <div class="field-group">
+        <label class="field-label">Link na meni ili ponudu</label>
+        <input class="field-input" id="s-menu-url" value="${esc(pc.menu_url||'')}" placeholder="https://... (sajt, Glovo, PDF, Instagram...)">
+        <p style="font-size:10px;color:rgba(255,255,255,0.35);font-weight:600;margin-top:6px">Gosti će videti dugme 'Pogledaj meni →' na vašoj stranici</p>
+      </div>
     </div>
     ${isPremium ? `
     <div class="panel-card">
@@ -354,10 +358,18 @@ function renderStay(){
     <p class="save-msg" id="stay-msg"></p>`;
 }
 
+async function saveMenuUrl(inputId){
+  const url = document.getElementById(inputId)?.value.trim() || '';
+  await sb.from('partner_content').upsert({partner_id: partner.id, menu_url: url, updated_at: new Date().toISOString()}, {onConflict:'partner_id'});
+  document.getElementById('promo-msg').textContent = '✓ Link sačuvan!';
+  setTimeout(() => { const el = document.getElementById('promo-msg'); if(el) el.textContent = ''; }, 2500);
+}
+
 async function saveStay(){
   const updates = {
     wifi_name: document.getElementById('s-wifi-name')?.value || '',
     wifi_pass: document.getElementById('s-wifi-pass')?.value || '',
+    menu_url: document.getElementById('s-menu-url')?.value.trim() || '',
   };
   if(partner.is_premium){
     updates.extra_offer = document.getElementById('s-extra-offer')?.value || '';
@@ -542,6 +554,14 @@ async function renderPromo(){
       <div class="field-group"><label class="field-label">Tekst promocije</label><textarea class="field-input" id="p-offer" placeholder="npr. 20% popust na sve tretmane ovog vikenda">${esc(pc.current_offer||'')}</textarea></div>
       <button class="btn-primary" onclick="activatePromo()">🚀 Aktiviraj promociju</button>
     </div>` : ''}
+    <div class="panel-card">
+      <p class="panel-card-title">🍽 Link na meni / ponudu</p>
+      <div class="field-group">
+        <input class="field-input" id="b-menu-url" value="${esc(pc.menu_url||'')}" placeholder="https://... (sajt, Glovo, PDF, Instagram...)">
+        <p style="font-size:10px;color:rgba(255,255,255,0.35);font-weight:600;margin-top:6px">Gosti vide dugme 'Pogledaj ponudu →' na landing stranici</p>
+      </div>
+      <button class="btn-primary" onclick="saveMenuUrl('b-menu-url')">💾 Sačuvaj link</button>
+    </div>
     <p class="save-msg" id="promo-msg"></p>`;
 }
 
@@ -590,6 +610,11 @@ function renderInfo(){
       <p class="panel-card-title">Opis</p>
       <div class="field-group"><label class="field-label">Kratki opis (za karticu)</label><input class="field-input" id="i-short" value="${esc(pc.short_desc||'')}" maxlength="120"></div>
       <div class="field-group"><label class="field-label">Duži opis</label><textarea class="field-input" id="i-desc">${esc(pc.description||'')}</textarea></div>
+      <div class="field-group" style="margin-top:8px">
+        <label class="field-label">🎟 Link na cenovnik / sajt atrakcije</label>
+        <input class="field-input" id="i-menu-url" value="${esc(pc.menu_url||'')}" placeholder="https://... (ulaznice, raspored, sajt...)">
+        <p style="font-size:10px;color:rgba(255,255,255,0.35);font-weight:600;margin-top:6px">Gosti vide dugme 'Više info →' na landing stranici</p>
+      </div>
     </div>
     <div class="panel-card">
       <p class="panel-card-title">Radno vreme i kontakt</p>
@@ -636,6 +661,7 @@ async function saveInfo(){
     description: document.getElementById('i-desc')?.value||'',
     working_hours: document.getElementById('i-hours')?.value||'',
     address: document.getElementById('i-addr')?.value||'',
+    menu_url: document.getElementById('i-menu-url')?.value.trim()||'',
     updated_at: new Date().toISOString()
   }, {onConflict:'partner_id'});
   document.getElementById('info-msg').textContent = '✓ Sačuvano!';
@@ -849,11 +875,10 @@ async function renderStats(){
       break;
     case 'hotel':
       mainMetricKey='page_visit'; mainMetricLabel='Pregledi profila'; mainMetricIcon='👁'; mainMetricColor='#3b82f6';
-      kpis.push({key:'page_visit',  icon:'👁',  label:'Pregledi profila',    color:'#3b82f6'});
-      kpis.push({key:'wa_click',    icon:'📱',  label:'WhatsApp kontakti',   color:'#4ade80'});
-      kpis.push({key:'hh_view',     icon:'🍹',  label:'Happy Hour pregledi', color:'#fb923c'});
-      kpis.push({key:'events_view', icon:'🎉',  label:'Događaji pregledi',   color:'#f87171'});
-      kpis.push({key:'qr_scan',     icon:'📷',  label:'QR skeniranja',       color:'#c084fc'});
+      kpis.push({key:'page_visit', icon:'👁', label:'Pregledi profila', color:'#3b82f6'});
+      kpis.push({key:'hh_view', icon:'🍹', label:'Happy Hour pregledi', color:'#fb923c'});
+      kpis.push({key:'events_view', icon:'🎉', label:'Događaji pregledi', color:'#f87171'});
+      kpis.push({key:'attr_view', icon:'🎡', label:'Atrakcije pregledi', color:'#34d399'});
       break;
     case 'restaurant':
       mainMetricKey='hh_view'; mainMetricLabel='Happy Hour pregledi'; mainMetricIcon='🍹'; mainMetricColor='#fb923c';
@@ -978,6 +1003,15 @@ async function renderStats(){
       <button class="stats-share-btn" onclick="shareStatsScreenshot()">📤 Podeli</button>
     </div>
 
+    <!-- Push notifikacije kartica -->
+    <div class="panel-card" style="margin-top:14px;border-color:rgba(99,102,241,0.25);background:rgba(99,102,241,0.05)">
+      <p class="panel-card-title" style="color:#a5b4fc">🔔 Pošalji obaveštenje gostima</p>
+      <p style="font-size:11px;color:rgba(255,255,255,0.45);font-weight:600;line-height:1.5;margin-bottom:12px">Pošalji ručnu poruku gostima (koristite umereno — za važne obavesti, ne svaki dan).</p>
+      <div class="field-group"><label class="field-label">Naslov</label><input class="field-input" id="push-title" placeholder="npr. Posebna ponuda večeras!" maxlength="50"></div>
+      <div class="field-group"><label class="field-label">Poruka</label><textarea class="field-input" id="push-body" placeholder="npr. Happy Hour od 18-20h, piće -30%!" maxlength="120" style="min-height:70px"></textarea></div>
+      <button class="btn-primary" onclick="sendPushToGuests()" style="background:linear-gradient(135deg,#6366f1,#4f46e5)">🔔 Pošalji svim gostima</button>
+      <p class="save-msg" id="push-msg"></p>
+    </div>
 
     <div class="panel-card" style="margin-top:12px">
       <p class="panel-card-title">Status naloga</p>
@@ -1051,6 +1085,45 @@ function animateNumber(el, target, duration){
 }
 
 // Web Share API za statistike
+async function sendPushToGuests(){
+  const title = document.getElementById('push-title').value.trim();
+  const body  = document.getElementById('push-body').value.trim();
+  const msgEl = document.getElementById('push-msg');
+
+  if(!title){ msgEl.textContent='⚠️ Unesite naslov.'; msgEl.style.color='#fca5a5'; return; }
+  if(!body) { msgEl.textContent='⚠️ Unesite poruku.';  msgEl.style.color='#fca5a5'; return; }
+
+  msgEl.textContent='⏳ Šaljem...'; msgEl.style.color='rgba(255,255,255,0.5)';
+
+  try{
+    // Pozovi Edge Function
+    const res = await fetch('https://zapmsxvwxjeoglpzldhl.supabase.co/functions/v1/send-push', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcG1zeHZ3eGplb2dscHpsZGhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMjY4NDQsImV4cCI6MjA5NjcwMjg0NH0.szTiMlsQJZCgbFE89eRn1YIN133smnEkPhVmcaVmGqM` },
+      body: JSON.stringify({
+        partner_code: partner.partner_code,
+        title,
+        message: body,
+        type: 'manual',
+        url: `./index.html?id=${partner.partner_code}`
+      })
+    });
+
+    const data = await res.json();
+    if(res.ok){
+      msgEl.textContent = `✓ Poslato ${data.sent} gostima!`;
+      msgEl.style.color = '#6ee7b7';
+      document.getElementById('push-title').value = '';
+      document.getElementById('push-body').value = '';
+    } else {
+      msgEl.textContent = `⚠️ Greška: ${data.error || 'Pokušajte ponovo'}`;
+      msgEl.style.color = '#fca5a5';
+    }
+  }catch(e){
+    msgEl.textContent = '⚠️ Mrežna greška. Pokušajte ponovo.';
+    msgEl.style.color = '#fca5a5';
+  }
+}
 
 async function shareStatsScreenshot(){
   const heroNum = document.getElementById('hero-number')?.textContent || '0';
@@ -1087,27 +1160,5 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 });
 </script>
-<script>
-const LANGS_MAP={'':'rs','en':'gb','de':'de','ru':'ru','bg':'bg','zh-CN':'cn'};
-const FLAG_SVGS={rs:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNDNjM2M0MiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzBDNDA3NiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGRkZGRiIvPjwvc3ZnPg==',gb:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDEyMTY5Ii8+PHBhdGggZD0iTTAsMCBMMzAsMjAgTTMwLDAgTDAsMjAiIHN0cm9rZT0iI0ZGRiIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTAsMCBMMzAsMjAgTTMwLDAgTDAsMjAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSIyLjUiLz48cGF0aCBkPSJNMTUsMCBMMTUsMjAgTTAsMTAgTDMwLDEwIiBzdHJva2U9IiNGRkYiIHN0cm9rZS13aWR0aD0iNiIvPjxwYXRoIGQ9Ik0xNSwwIEwxNSwyMCBNMCwxMCBMMzAsMTAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSI0Ii8+PC9zdmc+',de:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiMwMDAiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iI0REMDAwMCIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGQ0UwMCIvPjwvc3ZnPg==',ru:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNGRkYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzAwMzlBNiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0Q1MkIxRSIvPjwvc3ZnPg==',bg:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNGRkYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzAwOTY2RSIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0Q2MjYxMiIvPjwvc3ZnPg==',cn:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjREUyOTEwIi8+PHBvbHlnb24gcG9pbnRzPSI3LDMgOC4yLDYuOCAxMiw2LjggOSw5IDEwLjIsMTIuOCA3LDEwLjUgMy44LDEyLjggNSw5IDIsMy44LDYuOCIgZmlsbD0iI0ZGREUwMCIvPjwvc3ZnPg=='};
-const LANG_NOW=STAYVB_LANG.get();
-function stayvbSetLang(c){STAYVB_LANG.set(c);}
-function buildLangPills(){
-  const el=document.getElementById('lang-pills');
-  if(!el)return;
-  el.innerHTML=Object.keys(LANGS_MAP).map(code=>{
-    const src='data:image/svg+xml;base64,'+(FLAG_SVGS[LANGS_MAP[code]]||'');
-    return `<button class="lang-pill${code===LANG_NOW?' active':''}" onclick="stayvbSetLang('${code}')"><img src="${src}" alt="${code||'sr'}"></button>`;
-  }).join('');
-}
-document.addEventListener('DOMContentLoaded',buildLangPills);
-</script>
-<script>
-function googleTranslateElementInit(){
-  new google.translate.TranslateElement({pageLanguage:'sr',includedLanguages:'en,de,ru,bg,zh-CN',autoDisplay:false},'google_translate_element');
-  STAYVB_LANG.onWidgetReady();
-}
-</script>
-<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
