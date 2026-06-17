@@ -17,32 +17,33 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
 *{box-sizing:border-box}
 body{font-family:'Inter',sans-serif;background:linear-gradient(145deg,#0f172a 0%,#1a2540 100%);color:white;min-height:100vh;margin:0;top:0!important}
+
+/* ── Google Translate hide ── */
 #google_translate_element{display:none!important}
 .goog-te-banner-frame,.skiptranslate{display:none!important}
 body.translated-ltr,body.translated-rtl{margin-top:0!important}
-.lang-pills-bar{position:absolute;top:14px;right:14px;display:flex;flex-wrap:wrap;gap:4px;max-width:170px;justify-content:flex-end;z-index:10}
+
+/* ── Lang pills ── */
+.lang-pills-bar{position:fixed;top:14px;right:14px;display:flex;flex-wrap:wrap;gap:4px;max-width:170px;justify-content:flex-end;z-index:9990}
 .lang-pill{padding:3px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);cursor:pointer;line-height:0}
 .lang-pill img{width:26px;height:17px;object-fit:cover;border-radius:3px;display:block;opacity:0.75}
 .lang-pill.active{border-color:rgba(251,191,36,0.60);background:rgba(251,191,36,0.20)}
 .lang-pill.active img{opacity:1}
+
 .app{max-width:430px;margin:0 auto;min-height:100vh;padding:24px 20px 40px}
 
-/* Stamp grid - kompaktan red zvezda */
 .stamps-row{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;padding:4px 0}
 .star{font-size:1.5rem;line-height:1;transition:all 0.3s ease;filter:grayscale(1) opacity(0.18)}
 .star.filled{filter:none;animation:none}
 .star.new-stamp{animation:stampPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards}
 @keyframes stampPop{0%{transform:scale(0);opacity:0}60%{transform:scale(1.3)}100%{transform:scale(1);opacity:1}}
 
-/* Cards */
 .card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);border-radius:1.5rem;padding:20px}
 .gold-card{background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid rgba(251,191,36,0.25);border-radius:2rem;padding:22px 20px}
 
-/* Progress */
 .progress-track{height:8px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden;width:100%}
 .progress-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#f59e0b,#fbbf24);transition:width 0.6s ease}
 
-/* Location item */
 .loc-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);margin-bottom:6px;transition:background 0.15s}
 .loc-item:active{background:rgba(255,255,255,0.08)}
 .loc-icon{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
@@ -54,26 +55,24 @@ body.translated-ltr,body.translated-rtl{margin-top:0!important}
 .lb-earned{background:rgba(16,185,129,0.15);color:#6ee7b7;border:1px solid rgba(16,185,129,0.25)}
 .lb-missing{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.30)}
 
-/* Buttons */
 .btn-gold{width:100%;padding:16px;background:linear-gradient(135deg,#d97706,#f59e0b);color:#0f172a;border:none;border-radius:1.2rem;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;cursor:pointer;font-family:inherit;transition:transform 0.18s;box-shadow:0 10px 24px rgba(245,158,11,0.30)}
 .btn-gold:active{transform:scale(0.97)}
+.btn-gold:disabled{opacity:0.6;cursor:not-allowed}
 .btn-scan{width:100%;padding:16px;background:linear-gradient(135deg,#7c3aed,#8b5cf6);color:white;border:none;border-radius:1.2rem;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;cursor:pointer;font-family:inherit;transition:transform 0.18s;box-shadow:0 10px 24px rgba(139,92,246,0.30);display:flex;align-items:center;justify-content:center;gap:8px}
 .btn-scan:active{transform:scale(0.97)}
 .btn-ghost{width:100%;padding:14px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.10);border-radius:1.2rem;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:0.08em}
 
-/* Tabs */
 .tabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.10);margin-bottom:20px}
 .tab-btn{flex:1;padding:12px 8px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;color:rgba(255,255,255,0.40);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.18s;text-align:center}
 .tab-btn.active{color:#fbbf24;border-bottom-color:#fbbf24}
 .tab-content{display:none}.tab-content.active{display:block}
 
-/* Scanner modal */
-#scanner-modal{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.95);flex-direction:column;align-items:center;justify-content:center;padding:20px}
+#scanner-modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.95);flex-direction:column;align-items:center;justify-content:center;padding:20px}
 #scanner-modal.open{display:flex}
 #scanner-video{width:100%;max-width:320px;border-radius:1.5rem;border:2px solid rgba(251,191,36,0.40)}
 .scanner-frame{position:relative;width:100%;max-width:320px}
 .scanner-corners{position:absolute;inset:0;pointer-events:none}
-.sc{position:absolute;width:24px;height:24px;border-color:var(--gold,#fbbf24);border-style:solid}
+.sc{position:absolute;width:24px;height:24px;border-color:#fbbf24;border-style:solid}
 .sc-tl{top:8px;left:8px;border-width:3px 0 0 3px;border-radius:4px 0 0 0}
 .sc-tr{top:8px;right:8px;border-width:3px 3px 0 0;border-radius:0 4px 0 0}
 .sc-bl{bottom:8px;left:8px;border-width:0 0 3px 3px;border-radius:0 0 0 4px}
@@ -82,99 +81,56 @@ body.translated-ltr,body.translated-rtl{margin-top:0!important}
 @keyframes scanLine{0%{top:10%}100%{top:90%}}
 #scanner-result{margin-top:16px;padding:12px 20px;border-radius:12px;background:rgba(255,255,255,0.08);font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);text-align:center;min-height:42px;display:flex;align-items:center;justify-content:center}
 
-/* Form */
 .form-input{width:100%;padding:13px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:14px;color:white;font-size:14px;font-weight:700;font-family:inherit;outline:none;margin-bottom:10px}
 .form-input::placeholder{color:rgba(255,255,255,0.25)}
 .form-input:focus{border-color:rgba(251,191,36,0.40)}
 .form-label{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.40);margin-bottom:6px;display:block}
-
-/* Badge */
-.loc-badge-top{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.7)}
-.dot-pulse{width:7px;height:7px;border-radius:50%;background:#10b981;animation:dotPulse 1.4s infinite;flex-shrink:0}
-@keyframes dotPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:0.7}}
 
 .divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);margin:16px 0}
 .msg{font-size:11px;font-weight:800;min-height:16px;text-align:center;margin-top:8px;color:#6ee7b7}
 .msg.err{color:#f87171}
 
 /* ── Email onboarding modal ── */
-#email-modal{
-  display:none;position:fixed;inset:0;z-index:9999;
-  background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);
-  align-items:flex-end;justify-content:center;padding:0;
-}
+#email-modal{display:none;position:fixed;inset:0;z-index:9995;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center}
 #email-modal.open{display:flex}
-.email-sheet{
-  width:100%;max-width:430px;
-  background:linear-gradient(160deg,#1e293b 0%,#0f172a 100%);
-  border:1px solid rgba(255,255,255,0.10);
-  border-radius:2rem 2rem 0 0;
-  padding:32px 24px 40px;
-  animation:sheetUp 0.35s cubic-bezier(0.22,1,0.36,1);
-}
+.email-sheet{width:100%;max-width:430px;background:linear-gradient(160deg,#1e293b 0%,#0f172a 100%);border:1px solid rgba(255,255,255,0.10);border-radius:2rem 2rem 0 0;padding:32px 24px 40px;animation:sheetUp 0.35s cubic-bezier(0.22,1,0.36,1)}
 @keyframes sheetUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
-.email-icon{width:64px;height:64px;border-radius:20px;
-  background:linear-gradient(135deg,rgba(251,191,36,0.15),rgba(245,158,11,0.08));
-  border:1px solid rgba(251,191,36,0.30);
-  display:flex;align-items:center;justify-content:center;
-  font-size:2rem;margin:0 auto 20px;
-}
-.email-skip{
-  width:100%;padding:13px;margin-top:10px;
-  background:transparent;border:1px solid rgba(255,255,255,0.10);
-  border-radius:1.2rem;color:rgba(255,255,255,0.40);
-  font-size:11px;font-weight:800;cursor:pointer;
-  font-family:inherit;text-transform:uppercase;letter-spacing:0.08em;
-}
-.email-skip:active{background:rgba(255,255,255,0.04)}
+.email-icon{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,rgba(251,191,36,0.15),rgba(245,158,11,0.08));border:1px solid rgba(251,191,36,0.30);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 20px}
+.email-skip{width:100%;padding:13px;margin-top:10px;background:transparent;border:1px solid rgba(255,255,255,0.10);border-radius:1.2rem;color:rgba(255,255,255,0.40);font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:0.08em}
 .consent-row{display:flex;align-items:flex-start;gap:10px;margin:12px 0 4px}
-.consent-row input[type=checkbox]{
-  width:18px;height:18px;border-radius:5px;
-  accent-color:#f59e0b;margin-top:1px;flex-shrink:0;cursor:pointer;
-}
+.consent-row input[type=checkbox]{width:18px;height:18px;border-radius:5px;accent-color:#f59e0b;margin-top:1px;flex-shrink:0;cursor:pointer}
 .consent-text{font-size:11px;color:rgba(255,255,255,0.45);font-weight:600;line-height:1.5}
 .consent-text strong{color:rgba(255,255,255,0.65)}
 </style>
 </head>
 <body>
+
+<div id="google_translate_element" style="display:none"></div>
+<div class="lang-pills-bar" id="lang-pills"></div>
+
 <div class="app">
-  <div id="google_translate_element" style="display:none"></div>
-  <!-- Lang pills — fiksne, vidljive uvek -->
-  <div class="lang-pills-bar" id="lang-pills" style="position:fixed;top:14px;right:14px"></div>
   <div id="main-screen"></div>
 </div>
 
-<!-- Email onboarding modal (bottom sheet) -->
+<!-- Email onboarding modal -->
 <div id="email-modal">
   <div class="email-sheet">
     <div class="email-icon">✉️</div>
-    <h2 style="font-size:1.25rem;font-weight:900;color:#fbbf24;text-align:center;margin:0 0 8px;letter-spacing:-0.02em">
-      Ostavi kontakt
-    </h2>
+    <h2 style="font-size:1.25rem;font-weight:900;color:#fbbf24;text-align:center;margin:0 0 8px;letter-spacing:-0.02em">Ostavi kontakt</h2>
     <p style="font-size:12.5px;color:rgba(255,255,255,0.55);font-weight:600;text-align:center;line-height:1.6;margin:0 0 24px;max-width:300px;margin-left:auto;margin-right:auto">
       Jednom mesečno šaljemo kratki newsletter sa događajima i posebnim ponudama iz Vrnjačke Banje.
     </p>
-
     <label class="form-label">Tvoja email adresa</label>
-    <input class="form-input" id="onboard-email" type="email"
-      placeholder="ime@example.com"
-      autocomplete="email" inputmode="email"
-      style="margin-bottom:0">
+    <input class="form-input" id="onboard-email" type="email" placeholder="ime@example.com" autocomplete="email" inputmode="email" style="margin-bottom:0">
     <p class="msg err" id="onboard-msg" style="min-height:14px;margin-bottom:4px"></p>
-
     <div class="consent-row">
       <input type="checkbox" id="onboard-consent" checked>
       <label for="onboard-consent" class="consent-text">
         Slažem se da primam <strong>mesečni newsletter</strong> o dešavanjima u Vrnjačkoj Banji. Mogu se odjaviti u svakom trenutku.
       </label>
     </div>
-
-    <button class="btn-gold" onclick="submitEmail()" style="margin-top:16px">
-      Prijavi se →
-    </button>
-    <button class="email-skip" onclick="skipEmail()">
-      Preskoči
-    </button>
+    <button class="btn-gold" onclick="submitEmail()" style="margin-top:16px">Prijavi se →</button>
+    <button class="email-skip" onclick="skipEmail()">Preskoči</button>
   </div>
 </div>
 
@@ -197,6 +153,15 @@ body.translated-ltr,body.translated-rtl{margin-top:0!important}
 
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>
+const sb = C.db();
+const params = new URLSearchParams(location.search);
+const LOCATION_CODE = (params.get('code') || '').toUpperCase();
+const GOAL = C.LOYALTY_GOAL;
+let scannerStream = null;
+let scannerActive = false;
+let scanCanvas, scanCtx;
+
+// ── Lang pills ────────────────────────────────────────────────────
 const LANGS_MAP = {'':'rs','en':'gb','de':'de','ru':'ru','bg':'bg','zh-CN':'cn'};
 const FLAG_SVGS = {rs:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNDNjM2M0MiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzBDNDA3NiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGRkZGRiIvPjwvc3ZnPg==',gb:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDEyMTY5Ii8+PHBhdGggZD0iTTAsMCBMMzAsMjAgTTMwLDAgTDAsMjAiIHN0cm9rZT0iI0ZGRiIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTAsMCBMMzAsMjAgTTMwLDAgTDAsMjAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSIyLjUiLz48cGF0aCBkPSJNMTUsMCBMMTUsMjAgTTAsMTAgTDMwLDEwIiBzdHJva2U9IiNGRkYiIHN0cm9rZS13aWR0aD0iNiIvPjxwYXRoIGQ9Ik0xNSwwIEwxNSwyMCBNMCwxMCBMMzAsMTAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSI0Ii8+PC9zdmc+',de:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiMwMDAiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iI0REMDAwMCIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGQ0UwMCIvPjwvc3ZnPg==',ru:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNGRkYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzAwMzlBNiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0Q1MkIxRSIvPjwvc3ZnPg==',bg:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNGRkYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzAwOTY2RSIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0Q2MjYxMiIvPjwvc3ZnPg==',cn:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjREUyOTEwIi8+PHBvbHlnb24gcG9pbnRzPSI3LDMgOC4yLDYuOCAxMiw2LjggOSw5IDEwLjIsMTIuOCA3LDEwLjUgMy44LDEyLjggNSw5IDIsMy44LDYuOCIgZmlsbD0iI0ZGREUwMCIvPjwvc3ZnPg=='};
 const LANG = STAYVB_LANG.get();
@@ -210,105 +175,64 @@ function buildLangPills(){
   }).join('');
 }
 document.addEventListener('DOMContentLoaded', buildLangPills);
-</script>
-const sb = C.db();
-const params = new URLSearchParams(location.search);
-const LOCATION_CODE = (params.get('code') || '').toUpperCase();
-const GOAL = C.LOYALTY_GOAL;
-let scannerStream = null;
-let scannerActive = false;
-let scanCanvas, scanCtx;
 
 // ── Email onboarding ──────────────────────────────────────────────
-const EMAIL_SKIP_KEY = 'stayvb_email_asked'; // localStorage key
+const EMAIL_SKIP_KEY = 'stayvb_email_asked';
 
-function shouldShowEmailModal(guest) {
-  // Prikaži ako: gost nema email u bazi I nije prethodno preskočio/uneo
-  if (localStorage.getItem(EMAIL_SKIP_KEY)) return false;
-  if (guest && guest.email) return false;
+function shouldShowEmailModal(guest){
+  if(localStorage.getItem(EMAIL_SKIP_KEY)) return false;
+  if(guest && guest.email) return false;
   return true;
 }
+function openEmailModal(){ document.getElementById('email-modal').classList.add('open'); setTimeout(()=>document.getElementById('onboard-email').focus(),400); }
+function closeEmailModal(){ document.getElementById('email-modal').classList.remove('open'); }
 
-function openEmailModal() {
-  document.getElementById('email-modal').classList.add('open');
-  setTimeout(() => document.getElementById('onboard-email').focus(), 400);
-}
-
-function closeEmailModal() {
-  document.getElementById('email-modal').classList.remove('open');
-}
-
-async function submitEmail() {
+async function submitEmail(){
   const emailInput = document.getElementById('onboard-email');
   const msg = document.getElementById('onboard-msg');
   const consent = document.getElementById('onboard-consent').checked;
   const email = emailInput.value.trim().toLowerCase();
-
-  // Validacija
-  if (!email) { msg.textContent = '⚠️ Upiši email adresu.'; return; }
+  if(!email){ msg.textContent='⚠️ Upiši email adresu.'; return; }
   const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRx.test(email)) { msg.textContent = '⚠️ Email adresa nije ispravna.'; return; }
-  if (!consent) { msg.textContent = '⚠️ Označi pristanak za slanje newsletter-a.'; return; }
-
-  msg.textContent = '';
+  if(!emailRx.test(email)){ msg.textContent='⚠️ Email adresa nije ispravna.'; return; }
+  if(!consent){ msg.textContent='⚠️ Označi pristanak za slanje newsletter-a.'; return; }
+  msg.textContent='';
   const btn = document.querySelector('#email-modal .btn-gold');
-  btn.textContent = 'Čuvam...';
-  btn.disabled = true;
-
+  btn.textContent='Čuvam...'; btn.disabled=true;
   const token = C.getOrCreateGuestToken();
-  const { error } = await sb.from('guests')
-    .update({ email, newsletter_consent: true, newsletter_consent_at: new Date().toISOString() })
-    .eq('token', token);
-
-  if (error) {
-    msg.textContent = '⚠️ Greška. Pokušaj ponovo.';
-    btn.textContent = 'Prijavi se →';
-    btn.disabled = false;
-    return;
-  }
-
-  localStorage.setItem(EMAIL_SKIP_KEY, '1');
+  const {error} = await sb.from('guests').update({email, newsletter_consent:true, newsletter_consent_at:new Date().toISOString()}).eq('token',token);
+  if(error){ msg.textContent='⚠️ Greška. Pokušaj ponovo.'; btn.textContent='Prijavi se →'; btn.disabled=false; return; }
+  localStorage.setItem(EMAIL_SKIP_KEY,'1');
   closeEmailModal();
   showToast('✓ Prijavljeni ste na newsletter!', true);
 }
+function skipEmail(){ localStorage.setItem(EMAIL_SKIP_KEY,'skip'); closeEmailModal(); }
 
-function skipEmail() {
-  localStorage.setItem(EMAIL_SKIP_KEY, 'skip');
-  closeEmailModal();
-}
-
-// ── Helpers ──────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────
 function esc(v){ return C.escapeHtml(v); }
 function fmtDate(d){ return d ? new Date(d).toLocaleDateString('sr-RS') : ''; }
 
-// ── Render grid ──────────────────────────────────────────────────
+// ── Render grid ───────────────────────────────────────────────────
 function renderGrid(count, isNew){
   let html = '<div class="stamps-row">';
   for(let i=0;i<GOAL;i++){
     const filled = i < count;
     const isNewCell = filled && i === count-1 && isNew;
-    html += `<span class="star ${filled?'filled':''} ${isNewCell?'new-stamp':''}">⭐</span>`;
+    html += `<span class="star ${filled?'filled':''} ${isNewCell?'new-stamp':''}">${'⭐'}</span>`;
   }
   html += '</div>';
   return html;
 }
 
-// ── Glavni ekran ─────────────────────────────────────────────────
+// ── Glavni ekran ──────────────────────────────────────────────────
 async function renderMain(){
   const token = C.getOrCreateGuestToken();
-
-  // Uzmi gosta
   let guest = null;
   const {data:g} = await sb.from('guests').select('id,stamp_count,reward_status').eq('token',token).maybeSingle();
   guest = g;
-
   const count = guest?.stamp_count || 0;
   const pct = Math.min(Math.round(count/GOAL*100),100);
-
-  // Uzmi sve stamp lokacije (aktivne)
   const {data:allLocs} = await sb.from('stamp_locations').select('id,name,type,location_code').eq('is_active',true).order('sort_order').order('name');
-
-  // Uzmi pečate gosta
   let earnedLocIds = [];
   let stampDates = {};
   if(guest?.id){
@@ -316,10 +240,8 @@ async function renderMain(){
     earnedLocIds = (stamps||[]).map(s=>s.location_id);
     (stamps||[]).forEach(s=>{ stampDates[s.location_id] = s.created_at; });
   }
-
   const screen = document.getElementById('main-screen');
   screen.innerHTML = `
-    <!-- Header kompaktan -->
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
       <img src="icon192.png" style="width:40px;height:40px;border-radius:12px;border:1px solid rgba(251,191,36,0.30);flex-shrink:0">
       <div style="flex:1">
@@ -328,8 +250,6 @@ async function renderMain(){
       </div>
       <span style="font-size:1.3rem;font-weight:900;color:#fbbf24">${count}/${GOAL}</span>
     </div>
-
-    <!-- Stars + progress -->
     <div class="gold-card" style="margin-bottom:14px;padding:16px 18px">
       ${renderGrid(count, false)}
       <div class="progress-track" style="margin-top:10px"><div class="progress-fill" style="width:${pct}%"></div></div>
@@ -339,29 +259,19 @@ async function renderMain(){
       </div>
       ${count >= GOAL ? `<div style="margin-top:10px;padding:10px 12px;background:rgba(251,191,36,0.10);border:1px solid rgba(251,191,36,0.20);border-radius:10px;text-align:center;font-size:11px;font-weight:800;color:#fbbf24">🎁 Skupio/la si sve pečate! Idi na tab Nagrada.</div>` : ''}
     </div>
-
-    <!-- Scan dugme -->
-    <button class="btn-scan" onclick="openScanner()" style="margin-bottom:12px">
-      📷 Skeniraj QR kod lokacije
-    </button>
-
-    <!-- Tabs -->
+    <button class="btn-scan" onclick="openScanner()" style="margin-bottom:12px">📷 Skeniraj QR kod lokacije</button>
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('lokacije',this)">Lokacije (${(allLocs||[]).length})</button>
       <button class="tab-btn" onclick="switchTab('nagrada',this)">Nagrada</button>
     </div>
-
-    <!-- Tab: Lokacije -->
     <div id="tab-lokacije" class="tab-content active">
-      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.35);margin-bottom:12px">
-        ${earnedLocIds.length} od ${(allLocs||[]).length} skupljeno
-      </p>
+      <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.35);margin-bottom:12px">${earnedLocIds.length} od ${(allLocs||[]).length} skupljeno</p>
       ${(allLocs||[]).map(loc => {
         const earned = earnedLocIds.includes(loc.id);
         const date = stampDates[loc.id];
         const isPartner = loc.type === 'partner';
         const radarUrl = 'radar.html?highlight=' + encodeURIComponent(loc.location_code);
-        return `<div class="loc-item" style="padding:10px 12px;cursor:pointer" onclick="window.location.href='${radarUrl}'">
+        return `<div class="loc-item" style="cursor:pointer" onclick="window.location.href='${radarUrl}'">
           <span style="font-size:1.1rem;flex-shrink:0;${earned?'':'filter:grayscale(1) opacity(0.25)'}">⭐</span>
           <div style="flex:1;min-width:0">
             <div class="loc-name" style="font-size:12px">${esc(loc.name)}</div>
@@ -374,8 +284,6 @@ async function renderMain(){
         </div>`;
       }).join('') || '<p style="font-size:12px;color:rgba(255,255,255,0.35);font-weight:700;text-align:center;padding:20px">Nema aktivnih lokacija.</p>'}
     </div>
-
-    <!-- Tab: Nagrada -->
     <div id="tab-nagrada" class="tab-content">
       ${count >= GOAL
         ? `<div class="card" style="text-align:center;margin-bottom:14px">
@@ -398,13 +306,12 @@ async function renderMain(){
           </div>`
       }
     </div>
-
     <div style="margin-top:20px;text-align:center">
       <a href="index.html" style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.30);text-decoration:none;text-transform:uppercase;letter-spacing:0.10em">← Nazad na vodič</a>
     </div>`;
 }
 
-// ── Tab switch ────────────────────────────────────────────────────
+// ── Tab switch ─────────────────────────────────────────────────────
 function switchTab(id, btn){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
@@ -412,20 +319,12 @@ function switchTab(id, btn){
   document.getElementById('tab-'+id)?.classList.add('active');
 }
 
-// ── QR stamp (kod URL-a) ──────────────────────────────────────────
+// ── QR stamp ───────────────────────────────────────────────────────
 async function processCode(code){
   if(!code) return {ok:false, msg:'Nevažeći QR kod.'};
   const token = C.getOrCreateGuestToken();
-
-  // Nađi lokaciju
-  const {data:loc} = await sb.from('stamp_locations')
-    .select('id,name,is_active')
-    .eq('location_code', code.toUpperCase())
-    .maybeSingle();
-
+  const {data:loc} = await sb.from('stamp_locations').select('id,name,is_active').eq('location_code', code.toUpperCase()).maybeSingle();
   if(!loc || !loc.is_active) return {ok:false, msg:'Nevažeći kod. Kontaktiraj osoblje.'};
-
-  // Nađi ili kreiraj gosta
   let guestId;
   const {data:eg} = await sb.from('guests').select('id').eq('token',token).maybeSingle();
   if(eg){ guestId = eg.id; }
@@ -434,37 +333,27 @@ async function processCode(code){
     if(ng) guestId = ng.id;
   }
   if(!guestId) return {ok:false, msg:'Greška. Pokušaj ponovo.'};
-
-  // Upiši pečat
   const {error} = await sb.from('stamps').insert({guest_id:guestId, location_id:loc.id});
   const isDup = error?.code === '23505';
   if(error && !isDup) return {ok:false, msg:'Greška. Pokušaj ponovo.'};
-
   return {ok:true, isDup, name:loc.name};
 }
 
-// ── Scanner ───────────────────────────────────────────────────────
+// ── Scanner ────────────────────────────────────────────────────────
 function openScanner(){
   document.getElementById('scanner-modal').classList.add('open');
   document.getElementById('scanner-result').textContent = 'Čekam QR kod...';
   document.getElementById('scanner-result').style.color = 'rgba(255,255,255,0.6)';
-
-  if(!scanCanvas){
-    scanCanvas = document.createElement('canvas');
-    scanCtx = scanCanvas.getContext('2d');
-  }
-
+  if(!scanCanvas){ scanCanvas = document.createElement('canvas'); scanCtx = scanCanvas.getContext('2d'); }
   navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
     .then(stream => {
-      scannerStream = stream;
-      scannerActive = true;
+      scannerStream = stream; scannerActive = true;
       const video = document.getElementById('scanner-video');
-      video.srcObject = stream;
-      video.play();
+      video.srcObject = stream; video.play();
       requestAnimationFrame(scanFrame);
     })
     .catch(() => {
-      document.getElementById('scanner-result').textContent = 'Kamera nije dostupna. Upiši kod ručno.';
+      document.getElementById('scanner-result').textContent = 'Kamera nije dostupna.';
       document.getElementById('scanner-result').style.color = '#f87171';
     });
 }
@@ -473,26 +362,16 @@ function scanFrame(){
   if(!scannerActive) return;
   const video = document.getElementById('scanner-video');
   if(video.readyState === video.HAVE_ENOUGH_DATA){
-    scanCanvas.width = video.videoWidth;
-    scanCanvas.height = video.videoHeight;
+    scanCanvas.width = video.videoWidth; scanCanvas.height = video.videoHeight;
     scanCtx.drawImage(video, 0, 0);
     const imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
     const code = jsQR(imageData.data, imageData.width, imageData.height, {inversionAttempts:'dontInvert'});
     if(code){
-      const url = code.data;
-      // Izvuci code= parametar iz URL-a
-      let extractedCode = url;
-      try{
-        const u = new URL(url);
-        extractedCode = u.searchParams.get('code') || url;
-      } catch(e){}
-
+      let extractedCode = code.data;
+      try{ const u = new URL(code.data); extractedCode = u.searchParams.get('code') || code.data; } catch(e){}
       document.getElementById('scanner-result').textContent = '✓ Kod prepoznat! Obrađujem...';
       document.getElementById('scanner-result').style.color = '#6ee7b7';
-      scannerActive = false;
-      closeScanner();
-      handleScannedCode(extractedCode);
-      return;
+      scannerActive = false; closeScanner(); handleScannedCode(extractedCode); return;
     }
   }
   requestAnimationFrame(scanFrame);
@@ -500,25 +379,19 @@ function scanFrame(){
 
 function closeScanner(){
   scannerActive = false;
-  if(scannerStream){
-    scannerStream.getTracks().forEach(t=>t.stop());
-    scannerStream = null;
-  }
+  if(scannerStream){ scannerStream.getTracks().forEach(t=>t.stop()); scannerStream = null; }
   document.getElementById('scanner-video').srcObject = null;
   document.getElementById('scanner-modal').classList.remove('open');
 }
 
 async function handleScannedCode(code){
-  // Prikaži loading
   document.getElementById('main-screen').innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center">
-      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-400 mx-auto" style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-bottom-color:#fbbf24;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+      <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-bottom-color:#fbbf24;border-radius:50%;animation:spin 0.8s linear infinite"></div>
       <p style="font-size:11px;margin-top:16px;color:rgba(255,255,255,0.5);font-weight:700;text-transform:uppercase;letter-spacing:0.14em">Obrađujem pečat...</p>
     </div>
     <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
-
   const result = await processCode(code);
-
   if(!result.ok){
     document.getElementById('main-screen').innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;text-align:center;gap:14px">
@@ -528,41 +401,30 @@ async function handleScannedCode(code){
       </div>`;
     return;
   }
-
-  if(result.isDup){
-    await renderMain();
-    // Pokaži toast
-    showToast('Već imaš pečat sa ove lokacije ✓', false);
-    return;
-  }
-
-  // Novi pečat — rerender i toast
   await renderMain();
-  showToast(`⭐ Novi pečat: ${result.name}!`, true);
+  showToast(result.isDup ? 'Već imaš pečat sa ove lokacije ✓' : `⭐ Novi pečat: ${result.name}!`, !result.isDup);
 }
 
 function showToast(msg, isGood){
   const t = document.createElement('div');
-  t.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:14px;font-size:12px;font-weight:900;z-index:1000;white-space:nowrap;animation:toastIn 0.3s ease;${isGood?'background:rgba(16,185,129,0.9);color:white':'background:rgba(245,158,11,0.9);color:#0f172a'}`;
+  t.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:14px;font-size:12px;font-weight:900;z-index:10000;white-space:nowrap;animation:toastIn 0.3s ease;${isGood?'background:rgba(16,185,129,0.9);color:white':'background:rgba(245,158,11,0.9);color:#0f172a'}`;
   t.textContent = msg;
   document.body.appendChild(t);
-  const style = document.createElement('style');
-  style.textContent = '@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}';
-  document.head.appendChild(style);
+  const s = document.createElement('style');
+  s.textContent = '@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}';
+  document.head.appendChild(s);
   setTimeout(()=>t.remove(), 3000);
 }
 
-// ── Nagrada forma ─────────────────────────────────────────────────
+// ── Nagrada forma ──────────────────────────────────────────────────
 async function submitReward(){
   const name = document.getElementById('r-name')?.value.trim();
   const phone = document.getElementById('r-phone')?.value.trim();
   const msg = document.getElementById('reward-msg');
   if(!name||!phone){ msg.textContent='⚠️ Popuni oba polja.'; msg.className='msg err'; return; }
-
   const token = C.getOrCreateGuestToken();
   const {error} = await sb.from('guests').update({reward_status:'pending', reward_phone:phone, reward_claimed:true}).eq('token',token);
   if(error){ msg.textContent='⚠️ Greška. Pokušaj ponovo.'; msg.className='msg err'; return; }
-
   document.getElementById('main-screen').innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;gap:16px">
       <div style="font-size:3.5rem">🎁</div>
@@ -572,34 +434,22 @@ async function submitReward(){
     </div>`;
 }
 
-// ── Boot ──────────────────────────────────────────────────────────
+// ── Boot ───────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  // Ako ima ?code= u URL-u — odmah procesuj pečat
   if(LOCATION_CODE){
     const result = await processCode(LOCATION_CODE);
     await renderMain();
-    if(result.ok && !result.isDup){
-      showToast(`⭐ Novi pečat: ${result.name}!`, true);
-    } else if(result.isDup){
-      showToast('Već imaš pečat sa ove lokacije ✓', false);
-    } else {
-      showToast(result.msg, false);
-    }
+    if(result.ok && !result.isDup) showToast(`⭐ Novi pečat: ${result.name}!`, true);
+    else if(result.isDup) showToast('Već imaš pečat sa ove lokacije ✓', false);
+    else showToast(result.msg, false);
   } else {
-    // Nema koda — prikaži listu pečata
     await renderMain();
   }
 
-  // ── Email modal — proveri nakon rendera ──────────────────────────
-  // Uzmi gosta da vidimo da li već ima email
+  // Email modal — provjeri 900ms nakon učitavanja
   const token = C.getOrCreateGuestToken();
-  const { data: guestCheck } = await sb.from('guests')
-    .select('email')
-    .eq('token', token)
-    .maybeSingle();
-
-  if (shouldShowEmailModal(guestCheck)) {
-    // Kratka pauza da gost vidi stranicu pre modala
+  const {data:guestCheck} = await sb.from('guests').select('email').eq('token',token).maybeSingle();
+  if(shouldShowEmailModal(guestCheck)){
     setTimeout(openEmailModal, 900);
   }
 });
