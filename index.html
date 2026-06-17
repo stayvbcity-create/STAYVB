@@ -1398,7 +1398,7 @@ function isKnownGuest() {
 async function showPartnerLanding(partnerId) {
     const { data: partner } = await sb
         .from('partners')
-        .select('id, name, type, phone, whatsapp, description')
+        .select('id, name, type, phone, whatsapp')
         .eq('partner_code', partnerId)
         .eq('is_active', true)
         .maybeSingle();
@@ -1500,26 +1500,25 @@ window.addEventListener('load', async () => {
     const urlUnitId = (params.get('id') || '').toUpperCase();
     const hasLang = localStorage.getItem('stayvb_lang');
 
-    // Nepoznat gost (nema token) + skenira QR restorana/biznisa/atrakcije
-    // → prikaži mini landing za taj partner, ne punu aplikaciju
+    // Nepoznat gost + QR nekog partnera → provjeri tip, možda prikaži landing
     if(urlUnitId && !isKnownGuest()) {
-        const { data: partnerType } = await sb
-            .from('partners')
-            .select('type')
-            .eq('partner_code', urlUnitId)
-            .eq('is_active', true)
-            .maybeSingle();
+        try {
+            const timeout = new Promise(resolve => setTimeout(() => resolve(null), 3000));
+            const query = sb.from('partners').select('type').eq('partner_code', urlUnitId).eq('is_active', true).maybeSingle();
+            const result = await Promise.race([query, timeout]);
+            const type = result?.data?.type;
 
-        const type = partnerType?.type;
-        // Za hotel i apartman odmah otvori punu app (gost koji dolazi na smestaj)
-        // Za restoran, biznis, atrakciju — prikaži landing
-        if(type && type !== 'hotel' && type !== 'apartment') {
-            await showPartnerLanding(urlUnitId);
-            return;
+            if(type && type !== 'hotel' && type !== 'apartment') {
+                await showPartnerLanding(urlUnitId);
+                return;
+            }
+        } catch(e) {
+            // Ako Supabase ne odgovori — nastavi normalno
+            console.log('partner type check skip:', e.message);
         }
     }
 
-    // Poznat gost ili hotel/apartman → normalan flow
+    // Normalan flow
     if(hasLang === null){
         document.getElementById('lang-screen').style.display = 'flex';
         document.getElementById('loader').style.display = 'none';
