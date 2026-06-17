@@ -9,10 +9,19 @@
 <meta name="theme-color" content="#0f172a">
 <link rel="apple-touch-icon" href="icon192.png">
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="lang-init.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
 *{box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:#f8fafc;color:#0f172a;min-height:100vh;margin:0}
+body{font-family:'Inter',sans-serif;background:#f8fafc;color:#0f172a;min-height:100vh;margin:0;top:0!important}
+#google_translate_element{display:none!important}
+.goog-te-banner-frame,.skiptranslate{display:none!important}
+body.translated-ltr,body.translated-rtl{margin-top:0!important}
+.lang-pills-bar{position:absolute;top:14px;right:14px;display:flex;flex-wrap:wrap;gap:4px;max-width:170px;justify-content:flex-end}
+.lang-pill{padding:3px;border-radius:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);cursor:pointer;line-height:0}
+.lang-pill img{width:26px;height:17px;object-fit:cover;border-radius:3px;display:block;opacity:0.75}
+.lang-pill.active{border-color:rgba(251,191,36,0.70);background:rgba(251,191,36,0.22)}
+.lang-pill.active img{opacity:1}
 .app{max-width:640px;margin:0 auto;padding-bottom:60px}
 
 /* Hero */
@@ -64,9 +73,11 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#0f172a;min-height:
 </style>
 </head>
 <body>
+<div id="google_translate_element" style="display:none"></div>
 <div class="app">
   <div class="hero">
     <a href="javascript:history.back()" class="back-btn">←</a>
+    <div class="lang-pills-bar" id="lang-pills"></div>
     <div class="hero-badge">📘 Vodič za partnere</div>
     <h1 style="font-size:1.9rem;font-weight:900;letter-spacing:-0.04em;margin:0 0 10px">Kako koristiti<br>StayVB sistem</h1>
     <p style="font-size:12px;color:rgba(255,255,255,0.55);font-weight:700;margin:0;line-height:1.6;max-width:380px;margin:0 auto">Sve što treba da znate o vašem partner panelu,<br>QR kodovima i alatima za privlačenje gostiju</p>
@@ -269,6 +280,27 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#0f172a;min-height:
 
 <script>
 function toggleFaq(el){ el.classList.toggle('open'); }
+
+const LANGS_MAP = {'':'rs','en':'gb','de':'de','ru':'ru','bg':'bg','zh-CN':'cn'};
+const FLAG_SVGS = {rs:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNDNjM2M0MiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzBDNDA3NiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGRkZGRiIvPjwvc3ZnPg==',gb:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDEyMTY5Ii8+PHBhdGggZD0iTTAsMCBMMzAsMjAgTTMwLDAgTDAsMjAiIHN0cm9rZT0iI0ZGRiIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTAsMCBMMzAsMjAgTTMwLDAgTDAsMjAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSIyLjUiLz48cGF0aCBkPSJNMTUsMCBMMTUsMjAgTTAsMTAgTDMwLDEwIiBzdHJva2U9IiNGRkYiIHN0cm9rZS13aWR0aD0iNiIvPjxwYXRoIGQ9Ik0xNSwwIEwxNSwyMCBNMCwxMCBMMzAsMTAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSI0Ii8+PC9zdmc+',de:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiMwMDAiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iI0REMDAwMCIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGQ0UwMCIvPjwvc3ZnPg==',ru:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNGRkYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzAwMzlBNiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0Q1MkIxRSIvPjwvc3ZnPg==',bg:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNGRkYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzAwOTY2RSIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0Q2MjYxMiIvPjwvc3ZnPg==',cn:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjREUyOTEwIi8+PHBvbHlnb24gcG9pbnRzPSI3LDMgOC4yLDYuOCAxMiw2LjggOSw5IDEwLjIsMTIuOCA3LDEwLjUgMy44LDEyLjggNSw5IDIsMy44LDYuOCIgZmlsbD0iI0ZGREUwMCIvPjwvc3ZnPg=='};
+const LANG = STAYVB_LANG.get();
+function stayvbSetLang(c){ STAYVB_LANG.set(c); }
+function buildLangPills(){
+  const el = document.getElementById('lang-pills');
+  if(!el) return;
+  el.innerHTML = Object.keys(LANGS_MAP).map(code => {
+    const src = 'data:image/svg+xml;base64,' + (FLAG_SVGS[LANGS_MAP[code]]||'');
+    return `<button class="lang-pill${code===LANG?' active':''}" onclick="stayvbSetLang('${code}')"><img src="${src}" alt="${code||'sr'}"></button>`;
+  }).join('');
+}
+document.addEventListener('DOMContentLoaded', buildLangPills);
 </script>
+<script>
+  function googleTranslateElementInit(){
+    new google.translate.TranslateElement({pageLanguage:'sr',includedLanguages:'en,de,ru,bg,zh-CN',autoDisplay:false},'google_translate_element');
+    STAYVB_LANG.onWidgetReady();
+  }
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
