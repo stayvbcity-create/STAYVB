@@ -2270,7 +2270,7 @@ function renderQRList(data){
   }
 
   list.innerHTML=data.map(p=>{
-    const gUrl=(p.type==='apartment'||p.type==='hotel')?`${base}index.html?id=${p.partner_code}`:`${base}stamp.html?code=${p.partner_code}`;
+    const gUrl=`${base}index.html?id=${p.partner_code}`; // Svi partneri → index.html (stamp QR je poseban za fizičke lokacije)
     const pUrl=`${base}partner.html?t=${p.access_token}`;
     return `<div class="tbl-card" style="margin-bottom:12px;padding:18px">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
@@ -2294,7 +2294,7 @@ function renderQRList(data){
   }).join('');
 
   data.forEach(p=>{
-    const url=(p.type==='apartment'||p.type==='hotel')?`${base}index.html?id=${p.partner_code}`:`${base}stamp.html?code=${p.partner_code}`;
+    const url=`${base}index.html?id=${p.partner_code}`;
     QRCode.toCanvas(document.createElement('canvas'),url,{width:110,margin:1},(err,canvas)=>{
       if(!err){const el=document.getElementById('qr-'+p.id);if(el){el.innerHTML='';el.appendChild(canvas);}}
     });
