@@ -11,11 +11,20 @@
 <link rel="apple-touch-icon" href="icon192.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
+<script src="lang-init.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
 *{box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:linear-gradient(145deg,#0f172a 0%,#1a2540 100%);color:white;min-height:100vh;margin:0}
+body{font-family:'Inter',sans-serif;background:linear-gradient(145deg,#0f172a 0%,#1a2540 100%);color:white;min-height:100vh;margin:0;top:0!important}
+#google_translate_element{display:none!important}
+.goog-te-banner-frame,.skiptranslate{display:none!important}
+body.translated-ltr,body.translated-rtl{margin-top:0!important}
+.lang-pills-bar{position:absolute;top:14px;right:14px;display:flex;flex-wrap:wrap;gap:4px;max-width:170px;justify-content:flex-end;z-index:10}
+.lang-pill{padding:3px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);cursor:pointer;line-height:0}
+.lang-pill img{width:26px;height:17px;object-fit:cover;border-radius:3px;display:block;opacity:0.75}
+.lang-pill.active{border-color:rgba(251,191,36,0.60);background:rgba(251,191,36,0.20)}
+.lang-pill.active img{opacity:1}
 .app{max-width:430px;margin:0 auto;min-height:100vh;padding:24px 20px 40px}
 
 /* Stamp grid - kompaktan red zvezda */
@@ -87,11 +96,86 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(145deg,#0f172a 0%
 .divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);margin:16px 0}
 .msg{font-size:11px;font-weight:800;min-height:16px;text-align:center;margin-top:8px;color:#6ee7b7}
 .msg.err{color:#f87171}
+
+/* ── Email onboarding modal ── */
+#email-modal{
+  display:none;position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);
+  align-items:flex-end;justify-content:center;padding:0;
+}
+#email-modal.open{display:flex}
+.email-sheet{
+  width:100%;max-width:430px;
+  background:linear-gradient(160deg,#1e293b 0%,#0f172a 100%);
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:2rem 2rem 0 0;
+  padding:32px 24px 40px;
+  animation:sheetUp 0.35s cubic-bezier(0.22,1,0.36,1);
+}
+@keyframes sheetUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+.email-icon{width:64px;height:64px;border-radius:20px;
+  background:linear-gradient(135deg,rgba(251,191,36,0.15),rgba(245,158,11,0.08));
+  border:1px solid rgba(251,191,36,0.30);
+  display:flex;align-items:center;justify-content:center;
+  font-size:2rem;margin:0 auto 20px;
+}
+.email-skip{
+  width:100%;padding:13px;margin-top:10px;
+  background:transparent;border:1px solid rgba(255,255,255,0.10);
+  border-radius:1.2rem;color:rgba(255,255,255,0.40);
+  font-size:11px;font-weight:800;cursor:pointer;
+  font-family:inherit;text-transform:uppercase;letter-spacing:0.08em;
+}
+.email-skip:active{background:rgba(255,255,255,0.04)}
+.consent-row{display:flex;align-items:flex-start;gap:10px;margin:12px 0 4px}
+.consent-row input[type=checkbox]{
+  width:18px;height:18px;border-radius:5px;
+  accent-color:#f59e0b;margin-top:1px;flex-shrink:0;cursor:pointer;
+}
+.consent-text{font-size:11px;color:rgba(255,255,255,0.45);font-weight:600;line-height:1.5}
+.consent-text strong{color:rgba(255,255,255,0.65)}
 </style>
 </head>
 <body>
 <div class="app">
+  <div id="google_translate_element" style="display:none"></div>
+  <!-- Lang pills — fiksne, vidljive uvek -->
+  <div class="lang-pills-bar" id="lang-pills" style="position:fixed;top:14px;right:14px"></div>
   <div id="main-screen"></div>
+</div>
+
+<!-- Email onboarding modal (bottom sheet) -->
+<div id="email-modal">
+  <div class="email-sheet">
+    <div class="email-icon">✉️</div>
+    <h2 style="font-size:1.25rem;font-weight:900;color:#fbbf24;text-align:center;margin:0 0 8px;letter-spacing:-0.02em">
+      Ostavi kontakt
+    </h2>
+    <p style="font-size:12.5px;color:rgba(255,255,255,0.55);font-weight:600;text-align:center;line-height:1.6;margin:0 0 24px;max-width:300px;margin-left:auto;margin-right:auto">
+      Jednom mesečno šaljemo kratki newsletter sa događajima i posebnim ponudama iz Vrnjačke Banje.
+    </p>
+
+    <label class="form-label">Tvoja email adresa</label>
+    <input class="form-input" id="onboard-email" type="email"
+      placeholder="ime@example.com"
+      autocomplete="email" inputmode="email"
+      style="margin-bottom:0">
+    <p class="msg err" id="onboard-msg" style="min-height:14px;margin-bottom:4px"></p>
+
+    <div class="consent-row">
+      <input type="checkbox" id="onboard-consent" checked>
+      <label for="onboard-consent" class="consent-text">
+        Slažem se da primam <strong>mesečni newsletter</strong> o dešavanjima u Vrnjačkoj Banji. Mogu se odjaviti u svakom trenutku.
+      </label>
+    </div>
+
+    <button class="btn-gold" onclick="submitEmail()" style="margin-top:16px">
+      Prijavi se →
+    </button>
+    <button class="email-skip" onclick="skipEmail()">
+      Preskoči
+    </button>
+  </div>
 </div>
 
 <!-- Scanner Modal -->
@@ -113,6 +197,20 @@ body{font-family:'Inter',sans-serif;background:linear-gradient(145deg,#0f172a 0%
 
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>
+const LANGS_MAP = {'':'rs','en':'gb','de':'de','ru':'ru','bg':'bg','zh-CN':'cn'};
+const FLAG_SVGS = {rs:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNDNjM2M0MiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzBDNDA3NiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGRkZGRiIvPjwvc3ZnPg==',gb:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDEyMTY5Ii8+PHBhdGggZD0iTTAsMCBMMzAsMjAgTTMwLDAgTDAsMjAiIHN0cm9rZT0iI0ZGRiIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTAsMCBMMzAsMjAgTTMwLDAgTDAsMjAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSIyLjUiLz48cGF0aCBkPSJNMTUsMCBMMTUsMjAgTTAsMTAgTDMwLDEwIiBzdHJva2U9IiNGRkYiIHN0cm9rZS13aWR0aD0iNiIvPjxwYXRoIGQ9Ik0xNSwwIEwxNSwyMCBNMCwxMCBMMzAsMTAiIHN0cm9rZT0iI0M4MTAyRSIgc3Ryb2tlLXdpZHRoPSI0Ii8+PC9zdmc+',de:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiMwMDAiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iI0REMDAwMCIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0ZGQ0UwMCIvPjwvc3ZnPg==',ru:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNGRkYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzAwMzlBNiIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0Q1MkIxRSIvPjwvc3ZnPg==',bg:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjYuNjciIGZpbGw9IiNGRkYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iNi42NyIgeT0iNi42NyIgZmlsbD0iIzAwOTY2RSIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSI2LjY3IiB5PSIxMy4zMyIgZmlsbD0iI0Q2MjYxMiIvPjwvc3ZnPg==',cn:'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjREUyOTEwIi8+PHBvbHlnb24gcG9pbnRzPSI3LDMgOC4yLDYuOCAxMiw2LjggOSw5IDEwLjIsMTIuOCA3LDEwLjUgMy44LDEyLjggNSw5IDIsMy44LDYuOCIgZmlsbD0iI0ZGREUwMCIvPjwvc3ZnPg=='};
+const LANG = STAYVB_LANG.get();
+function stayvbSetLang(c){ STAYVB_LANG.set(c); }
+function buildLangPills(){
+  const el = document.getElementById('lang-pills');
+  if(!el) return;
+  el.innerHTML = Object.keys(LANGS_MAP).map(code => {
+    const src = 'data:image/svg+xml;base64,' + (FLAG_SVGS[LANGS_MAP[code]]||'');
+    return `<button class="lang-pill${code===LANG?' active':''}" onclick="stayvbSetLang('${code}')"><img src="${src}" alt="${code||'sr'}"></button>`;
+  }).join('');
+}
+document.addEventListener('DOMContentLoaded', buildLangPills);
+</script>
 const sb = C.db();
 const params = new URLSearchParams(location.search);
 const LOCATION_CODE = (params.get('code') || '').toUpperCase();
@@ -120,6 +218,64 @@ const GOAL = C.LOYALTY_GOAL;
 let scannerStream = null;
 let scannerActive = false;
 let scanCanvas, scanCtx;
+
+// ── Email onboarding ──────────────────────────────────────────────
+const EMAIL_SKIP_KEY = 'stayvb_email_asked'; // localStorage key
+
+function shouldShowEmailModal(guest) {
+  // Prikaži ako: gost nema email u bazi I nije prethodno preskočio/uneo
+  if (localStorage.getItem(EMAIL_SKIP_KEY)) return false;
+  if (guest && guest.email) return false;
+  return true;
+}
+
+function openEmailModal() {
+  document.getElementById('email-modal').classList.add('open');
+  setTimeout(() => document.getElementById('onboard-email').focus(), 400);
+}
+
+function closeEmailModal() {
+  document.getElementById('email-modal').classList.remove('open');
+}
+
+async function submitEmail() {
+  const emailInput = document.getElementById('onboard-email');
+  const msg = document.getElementById('onboard-msg');
+  const consent = document.getElementById('onboard-consent').checked;
+  const email = emailInput.value.trim().toLowerCase();
+
+  // Validacija
+  if (!email) { msg.textContent = '⚠️ Upiši email adresu.'; return; }
+  const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRx.test(email)) { msg.textContent = '⚠️ Email adresa nije ispravna.'; return; }
+  if (!consent) { msg.textContent = '⚠️ Označi pristanak za slanje newsletter-a.'; return; }
+
+  msg.textContent = '';
+  const btn = document.querySelector('#email-modal .btn-gold');
+  btn.textContent = 'Čuvam...';
+  btn.disabled = true;
+
+  const token = C.getOrCreateGuestToken();
+  const { error } = await sb.from('guests')
+    .update({ email, newsletter_consent: true, newsletter_consent_at: new Date().toISOString() })
+    .eq('token', token);
+
+  if (error) {
+    msg.textContent = '⚠️ Greška. Pokušaj ponovo.';
+    btn.textContent = 'Prijavi se →';
+    btn.disabled = false;
+    return;
+  }
+
+  localStorage.setItem(EMAIL_SKIP_KEY, '1');
+  closeEmailModal();
+  showToast('✓ Prijavljeni ste na newsletter!', true);
+}
+
+function skipEmail() {
+  localStorage.setItem(EMAIL_SKIP_KEY, 'skip');
+  closeEmailModal();
+}
 
 // ── Helpers ──────────────────────────────────────────────────────
 function esc(v){ return C.escapeHtml(v); }
@@ -418,7 +574,7 @@ async function submitReward(){
 
 // ── Boot ──────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  // Ako ima ?code= u URL-u — odmah procesuj
+  // Ako ima ?code= u URL-u — odmah procesuj pečat
   if(LOCATION_CODE){
     const result = await processCode(LOCATION_CODE);
     await renderMain();
@@ -433,7 +589,27 @@ window.addEventListener('DOMContentLoaded', async () => {
     // Nema koda — prikaži listu pečata
     await renderMain();
   }
+
+  // ── Email modal — proveri nakon rendera ──────────────────────────
+  // Uzmi gosta da vidimo da li već ima email
+  const token = C.getOrCreateGuestToken();
+  const { data: guestCheck } = await sb.from('guests')
+    .select('email')
+    .eq('token', token)
+    .maybeSingle();
+
+  if (shouldShowEmailModal(guestCheck)) {
+    // Kratka pauza da gost vidi stranicu pre modala
+    setTimeout(openEmailModal, 900);
+  }
 });
 </script>
+<script>
+  function googleTranslateElementInit(){
+    new google.translate.TranslateElement({pageLanguage:'sr',includedLanguages:'en,de,ru,bg,zh-CN',autoDisplay:false},'google_translate_element');
+    STAYVB_LANG.onWidgetReady();
+  }
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
