@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="sr-Latn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>StayVB</title>
+<meta name="theme-color" content="#0f172a">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:linear-gradient(145deg,#0f172a 0%,#162235 55%,#1f2937 100%);color:white;min-height:100vh}
+.wrap{max-width:430px;margin:0 auto;padding:0 0 48px}
+
+/* Loading */
+#loader{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:16px}
+.spin{width:36px;height:36px;border:3px solid rgba(255,255,255,0.10);border-top-color:#fbbf24;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Hero */
+.hero{padding:48px 24px 28px;text-align:center}
+.hero-icon{width:76px;height:76px;border-radius:22px;background:rgba(251,191,36,0.12);border:1.5px solid rgba(251,191,36,0.35);display:flex;align-items:center;justify-content:center;font-size:2.2rem;margin:0 auto 16px}
+.hero-type{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.18em;color:rgba(255,255,255,0.40);margin-bottom:6px}
+.hero-name{font-size:1.8rem;font-weight:900;letter-spacing:-0.03em;color:white;line-height:1.1}
+
+/* Cards */
+.cards{padding:0 18px;display:flex;flex-direction:column;gap:12px}
+.card-offer{padding:16px 18px;border-radius:1.4rem;background:linear-gradient(135deg,#7c3aed,#4f46e5);box-shadow:0 8px 24px rgba(124,58,237,0.35)}
+.card-offer-label{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.70);margin-bottom:8px}
+.card-offer-text{font-size:14px;font-weight:800;color:white;line-height:1.5}
+.card-prices{padding:16px 18px;border-radius:1.4rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10)}
+.card-prices-label{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.35);margin-bottom:8px}
+.card-prices-text{font-size:13px;font-weight:700;color:rgba(255,255,255,0.80);line-height:1.8}
+.card-wa{display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:1.4rem;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);text-decoration:none}
+.card-wa-title{font-size:13px;font-weight:900;color:#6ee7b7}
+.card-wa-sub{font-size:11px;color:rgba(255,255,255,0.40);font-weight:600;margin-top:2px}
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);margin:4px 0}
+.card-cta{padding:18px;border-radius:1.4rem;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.20);text-align:center}
+.card-cta-sub{font-size:11px;font-weight:700;color:rgba(255,255,255,0.40);margin-bottom:10px}
+.btn-cta{width:100%;padding:15px;background:linear-gradient(135deg,#d97706,#f59e0b);color:#0f172a;border:none;border-radius:1rem;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;cursor:pointer;font-family:inherit;box-shadow:0 8px 20px rgba(245,158,11,0.30)}
+.btn-cta:active{transform:scale(0.97)}
+.card-cta-hint{font-size:10px;color:rgba(255,255,255,0.22);margin-top:8px;font-weight:600}
+
+/* Error */
+#error-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:32px;gap:14px}
+#error-screen h2{font-size:1.2rem;font-weight:900;color:#f87171}
+#error-screen p{font-size:13px;color:rgba(255,255,255,0.50);font-weight:600;line-height:1.6}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="spin"></div>
+</div>
+
+<div id="main" style="display:none">
+  <div class="wrap">
+    <div class="hero">
+      <div class="hero-icon" id="hero-icon">📍</div>
+      <div class="hero-type" id="hero-type">Partner · Vrnjačka Banja</div>
+      <div class="hero-name" id="hero-name">—</div>
+    </div>
+    <div class="cards" id="cards"></div>
+  </div>
+</div>
+
+<div id="error-screen">
+  <div style="font-size:2.5rem">😕</div>
+  <h2>Partner nije pronađen</h2>
+  <p>Ovaj QR kod nije aktivan ili je istekao.</p>
+  <button onclick="goApp()" style="padding:13px 28px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:1rem;color:white;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:0.10em">
+    Otvori StayVB →
+  </button>
+</div>
+
+<script>
+const sb = C.db();
+const params = new URLSearchParams(location.search);
+const PARTNER_ID = (params.get('id') || '').toUpperCase();
+
+const ICONS = {hotel:'🏨', restaurant:'🍽', attraction:'🎡', business:'🛍', apartment:'🏠'};
+const LABELS = {hotel:'Hotel', restaurant:'Restoran', attraction:'Atrakcija', business:'Mali biznis', apartment:'Apartman'};
+
+function goApp(){
+    const url = PARTNER_ID
+        ? `index.html?id=${encodeURIComponent(PARTNER_ID)}`
+        : 'index.html';
+    location.href = url;
+}
+
+async function init(){
+    if(!PARTNER_ID){
+        location.href = 'index.html';
+        return;
+    }
+
+    try{
+        // Uzmi partnera
+        const {data:p} = await sb.from('partners')
+            .select('id,name,type,phone,whatsapp')
+            .eq('partner_code', PARTNER_ID)
+            .eq('is_active', true)
+            .maybeSingle();
+
+        if(!p){
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('error-screen').style.display = 'flex';
+            return;
+        }
+
+        // Uzmi content
+        const {data:pc} = await sb.from('partner_content')
+            .select('extra_offer,service_prices')
+            .eq('partner_id', p.id)
+            .maybeSingle();
+
+        const c = pc || {};
+
+        // Hero
+        document.getElementById('hero-icon').textContent = ICONS[p.type] || '📍';
+        document.getElementById('hero-type').textContent = (LABELS[p.type]||'Partner') + ' · Vrnjačka Banja';
+        document.getElementById('hero-name').textContent = p.name;
+
+        // Cards
+        const cards = document.getElementById('cards');
+        let html = '';
+
+        if(c.extra_offer){
+            html += `<div class="card-offer">
+              <div class="card-offer-label">🎯 Posebna ponuda</div>
+              <div class="card-offer-text">${esc(c.extra_offer)}</div>
+            </div>`;
+        }
+
+        if(c.service_prices){
+            html += `<div class="card-prices">
+              <div class="card-prices-label">📋 Cenovnik</div>
+              <div class="card-prices-text">${esc(c.service_prices).replace(/\n/g,'<br>').replace(/\|/g,' · ')}</div>
+            </div>`;
+        }
+
+        const phone = p.whatsapp || p.phone || '';
+        if(phone){
+            html += `<a href="https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent('Zdravo, vidim vas na StayVB!')}" class="card-wa">
+              <span style="font-size:1.4rem">📱</span>
+              <div>
+                <div class="card-wa-title">WhatsApp kontakt</div>
+                <div class="card-wa-sub">${esc(phone)}</div>
+              </div>
+            </a>`;
+        }
+
+        html += `<div class="divider"></div>`;
+
+        html += `<div class="card-cta">
+          <div class="card-cta-sub">Otkrijte sve što Vrnjačka Banja nudi</div>
+          <button class="btn-cta" onclick="goApp()">🗺 Otvori vodič →</button>
+          <div class="card-cta-hint">Događaji · Atrakcije · Happy Hour · Mapa</div>
+        </div>`;
+
+        cards.innerHTML = html;
+
+        // Prikaži
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('main').style.display = 'block';
+
+    } catch(e){
+        console.error('landing error:', e);
+        // Ako bilo šta padne — idi direktno na app
+        location.href = `index.html?id=${encodeURIComponent(PARTNER_ID)}`;
+    }
+}
+
+function esc(str){
+    return String(str||'')
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;');
+}
+
+init();
+</script>
+</body>
+</html>
