@@ -634,10 +634,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <label>⭐ Google Review link</label>
       <input id="edit-review-url" placeholder="https://g.page/r/.../review">
     </div>
-    <div class="field" id="edit-menu-wrap">
+    <div class="field">
       <label>🍽 Link na meni / ponudu</label>
       <input id="edit-menu-url" placeholder="https://... (sajt, Glovo, PDF, Instagram...)">
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;font-weight:600">Prikazuje se gostima na landing stranici. Samo admin može da menja.</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;font-weight:600">Samo admin može da menja — prikazuje se gostima na landing stranici.</div>
     </div>
     <div class="field-row">
       <div class="field"><label>Lat</label><input id="edit-lat"></div>
@@ -1734,7 +1734,7 @@ async function delPartner(id){
   loadPartners();
 }
 
-function openEdit(id){
+async function openEdit(id){
   const p=allPartners.find(x=>x.id===id); if(!p) return;
   document.getElementById('edit-id').value=p.id;
   document.getElementById('edit-title').textContent='✏️ '+p.name;
@@ -1744,11 +1744,11 @@ function openEdit(id){
   document.getElementById('edit-phone').value=p.phone||'';
   document.getElementById('edit-wa').value=p.whatsapp||'';
   document.getElementById('edit-review-url').value=p.google_review_url||'';
-  // Učitaj menu_url iz partner_content
+  document.getElementById('edit-menu-url').value='';
   try{
     const {data:pc}=await sb.from('partner_content').select('menu_url').eq('partner_id',p.id).maybeSingle();
-    document.getElementById('edit-menu-url').value=(pc?.menu_url)||'';
-  }catch(e){ document.getElementById('edit-menu-url').value=''; }
+    document.getElementById('edit-menu-url').value=pc?.menu_url||'';
+  }catch(e){}
   document.getElementById('edit-lat').value=p.lat||'';
   document.getElementById('edit-lng').value=p.lng||'';
   document.getElementById('edit-note').value=p.admin_note||'';
@@ -1812,9 +1812,8 @@ async function saveEdit(){
   if(pin && pin.length===4) u.pin=pin;
   else if(pin && pin.length!==4){ const m=document.getElementById('edit-msg'); m.textContent='⚠️ PIN mora biti tačno 4 cifre.'; m.className='form-msg err'; return; }
   await sb.from('partners').update(u).eq('id',id);
-  // Sačuvaj menu_url u partner_content
   const menuUrl=(document.getElementById('edit-menu-url')?.value||'').trim();
-  await sb.from('partner_content').upsert({partner_id:id, menu_url:menuUrl||null, updated_at:new Date().toISOString()},{onConflict:'partner_id'});
+  await sb.from('partner_content').upsert({partner_id:id,menu_url:menuUrl||null,updated_at:new Date().toISOString()},{onConflict:'partner_id'});
   const m=document.getElementById('edit-msg'); m.textContent='✓ Sačuvano!'; m.className='form-msg ok';
   setTimeout(async ()=>{
     closeModal('modal-edit');
