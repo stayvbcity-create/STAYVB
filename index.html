@@ -1333,9 +1333,18 @@ async function startApp(lang){
     const urlUnitId = (params.get('id') || '').toUpperCase();
 
     if(urlUnitId){
-        // Gost je otvorio link sa ?id= - sacuvaj za buduce pokretanje iz instalirane app-e
         currentUnitId = urlUnitId;
-        try{ localStorage.setItem('stayvb_unit_id', urlUnitId); }catch(e){}
+        // Čuvaj u localStorage SAMO ako je hotel ili apartman
+        // Restoran/biznis/atrakcija ne smeju da prebrišu smeštaj gosta
+        try{
+            const { data: pt } = await sb.from('partners')
+                .select('type').eq('partner_code', urlUnitId).eq('is_active',true).maybeSingle();
+            if(pt && (pt.type === 'hotel' || pt.type === 'apartment')){
+                localStorage.setItem('stayvb_unit_id', urlUnitId);
+            }
+            // Ako nije hotel/apartman — currentUnitId se koristi samo za ovaj posjet
+            // ali localStorage ostaje nepromijenjen (čuva stari smeštaj)
+        }catch(e){ /* nastavi normalno */ }
     } else {
         // Nema ?id= u URL-u (npr. otvoreno iz instalirane PWA ikonice) - koristi sacuvani
         try{ currentUnitId = localStorage.getItem('stayvb_unit_id') || ''; }catch(e){ currentUnitId = ''; }
