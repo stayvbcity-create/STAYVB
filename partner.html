@@ -855,10 +855,11 @@ async function renderStats(){
       break;
     case 'hotel':
       mainMetricKey='page_visit'; mainMetricLabel='Pregledi profila'; mainMetricIcon='👁'; mainMetricColor='#3b82f6';
-      kpis.push({key:'page_visit', icon:'👁', label:'Pregledi profila', color:'#3b82f6'});
-      kpis.push({key:'hh_view', icon:'🍹', label:'Happy Hour pregledi', color:'#fb923c'});
-      kpis.push({key:'events_view', icon:'🎉', label:'Događaji pregledi', color:'#f87171'});
-      kpis.push({key:'attr_view', icon:'🎡', label:'Atrakcije pregledi', color:'#34d399'});
+      kpis.push({key:'page_visit',     icon:'👁',  label:'Pregledi profila',      color:'#3b82f6'});
+      kpis.push({key:'wa_click',       icon:'📱',  label:'WhatsApp kontakti',     color:'#4ade80'});
+      kpis.push({key:'hh_view',        icon:'🍹',  label:'Happy Hour pregledi',   color:'#fb923c'});
+      kpis.push({key:'events_view',    icon:'🎉',  label:'Događaji pregledi',     color:'#f87171'});
+      kpis.push({key:'qr_scan',        icon:'📷',  label:'QR skeniranja',         color:'#c084fc'});
       break;
     case 'restaurant':
       mainMetricKey='hh_view'; mainMetricLabel='Happy Hour pregledi'; mainMetricIcon='🍹'; mainMetricColor='#fb923c';
@@ -996,7 +997,10 @@ async function renderStats(){
     <div class="panel-card" style="margin-top:12px">
       <p class="panel-card-title">Status naloga</p>
       <p style="font-size:1rem;font-weight:900;color:${partner.is_active?'#6ee7b7':'#fca5a5'};margin:0">${partner.is_active?'✓ Aktivan':'✕ Suspendovan'}</p>
-      ${partner.is_premium ? '<p style="font-size:10px;font-weight:800;color:#fbbf24;margin-top:6px">⭐ Premium partner</p>' : ''}
+      ${partner.is_premium ? `<p style="font-size:10px;font-weight:800;color:#fbbf24;margin-top:6px">⭐ Premium partner</p>
+        <p style="font-size:10px;color:rgba(255,255,255,0.35);font-weight:700;margin-top:3px">
+          Pretplata ističe: ${partner.subscription_expires ? new Date(partner.subscription_expires).toLocaleDateString('sr-RS') : 'nije postavljeno'}
+        </p>` : ''}
     </div>
 
     <div class="panel-card">
