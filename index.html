@@ -1389,118 +1389,16 @@ async function startApp(lang){
     }
 }
 
-// ── Partner landing za nepoznatog gosta ─────────────────────────
-function isKnownGuest(){
-    return !!localStorage.getItem('stayvb_guest_token');
-}
-
-async function showPartnerLanding(partnerId){
-    document.getElementById('loader').style.display = 'none';
-    document.getElementById('content').style.display = 'none';
-
-    let p = {}, c = {};
-    try {
-        const {data:pd} = await sb.from('partners')
-            .select('id,name,type,phone,whatsapp')
-            .eq('partner_code', partnerId).eq('is_active',true).maybeSingle();
-        p = pd || {};
-        if(p.id){
-            const {data:cd} = await sb.from('partner_content')
-                .select('extra_offer,service_prices')
-                .eq('partner_id',p.id).maybeSingle();
-            c = cd || {};
-        }
-    } catch(e){ console.log('landing fetch skip:', e); }
-
-    const typeIcon = {hotel:'🏨',restaurant:'🍽',attraction:'🎡',business:'🛍',apartment:'🏠'}[p.type]||'📍';
-    const typeLabel = {hotel:'Hotel',restaurant:'Restoran',attraction:'Atrakcija',business:'Mali biznis',apartment:'Apartman'}[p.type]||'Partner';
-
-    const landing = document.createElement('div');
-    landing.id = 'partner-landing';
-    landing.style.cssText = 'position:fixed;inset:0;z-index:9990;overflow-y:auto;background:linear-gradient(145deg,#0f172a 0%,#162235 55%,#1f2937 100%);color:white;font-family:Inter,sans-serif;';
-    landing.innerHTML = `
-      <div style="max-width:430px;margin:0 auto;padding:0 0 40px">
-        <div style="padding:48px 24px 32px;text-align:center">
-          <div style="width:72px;height:72px;border-radius:22px;background:rgba(251,191,36,0.12);border:1.5px solid rgba(251,191,36,0.35);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 14px">${typeIcon}</div>
-          <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.18em;color:rgba(255,255,255,0.40);margin-bottom:6px">${typeLabel} · Vrnjačka Banja</div>
-          <h1 style="font-size:1.7rem;font-weight:900;letter-spacing:-0.03em;margin:0;color:white">${p.name||partnerId}</h1>
-        </div>
-        <div style="padding:0 18px;display:flex;flex-direction:column;gap:12px">
-          ${c.extra_offer ? `
-          <div style="padding:16px 18px;border-radius:1.4rem;background:linear-gradient(135deg,#7c3aed,#4f46e5);box-shadow:0 8px 24px rgba(124,58,237,0.35)">
-            <div style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.75);margin-bottom:6px">🎯 Posebna ponuda</div>
-            <div style="font-size:14px;font-weight:800;color:white;line-height:1.4">${c.extra_offer}</div>
-          </div>` : ''}
-          ${c.service_prices ? `
-          <div style="padding:16px 18px;border-radius:1.4rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10)">
-            <div style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.40);margin-bottom:8px">📋 Cenovnik</div>
-            <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.80);line-height:1.7">${c.service_prices.replace(/
-/g,'<br>').replace(/\|/g,' · ')}</div>
-          </div>` : ''}
-          ${(p.whatsapp||p.phone) ? `
-          <a href="https://wa.me/${(p.whatsapp||p.phone||'').replace(/\D/g,'')}?text=${encodeURIComponent('Zdravo, vidim vas na StayVB!')}"
-             style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:1.4rem;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);text-decoration:none">
-            <span style="font-size:1.4rem">📱</span>
-            <div>
-              <div style="font-size:13px;font-weight:900;color:#6ee7b7">WhatsApp kontakt</div>
-              <div style="font-size:11px;color:rgba(255,255,255,0.40);font-weight:700">${p.whatsapp||p.phone}</div>
-            </div>
-          </a>` : ''}
-          <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);margin:4px 0"></div>
-          <div style="padding:18px;border-radius:1.4rem;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.20);text-align:center">
-            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.50);margin-bottom:10px">Otkrijte sve što Vrnjačka Banja nudi</div>
-            <button onclick="window._enterFullApp()" style="width:100%;padding:14px;background:linear-gradient(135deg,#d97706,#f59e0b);color:#0f172a;border:none;border-radius:1rem;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;cursor:pointer;font-family:inherit">
-              🗺 Otvori vodič →
-            </button>
-            <div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:8px;font-weight:700">Događaji · Atrakcije · Happy Hour · Mapa</div>
-          </div>
-        </div>
-      </div>`;
-    document.body.appendChild(landing);
-
-    window._enterFullApp = function(){
-        landing.style.transition = 'opacity 0.3s ease';
-        landing.style.opacity = '0';
-        setTimeout(()=>{
-            landing.remove();
-            const hasLang = localStorage.getItem('stayvb_lang');
-            if(hasLang === null){
-                document.getElementById('lang-screen').style.display = 'flex';
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('content').style.display = 'none';
-            } else {
-                startApp(hasLang);
-            }
-        }, 300);
-    };
-}
-
 window.addEventListener('load', async () => {
     await registerSW();
 
-    const params = new URLSearchParams(window.location.search);
-    const urlUnitId = (params.get('id') || '').toUpperCase();
     const hasLang = localStorage.getItem('stayvb_lang');
 
-    // Nepoznat gost + QR koji nije hotel/apartman → landing
-    if(urlUnitId && !isKnownGuest()){
-        try{
-            const {data:pt} = await sb.from('partners')
-                .select('type').eq('partner_code', urlUnitId)
-                .eq('is_active',true).maybeSingle();
-            if(pt && pt.type !== 'hotel' && pt.type !== 'apartment'){
-                await showPartnerLanding(urlUnitId);
-                return;
-            }
-        } catch(e){ /* nastavi normalno */ }
-    }
-
-    // Normalan flow — originalna logika nepromenjena
     if(hasLang === null){
         document.getElementById('lang-screen').style.display = 'flex';
         document.getElementById('loader').style.display = 'none';
         document.getElementById('content').style.display = 'none';
-        return;
+        return; // startApp() će biti pozvan iz stayvbSetLang()
     }
 
     const ls = document.getElementById('lang-screen');
