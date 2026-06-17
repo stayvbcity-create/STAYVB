@@ -64,7 +64,7 @@ window.STAYVB_CONFIG = (function () {
         if (!data || data.length === 0) return { ok: false, error: 'Nevažeći link ili PIN.' };
         const result = data[0];
         if (!result.login_ok) return { ok: false, error: result.error_msg || 'Pogrešan PIN.' };
-        sessionStorage.setItem('stayvb_partner', JSON.stringify({ id: result.id, name: result.name, type: result.type, token: token, ts: Date.now() }));
+        sessionStorage.setItem('stayvb_partner', JSON.stringify({ id: result.id, name: result.name, type: result.type, is_premium: result.is_premium, is_active: result.is_active, hh_visibility: result.hh_visibility, token: token, ts: Date.now() }));
         return { ok: true, partner: result };
     }
 
