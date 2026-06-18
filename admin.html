@@ -1895,18 +1895,17 @@ async function savePartner(){
 async function loadBilling(){
   // Popuni select - uvek osvježi opcije
   const sel=document.getElementById('billing-month');
-  const prev=sel.value;
-  // Ako select već ima opcije, samo ažuriraj vrednost
-  if(sel.options.length===0){
-    const now=new Date();
-    for(let i=0;i<12;i++){
-      const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-      const v=d.toISOString().slice(0,7);
-      const o=document.createElement('option');
-      o.value=v; o.textContent=v;
-      if(i===0) o.selected=true;
-      sel.appendChild(o);
-    }
+  const currentMonth=new Date().toISOString().slice(0,7);
+  // Uvek osvježi listu opcija
+  sel.innerHTML='';
+  const now=new Date();
+  for(let i=0;i<12;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const v=d.toISOString().slice(0,7);
+    const o=document.createElement('option');
+    o.value=v; o.textContent=v;
+    if(i===0) o.selected=true; // tekući mesec uvek default
+    sel.appendChild(o);
   }
   const month=sel.value;
   const today=new Date().toISOString().split('T')[0];
