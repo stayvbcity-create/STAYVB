@@ -546,11 +546,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <div class="billing-sum-card"><div class="billing-sum-num" id="bill-paid" style="color:var(--green)">—</div><div class="billing-sum-label">Naplaćeno</div></div>
         <div class="billing-sum-card"><div class="billing-sum-num" id="bill-pend" style="color:var(--red)">—</div><div class="billing-sum-label">Na čekanju</div></div>
       </div>
-      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-        <button class="btn btn-ghost btn-sm" id="f-all"    onclick="billFilter('all')"     style="border-color:rgba(255,255,255,0.20)">Svi</button>
-        <button class="btn btn-ghost btn-sm" id="f-pending" onclick="billFilter('pending')" style="border-color:rgba(239,68,68,0.40);color:#fca5a5">⏳ Čeka uplatu</button>
-        <button class="btn btn-ghost btn-sm" id="f-paid"    onclick="billFilter('paid')"    style="border-color:rgba(16,185,129,0.40);color:#6ee7b7">✓ Plaćeno</button>
-        <button class="btn btn-ghost btn-sm" id="f-expired" onclick="billFilter('expired')" style="border-color:rgba(251,191,36,0.40);color:#fbbf24">⚠️ Istekla pretplata</button>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm bill-filter-btn" data-f="all"     onclick="setBillFilter('all')"     style="font-weight:900;background:rgba(255,255,255,0.10);color:white">Svi</button>
+        <button class="btn btn-ghost btn-sm bill-filter-btn" data-f="pending" onclick="setBillFilter('pending')" style="color:#fca5a5">⏳ Čeka uplatu</button>
+        <button class="btn btn-ghost btn-sm bill-filter-btn" data-f="paid"    onclick="setBillFilter('paid')"    style="color:#6ee7b7">✓ Plaćeno</button>
+        <button class="btn btn-ghost btn-sm bill-filter-btn" data-f="expired" onclick="setBillFilter('expired')" style="color:#fbbf24">⚠️ Istekla pretplata</button>
       </div>
       <div class="tbl-card"><div class="tbl-wrap" id="billing-tbl"></div></div>
     </div>
@@ -1885,71 +1885,78 @@ async function loadBilling(){
   document.getElementById('bill-total').textContent=fmtRsd(total);
   document.getElementById('bill-paid').textContent=fmtRsd(paid);
   document.getElementById('bill-pend').textContent=fmtRsd(pend);
-  window._billData = list; // čuvamo za filter
+  // Sačuvaj za filter
+  window._billList  = list;
   window._billMonth = month;
-  renderBillingTable(list, 'all');
+  window._billFilter = window._billFilter||'all';
+  renderBillingTable(list, window._billFilter);
 }
 
-function billFilter(f){
-  ['all','pending','paid','expired'].forEach(x=>{
-    const el=document.getElementById('f-'+x);
-    if(el) el.style.fontWeight = x===f?'900':'700';
-    if(el) el.style.background = x===f?'rgba(255,255,255,0.08)':'';
+function setBillFilter(f){
+  window._billFilter = f;
+  document.querySelectorAll('.bill-filter-btn').forEach(b=>{
+    b.style.background = b.dataset.f===f ? 'rgba(255,255,255,0.10)' : '';
+    b.style.fontWeight = b.dataset.f===f ? '900' : '700';
+    b.style.color      = b.dataset.f===f ? 'white' : '';
   });
-  renderBillingTable(window._billData||[], f);
+  renderBillingTable(window._billList||[], f);
 }
 
 function renderBillingTable(list, filter){
   const today = new Date().toISOString().split('T')[0];
-  let filtered = list;
-  if(filter==='pending') filtered = list.filter(b=>b.status!=='paid');
-  if(filter==='paid')    filtered = list.filter(b=>b.status==='paid');
-  if(filter==='expired') filtered = list.filter(b=>{
-    const exp = b.partners?.subscription_expires;
-    return exp && exp < today;
-  });
 
-  if(!filtered.length){
-    document.getElementById('billing-tbl').innerHTML='<p style="color:var(--muted);padding:20px;font-size:13px;font-weight:700">Nema rezultata za ovaj filter.</p>';
+  let rows = list;
+  if(filter==='pending')  rows = list.filter(b=>b.status!=='paid');
+  if(filter==='paid')     rows = list.filter(b=>b.status==='paid');
+  if(filter==='expired')  rows = list.filter(b=>{ const e=b.partners?.subscription_expires; return e&&e<today; });
+
+  if(!rows.length){
+    document.getElementById('billing-tbl').innerHTML='<p style="color:var(--muted);padding:24px;font-size:13px;font-weight:700;text-align:center">Nema rezultata.</p>';
     return;
   }
 
   document.getElementById('billing-tbl').innerHTML=`
     <table class="tbl">
       <thead><tr>
-        <th>Partner</th><th>Tip</th><th>Iznos</th>
-        <th>Status uplate</th><th>Datum uplate</th>
-        <th>Premium do</th><th>Pretplata</th>
+        <th>Partner</th>
+        <th>Tip</th>
+        <th>Iznos</th>
+        <th>Status uplate</th>
+        <th>Datum uplate</th>
+        <th>Premium do</th>
+        <th>Pretplata</th>
         <th>Akcija</th>
       </tr></thead>
-      <tbody>${filtered.map(b=>{
-        const exp = b.partners?.subscription_expires;
+      <tbody>${rows.map(b=>{
+        const exp       = b.partners?.subscription_expires;
         const isExpired = exp && exp < today;
         const isPremium = b.partners?.is_premium;
-        return `<tr style="${isExpired?'background:rgba(239,68,68,0.06)':''}">
+        const rowStyle  = isExpired ? 'background:rgba(239,68,68,0.05)' : '';
+        return `<tr style="${rowStyle}">
           <td>
-            <div style="font-weight:800">${esc(b.partners?.name||'')}</div>
-            <div style="font-size:10px;color:var(--muted)">${esc(b.partners?.partner_code||'')}</div>
+            <div style="font-weight:800">${esc(b.partners?.name||'—')}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">${esc(b.partners?.partner_code||'')}</div>
           </td>
           <td>${typeBadge(b.partners?.type||'')}</td>
           <td style="font-weight:900;color:var(--gold)">${fmtRsd(b.amount_rsd)}</td>
           <td>${payBadge(b.status)}</td>
-          <td style="font-size:11px;color:var(--muted)">${b.paid_at?fmtDate(b.paid_at):'<span style="color:#fca5a5">nije plaćeno</span>'}</td>
-          <td style="font-size:11px;${isExpired?'color:#fca5a5;font-weight:800':'color:var(--muted)'}">
-            ${exp?fmtDate(exp)+'<br><span style="font-size:9px">'+(isExpired?'⚠️ ISTEKLA':'✓ aktivna')+'</span>':'<span style="color:var(--faint)">—</span>'}
-          </td>
-          <td>
-            ${isPremium
-              ?`<span style="font-size:10px;font-weight:900;color:#fbbf24;background:rgba(251,191,36,0.12);padding:2px 8px;border-radius:999px">⭐ Premium</span>`
-              :`<span style="font-size:10px;font-weight:700;color:var(--muted)">Basic</span>`
-            }
-          </td>
-          <td style="white-space:nowrap">
-            ${b.status!=='paid'
-              ?`<button class="btn btn-green btn-sm" onclick="markPaid('${b.partner_id}','${window._billMonth}',this)">✓ Platio</button>`
-              :`<button class="btn btn-ghost btn-sm" onclick="markUnpaid('${b.partner_id}','${window._billMonth}',this)">↩ Poništi</button>`
-            }
-          </td>
+          <td style="font-size:11px">${b.paid_at
+            ? `<span style="color:var(--green)">${fmtDate(b.paid_at)}</span>`
+            : `<span style="color:#fca5a5;font-weight:700">nije plaćeno</span>`
+          }</td>
+          <td style="font-size:11px">${exp
+            ? `<div style="font-weight:800;color:${isExpired?'#fca5a5':'var(--text)'}">${fmtDate(exp)}</div>
+               <div style="font-size:9px;font-weight:900;margin-top:2px;color:${isExpired?'#fca5a5':'#6ee7b7'}">${isExpired?'⚠️ ISTEKLA':'✓ aktivna'}</div>`
+            : `<span style="color:var(--faint)">—</span>`
+          }</td>
+          <td>${isPremium
+            ? `<span style="font-size:10px;font-weight:900;color:#fbbf24;background:rgba(251,191,36,0.12);padding:3px 8px;border-radius:999px">⭐ Premium</span>`
+            : `<span style="font-size:10px;font-weight:700;color:var(--muted)">Basic</span>`
+          }</td>
+          <td style="white-space:nowrap">${b.status!=='paid'
+            ? `<button class="btn btn-green btn-sm" onclick="markPaid('${b.partner_id}','${window._billMonth}',this)">✓ Platio</button>`
+            : `<button class="btn btn-ghost btn-sm" onclick="markUnpaid('${b.partner_id}','${window._billMonth}',this)">↩ Poništi</button>`
+          }</td>
         </tr>`;
       }).join('')}</tbody>
     </table>`;
@@ -2006,7 +2013,7 @@ async function loadStamps(){
   const {data}=await sb.from('stamp_locations').select('*').order('sort_order').order('name');
   document.getElementById('stamps-tbl').innerHTML=`
     <table class="tbl">
-      <thead><tr><th>Naziv</th><th>Tip</th><th>Koordinate</th><th title="Gost može skupiti pečat na ovoj lokaciji">Aktivan za pečate ✦</th><th title="Lokacija je vidljiva na mapi popusta i pečata">Vidljiv na mapi ✦</th><th>Akcije</th></tr></thead>
+      <thead><tr><th>Naziv</th><th>Tip</th><th>Koordinate</th><th>Aktivan<br><span style='font-size:9px;font-weight:600;color:var(--muted)'>gost skuplja pečat</span></th><th>Na mapi<br><span style='font-size:9px;font-weight:600;color:var(--muted)'>vidljiv na radaru</span></th><th>Akcije</th></tr></thead>
       <tbody>${(data||[]).map(l=>`<tr>
         <td style="font-weight:800">${esc(l.name)}</td>
         <td><span class="badge ${l.type==='public'?'b-attr':'b-rest'}">${l.type}</span></td>
@@ -2017,7 +2024,15 @@ async function loadStamps(){
       </tr>`).join('')}</tbody>
     </table>`;
 }
-async function togS(id,f,v){await sb.from('stamp_locations').update({[f]:v}).eq('id',id); loadStamps();}
+async function togS(id,f,v){
+  const {error}=await sb.from('stamp_locations').update({[f]:v}).eq('id',id);
+  if(error){
+    alert('Greška pri čuvanju: '+error.message+'\n\nMoguć problem sa RLS dozvolama za stamp_locations tabelu.');
+    loadStamps(); // reload da vrati pravo stanje
+    return;
+  }
+  loadStamps();
+}
 async function delStamp(id){if(!confirm('Obrisati?'))return;await sb.from('stamp_locations').delete().eq('id',id);loadStamps();}
 function openNewStamp(){['ms-name','ms-desc','ms-lat','ms-lng'].forEach(id=>document.getElementById(id).value='');document.getElementById('ms-msg').textContent='';openModal('modal-stamp');}
 async function saveStamp(){
