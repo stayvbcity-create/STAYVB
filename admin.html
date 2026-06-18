@@ -1915,11 +1915,15 @@ async function loadBilling(){
     .eq('is_active',true).order('name');
 
   // Uzmi billing zapise za ovaj mesec
-  const {data:bills}=await sb.from('partner_billing')
+  const {data:bills, error:billErr}=await sb.from('partner_billing')
     .select('*').eq('month_year',month);
+
+  if(billErr) console.error('Billing query greška:', billErr);
+  console.log('Billing zapisi za', month, ':', bills?.length, bills);
 
   const billMap={};
   (bills||[]).forEach(b=>{ billMap[b.partner_id]=b; });
+  console.log('BillMap:', Object.keys(billMap).length, 'zapisa');
 
   // Spoji — svaki partner uvek prikazan
   const list=(partners||[]).map(p=>({p, b:billMap[p.id]||null}));
