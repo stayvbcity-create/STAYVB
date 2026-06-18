@@ -535,24 +535,59 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- ═══ NAPLATA ═══ -->
     <div id="page-billing" class="page">
       <div class="sec-header">
-        <div><div class="sec-title">Naplata</div><div class="sec-sub">Real-time pregled pretplata svih partnera</div></div>
+        <div>
+          <div class="sec-title">Naplata</div>
+          <div class="sec-sub" id="billing-date-label">Učitavam...</div>
+        </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <select class="filter-select" id="billing-month" onchange="loadBilling()"></select>
-          <button class="btn btn-ghost btn-sm" onclick="loadBilling()">🔄</button>
-          <button class="btn btn-blue btn-sm" onclick="generateBillingNow()">⚙️ Generiši za mesec</button>
+          <button class="btn btn-ghost btn-sm" onclick="loadBilling()">🔄 Osvježi</button>
+          <button class="btn btn-blue btn-sm" onclick="generateBillingNow()">⚙️ Generiši billing</button>
         </div>
       </div>
-      <div class="billing-summary" style="margin-bottom:14px">
-        <div class="billing-sum-card"><div class="billing-sum-num" id="bill-total" style="color:var(--gold)">—</div><div class="billing-sum-label">Ukupno za mesec</div></div>
-        <div class="billing-sum-card"><div class="billing-sum-num" id="bill-paid" style="color:var(--green)">—</div><div class="billing-sum-label">✓ Naplaćeno</div><div style="font-size:10px;color:var(--muted);margin-top:4px" id="bill-paid-count"></div></div>
-        <div class="billing-sum-card"><div class="billing-sum-num" id="bill-pend" style="color:var(--red)">—</div><div class="billing-sum-label">✗ Nije plaćeno</div><div style="font-size:10px;color:var(--muted);margin-top:4px" id="bill-pend-count"></div></div>
+
+      <!-- KPI — 4 kartice -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px">
+        <div class="billing-sum-card" style="border-top:3px solid var(--gold)">
+          <div class="billing-sum-num" id="bill-total" style="color:var(--gold)">—</div>
+          <div class="billing-sum-label">Ukupno fakturisano</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px" id="bill-total-count"></div>
+        </div>
+        <div class="billing-sum-card" style="border-top:3px solid var(--green)">
+          <div class="billing-sum-num" id="bill-paid" style="color:var(--green)">—</div>
+          <div class="billing-sum-label">✓ Uplaćeno</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px" id="bill-paid-count"></div>
+        </div>
+        <div class="billing-sum-card" style="border-top:3px solid var(--red)">
+          <div class="billing-sum-num" id="bill-pend" style="color:var(--red)">—</div>
+          <div class="billing-sum-label">✗ Nije uplaćeno</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px" id="bill-pend-count"></div>
+        </div>
+        <div class="billing-sum-card" style="border-top:3px solid #f59e0b">
+          <div class="billing-sum-num" id="bill-diff" style="color:#f59e0b">—</div>
+          <div class="billing-sum-label">⚡ Razlika</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px" id="bill-pct"></div>
+        </div>
       </div>
+
+      <!-- Progress bar naplate -->
+      <div class="tbl-card" style="padding:16px 20px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:11px;font-weight:800;color:var(--muted)">Procenat naplate za mesec</span>
+          <span style="font-size:13px;font-weight:900" id="bill-pct-num">—</span>
+        </div>
+        <div style="height:10px;background:rgba(255,255,255,0.07);border-radius:999px;overflow:hidden">
+          <div id="bill-progress" style="height:100%;border-radius:999px;background:linear-gradient(90deg,#10b981,#34d399);transition:width 0.8s ease;width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Filteri -->
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
         <button class="btn btn-ghost btn-sm bill-f" data-f="all"     onclick="setBillFilter('all')"    style="font-weight:900;background:rgba(255,255,255,0.10)">Svi</button>
         <button class="btn btn-ghost btn-sm bill-f" data-f="paid"    onclick="setBillFilter('paid')"   style="color:#6ee7b7">✓ Platili</button>
         <button class="btn btn-ghost btn-sm bill-f" data-f="unpaid"  onclick="setBillFilter('unpaid')" style="color:#fca5a5">✗ Nisu platili</button>
         <button class="btn btn-ghost btn-sm bill-f" data-f="expired" onclick="setBillFilter('expired')" style="color:#fbbf24">⚠️ Istekla pretplata</button>
       </div>
+
       <div class="tbl-card"><div class="tbl-wrap" id="billing-tbl"></div></div>
     </div>
 
@@ -1893,22 +1928,13 @@ async function savePartner(){
 
 // ── Billing ───────────────────────────────────────────────────────
 async function loadBilling(){
-  // Popuni select - uvek osvježi opcije
-  const sel=document.getElementById('billing-month');
-  const currentMonth=new Date().toISOString().slice(0,7);
-  // Uvek osvježi listu opcija
-  sel.innerHTML='';
+  // Uvek tekući mesec, real-time stanje
   const now=new Date();
-  for(let i=0;i<12;i++){
-    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-    const v=d.toISOString().slice(0,7);
-    const o=document.createElement('option');
-    o.value=v; o.textContent=v;
-    if(i===0) o.selected=true; // tekući mesec uvek default
-    sel.appendChild(o);
-  }
-  const month=sel.value;
-  const today=new Date().toISOString().split('T')[0];
+  const month=now.toISOString().slice(0,7);
+  const today=now.toISOString().split('T')[0];
+  const monthLabel=now.toLocaleDateString('sr-RS',{month:'long',year:'numeric'});
+  const el=document.getElementById('billing-date-label');
+  if(el) el.textContent='Stanje na dan: '+now.toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'})+' — '+monthLabel;
 
   // Uzmi SVE aktivne partnere
   const {data:partners}=await sb.from('partners')
@@ -1933,11 +1959,26 @@ async function loadBilling(){
   const paid=paidList.reduce((s,r)=>s+(r.b?.amount_rsd||0),0);
   const pend=unpaidList.reduce((s,r)=>s+(r.b?.amount_rsd||r.p.monthly_price||0),0);
 
+  const diff=total-paid;
+  const pct=total>0?Math.round(paid/total*100):0;
+  const pctColor=pct>=80?'#6ee7b7':pct>=50?'#fcd34d':'#fca5a5';
+
   document.getElementById('bill-total').textContent=fmtRsd(total);
   document.getElementById('bill-paid').textContent=fmtRsd(paid);
   document.getElementById('bill-pend').textContent=fmtRsd(pend);
+  document.getElementById('bill-diff').textContent=fmtRsd(diff);
+  document.getElementById('bill-total-count').textContent=list.length+' partnera';
   document.getElementById('bill-paid-count').textContent=paidList.length+' partnera';
   document.getElementById('bill-pend-count').textContent=unpaidList.length+' partnera';
+  document.getElementById('bill-pct').textContent=pct+'% naplaćeno';
+  document.getElementById('bill-pct-num').textContent=pct+'%';
+  document.getElementById('bill-pct-num').style.color=pctColor;
+  document.getElementById('bill-progress').style.width=pct+'%';
+  document.getElementById('bill-progress').style.background=pct>=80
+    ?'linear-gradient(90deg,#10b981,#34d399)'
+    :pct>=50
+    ?'linear-gradient(90deg,#f59e0b,#fbbf24)'
+    :'linear-gradient(90deg,#ef4444,#f87171)';
 
   window._billList=list;
   window._billMonth=month;
@@ -2044,7 +2085,7 @@ async function markUnpaid(pid,month,btn){
 }
 
 async function generateBillingNow(){
-  const month=document.getElementById('billing-month')?.value||new Date().toISOString().slice(0,7);
+  const month=new Date().toISOString().slice(0,7);
   if(!confirm('Generisati billing za '+month+'?')) return;
   const {data}=await sb.rpc('generate_monthly_billing',{p_month:month});
   alert('Generisano '+data+' zapisa za '+month+'.');
