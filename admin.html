@@ -547,10 +547,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <div class="billing-sum-card"><div class="billing-sum-num" id="bill-pend" style="color:var(--red)">—</div><div class="billing-sum-label">Na čekanju</div></div>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-        <button class="btn btn-ghost btn-sm bill-filter-btn" data-f="all"     onclick="setBillFilter('all')"     style="font-weight:900;background:rgba(255,255,255,0.10);color:white">Svi</button>
-        <button class="btn btn-ghost btn-sm bill-filter-btn" data-f="pending" onclick="setBillFilter('pending')" style="color:#fca5a5">⏳ Čeka uplatu</button>
-        <button class="btn btn-ghost btn-sm bill-filter-btn" data-f="paid"    onclick="setBillFilter('paid')"    style="color:#6ee7b7">✓ Plaćeno</button>
-        <button class="btn btn-ghost btn-sm bill-filter-btn" data-f="expired" onclick="setBillFilter('expired')" style="color:#fbbf24">⚠️ Istekla pretplata</button>
+        <button class="btn btn-ghost btn-sm bill-f" data-f="all"     onclick="setBillFilter('all')"    style="font-weight:900;background:rgba(255,255,255,0.10)">Svi</button>
+        <button class="btn btn-ghost btn-sm bill-f" data-f="paid"    onclick="setBillFilter('paid')"   style="color:#6ee7b7">✓ Platili</button>
+        <button class="btn btn-ghost btn-sm bill-f" data-f="unpaid"  onclick="setBillFilter('unpaid')" style="color:#fca5a5">✗ Nisu platili</button>
+        <button class="btn btn-ghost btn-sm bill-f" data-f="expired" onclick="setBillFilter('expired')" style="color:#fbbf24">⚠️ Istekla pretplata</button>
       </div>
       <div class="tbl-card"><div class="tbl-wrap" id="billing-tbl"></div></div>
     </div>
@@ -821,8 +821,7 @@ function typeBadge(t){
 
 function payBadge(s){
   if(s==='paid') return '<span class="badge b-paid">✓ Platio</span>';
-  if(s==='overdue') return '<span class="badge b-overdue">🔴 Kasni</span>';
-  return '<span class="badge b-pending">⏳ Čeka</span>';
+  return '<span class="badge b-overdue">✗ Nije platio</span>';
 }
 
 // ── Navigation ────────────────────────────────────────────────────
@@ -951,11 +950,13 @@ async function loadDashboard(){
     .in('status',['pending','overdue']);
 
   document.getElementById('unpaid-list').innerHTML = (unpaid||[]).length===0
-    ? '<p style="font-size:12px;color:#6ee7b7;font-weight:700">✅ Svi su platili ovaj mesec!</p>'
-    : `<table class="tbl"><thead><tr><th>Kod</th><th>Partner</th><th>Iznos</th><th>Status</th><th></th></tr></thead><tbody>
+    ? '<p style="font-size:12px;color:#6ee7b7;font-weight:700;padding:8px 0">✅ Svi su platili ovaj mesec!</p>'
+    : `<table class="tbl"><thead><tr><th>Partner</th><th>Iznos</th><th>Status</th><th>Akcija</th></tr></thead><tbody>
       ${(unpaid||[]).map(b=>`<tr>
-        <td><span class="p-code">${esc(b.partners?.partner_code||'')}</span></td>
-        <td style="font-weight:800">${esc(b.partners?.name||'')}</td>
+        <td>
+          <div style="font-weight:800">${esc(b.partners?.name||'')}</div>
+          <div style="font-size:10px;color:var(--muted)">${esc(b.partners?.partner_code||'')}</div>
+        </td>
         <td style="color:var(--gold);font-weight:900">${fmtRsd(b.amount_rsd)}</td>
         <td>${payBadge(b.status)}</td>
         <td><button class="btn btn-green btn-sm" onclick="markPaid('${b.partner_id}','${month}',this)">✓ Platio</button></td>
@@ -1876,7 +1877,7 @@ async function loadBilling(){
   }
   const month=sel.value;
   const {data:bills}=await sb.from('partner_billing')
-    .select('*,partners(name,partner_code,type,pin,is_premium,subscription_expires)')
+    .select('*,partners(name,partner_code,type,is_premium,subscription_expires)')
     .eq('month_year',month).order('status');
   const list=bills||[];
   const total=list.reduce((s,b)=>s+b.amount_rsd,0);
@@ -1885,7 +1886,6 @@ async function loadBilling(){
   document.getElementById('bill-total').textContent=fmtRsd(total);
   document.getElementById('bill-paid').textContent=fmtRsd(paid);
   document.getElementById('bill-pend').textContent=fmtRsd(pend);
-  // Sačuvaj za filter
   window._billList  = list;
   window._billMonth = month;
   window._billFilter = window._billFilter||'all';
@@ -1894,24 +1894,24 @@ async function loadBilling(){
 
 function setBillFilter(f){
   window._billFilter = f;
-  document.querySelectorAll('.bill-filter-btn').forEach(b=>{
-    b.style.background = b.dataset.f===f ? 'rgba(255,255,255,0.10)' : '';
-    b.style.fontWeight = b.dataset.f===f ? '900' : '700';
-    b.style.color      = b.dataset.f===f ? 'white' : '';
+  document.querySelectorAll('.bill-f').forEach(b=>{
+    const active = b.dataset.f===f;
+    b.style.background  = active?'rgba(255,255,255,0.10)':'';
+    b.style.fontWeight  = active?'900':'700';
+    b.style.borderColor = active?'rgba(255,255,255,0.25)':'rgba(255,255,255,0.10)';
   });
   renderBillingTable(window._billList||[], f);
 }
 
 function renderBillingTable(list, filter){
   const today = new Date().toISOString().split('T')[0];
-
   let rows = list;
-  if(filter==='pending')  rows = list.filter(b=>b.status!=='paid');
-  if(filter==='paid')     rows = list.filter(b=>b.status==='paid');
-  if(filter==='expired')  rows = list.filter(b=>{ const e=b.partners?.subscription_expires; return e&&e<today; });
+  if(filter==='paid')    rows = list.filter(b=>b.status==='paid');
+  if(filter==='unpaid')  rows = list.filter(b=>b.status!=='paid');
+  if(filter==='expired') rows = list.filter(b=>{ const e=b.partners?.subscription_expires; return e&&e<today; });
 
   if(!rows.length){
-    document.getElementById('billing-tbl').innerHTML='<p style="color:var(--muted);padding:24px;font-size:13px;font-weight:700;text-align:center">Nema rezultata.</p>';
+    document.getElementById('billing-tbl').innerHTML='<p style="color:var(--muted);padding:24px;font-size:13px;font-weight:700;text-align:center">Nema rezultata za ovaj filter.</p>';
     return;
   }
 
@@ -1921,41 +1921,38 @@ function renderBillingTable(list, filter){
         <th>Partner</th>
         <th>Tip</th>
         <th>Iznos</th>
-        <th>Status uplate</th>
+        <th>Status</th>
         <th>Datum uplate</th>
-        <th>Premium do</th>
-        <th>Pretplata</th>
+        <th>Pretplata ističe</th>
         <th>Akcija</th>
       </tr></thead>
       <tbody>${rows.map(b=>{
         const exp       = b.partners?.subscription_expires;
         const isExpired = exp && exp < today;
         const isPremium = b.partners?.is_premium;
-        const rowStyle  = isExpired ? 'background:rgba(239,68,68,0.05)' : '';
-        return `<tr style="${rowStyle}">
+        return `<tr style="${isExpired&&b.status!=='paid'?'background:rgba(239,68,68,0.05)':''}">
           <td>
             <div style="font-weight:800">${esc(b.partners?.name||'—')}</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:2px">${esc(b.partners?.partner_code||'')}</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
+              <span style="font-size:10px;color:var(--muted)">${esc(b.partners?.partner_code||'')}</span>
+              ${isPremium?'<span style="font-size:9px;font-weight:900;color:#fbbf24;background:rgba(251,191,36,0.12);padding:1px 6px;border-radius:999px">⭐ Premium</span>':''}
+            </div>
           </td>
           <td>${typeBadge(b.partners?.type||'')}</td>
           <td style="font-weight:900;color:var(--gold)">${fmtRsd(b.amount_rsd)}</td>
           <td>${payBadge(b.status)}</td>
           <td style="font-size:11px">${b.paid_at
-            ? `<span style="color:var(--green)">${fmtDate(b.paid_at)}</span>`
-            : `<span style="color:#fca5a5;font-weight:700">nije plaćeno</span>`
+            ?`<span style="color:var(--green);font-weight:700">${fmtDate(b.paid_at)}</span>`
+            :`<span style="color:var(--muted)">—</span>`
           }</td>
           <td style="font-size:11px">${exp
-            ? `<div style="font-weight:800;color:${isExpired?'#fca5a5':'var(--text)'}">${fmtDate(exp)}</div>
-               <div style="font-size:9px;font-weight:900;margin-top:2px;color:${isExpired?'#fca5a5':'#6ee7b7'}">${isExpired?'⚠️ ISTEKLA':'✓ aktivna'}</div>`
-            : `<span style="color:var(--faint)">—</span>`
+            ?`<div style="font-weight:700;color:${isExpired?'#fca5a5':'var(--text)'}">${fmtDate(exp)}</div>
+              <div style="font-size:9px;font-weight:900;color:${isExpired?'#fca5a5':'#6ee7b7'};margin-top:2px">${isExpired?'⚠️ istekla':'✓ aktivna'}</div>`
+            :`<span style="color:var(--faint)">—</span>`
           }</td>
-          <td>${isPremium
-            ? `<span style="font-size:10px;font-weight:900;color:#fbbf24;background:rgba(251,191,36,0.12);padding:3px 8px;border-radius:999px">⭐ Premium</span>`
-            : `<span style="font-size:10px;font-weight:700;color:var(--muted)">Basic</span>`
-          }</td>
-          <td style="white-space:nowrap">${b.status!=='paid'
-            ? `<button class="btn btn-green btn-sm" onclick="markPaid('${b.partner_id}','${window._billMonth}',this)">✓ Platio</button>`
-            : `<button class="btn btn-ghost btn-sm" onclick="markUnpaid('${b.partner_id}','${window._billMonth}',this)">↩ Poništi</button>`
+          <td>${b.status!=='paid'
+            ?`<button class="btn btn-green btn-sm" onclick="markPaid('${b.partner_id}','${window._billMonth}',this)">✓ Platio</button>`
+            :`<button class="btn btn-ghost btn-sm" onclick="markUnpaid('${b.partner_id}','${window._billMonth}',this)">↩ Poništi</button>`
           }</td>
         </tr>`;
       }).join('')}</tbody>
@@ -1998,14 +1995,35 @@ async function loadRevenue(){
     if(b.status==='paid')g[b.month_year].paid+=b.amount_rsd;
     else g[b.month_year].pending+=b.amount_rsd;
   });
-  document.getElementById('revenue-content').innerHTML = Object.entries(g).map(([m,d])=>`
-    <div class="tbl-card" style="margin-bottom:10px;padding:16px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-      <span style="font-size:14px;font-weight:900;min-width:80px;color:var(--text)">${m}</span>
-      <span style="font-size:1.2rem;font-weight:900;color:var(--gold)">${fmtRsd(d.total)}</span>
-      <span class="badge b-paid">Naplaćeno: ${fmtRsd(d.paid)}</span>
-      ${d.pending>0?`<span class="badge b-pending">Čeka: ${fmtRsd(d.pending)}</span>`:''}
-      <span style="font-size:10px;color:var(--muted);margin-left:auto">${d.count} partnera</span>
-    </div>`).join('')||'<p style="color:var(--muted);font-size:13px">Nema podataka.</p>';
+  const entries = Object.entries(g).reverse(); // najnoviji mesec prvo
+  if(!entries.length){
+    document.getElementById('revenue-content').innerHTML='<p style="color:var(--muted);font-size:13px;padding:20px">Nema podataka.</p>';
+    return;
+  }
+  document.getElementById('revenue-content').innerHTML=`
+    <table class="tbl">
+      <thead><tr>
+        <th>Mesec</th>
+        <th>Ukupno</th>
+        <th style="color:#6ee7b7">✓ Naplaćeno</th>
+        <th style="color:#fca5a5">✗ Nije naplaćeno</th>
+        <th>Partnera</th>
+      </tr></thead>
+      <tbody>${entries.map(([m,d])=>`<tr>
+        <td style="font-weight:900">${m}</td>
+        <td style="font-weight:900;color:var(--gold)">${fmtRsd(d.total)}</td>
+        <td style="font-weight:800;color:#6ee7b7">${fmtRsd(d.paid)}</td>
+        <td style="font-weight:800;color:${d.pending>0?'#fca5a5':'var(--muted)'}">${d.pending>0?fmtRsd(d.pending):'—'}</td>
+        <td style="color:var(--muted)">${d.count}</td>
+      </tr>`).join('')}</tbody>
+      <tfoot><tr style="border-top:2px solid rgba(255,255,255,0.12)">
+        <td style="font-weight:900">UKUPNO</td>
+        <td style="font-weight:900;color:var(--gold)">${fmtRsd(entries.reduce((s,[,d])=>s+d.total,0))}</td>
+        <td style="font-weight:900;color:#6ee7b7">${fmtRsd(entries.reduce((s,[,d])=>s+d.paid,0))}</td>
+        <td style="font-weight:900;color:#fca5a5">${fmtRsd(entries.reduce((s,[,d])=>s+d.pending,0))}</td>
+        <td></td>
+      </tr></tfoot>
+    </table>`;
 }
 
 // ── Stamps ────────────────────────────────────────────────────────
@@ -2013,7 +2031,7 @@ async function loadStamps(){
   const {data}=await sb.from('stamp_locations').select('*').order('sort_order').order('name');
   document.getElementById('stamps-tbl').innerHTML=`
     <table class="tbl">
-      <thead><tr><th>Naziv</th><th>Tip</th><th>Koordinate</th><th>Aktivan<br><span style='font-size:9px;font-weight:600;color:var(--muted)'>gost skuplja pečat</span></th><th>Na mapi<br><span style='font-size:9px;font-weight:600;color:var(--muted)'>vidljiv na radaru</span></th><th>Akcije</th></tr></thead>
+      <thead><tr><th>Naziv</th><th>Tip</th><th>Koordinate</th><th>Aktivan</th><th>Na radaru</th><th>Akcije</th></tr></thead>
       <tbody>${(data||[]).map(l=>`<tr>
         <td style="font-weight:800">${esc(l.name)}</td>
         <td><span class="badge ${l.type==='public'?'b-attr':'b-rest'}">${l.type}</span></td>
@@ -2026,11 +2044,7 @@ async function loadStamps(){
 }
 async function togS(id,f,v){
   const {error}=await sb.from('stamp_locations').update({[f]:v}).eq('id',id);
-  if(error){
-    alert('Greška pri čuvanju: '+error.message+'\n\nMoguć problem sa RLS dozvolama za stamp_locations tabelu.');
-    loadStamps(); // reload da vrati pravo stanje
-    return;
-  }
+  if(error){ alert('Greška: '+error.message); }
   loadStamps();
 }
 async function delStamp(id){if(!confirm('Obrisati?'))return;await sb.from('stamp_locations').delete().eq('id',id);loadStamps();}
