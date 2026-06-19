@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="sr-Latn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>HealthConnect — Kraljevo</title>
+  <link rel="manifest" href="./manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="HealthConnect">
+  <meta name="theme-color" content="#1B6B5A">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon192.png">
+  <link rel="apple-touch-icon" href="icon192.png">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #F0F7F5;
+      color: #0D2B24;
+      min-height: 100%;
+      -webkit-font-smoothing: antialiased;
+    }
+    .app {
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: #F0F7F5;
+      padding-bottom: 84px;
+    }
+
+    /* ── Hero ────────────────────────────────────────────────────── */
+    .hero {
+      background: #1B6B5A;
+      padding: 52px 20px 56px;
+      position: relative;
+      overflow: hidden;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .hero-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+      position: relative;
+      z-index: 1;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: #2EC4A0;
+      border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 13px; color: #fff;
+    }
+    .logo-text { font-weight: 800; font-size: 15px; color: #fff; letter-spacing: -0.3px; }
+    .city-chip {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.13);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 20px; padding: 5px 11px;
+    }
+    .city-dot { width: 7px; height: 7px; border-radius: 50%; background: #2EC4A0; }
+    .city-name { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.92); }
+    .hero-body { position: relative; z-index: 1; }
+    .hero-greeting { font-size: 13px; color: rgba(255,255,255,0.6); font-weight: 600; margin-bottom: 4px; }
+    .hero-title {
+      font-size: 22px; font-weight: 800; color: #fff;
+      letter-spacing: -0.5px; line-height: 1.2; margin-bottom: 18px;
+    }
+    .hero-title em { font-style: normal; color: #2EC4A0; }
+    .search-bar {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.13);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 14px; padding: 11px 14px;
+    }
+    .search-bar input {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: #fff; font-size: 13px; font-family: inherit;
+    }
+    .search-bar input::placeholder { color: rgba(255,255,255,0.4); }
+    .s-ico { color: rgba(255,255,255,0.4); width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* ── Sekcija ─────────────────────────────────────────────────── */
+    .section { padding: 18px 16px 0; }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+    }
+    .section-title { font-size: 15px; font-weight: 800; color: #0D2B24; letter-spacing: -0.3px; }
+    .section-link { font-size: 12px; font-weight: 700; color: #1B6B5A; text-decoration: none; }
+
+    /* ── Brzi pristup ────────────────────────────────────────────── */
+    .quick-grid {
+      display: grid; grid-template-columns: repeat(4,1fr);
+      gap: 8px; padding: 0 16px;
+    }
+    .qa-item {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .qa-icon {
+      width: 50px; height: 50px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; transition: transform 0.15s;
+    }
+    .qa-item:active .qa-icon { transform: scale(0.91); }
+    .qi-green  { background: #D1F5E8; }
+    .qi-blue   { background: #D6E8FA; }
+    .qi-orange { background: #FCE8D2; }
+    .qi-purple { background: #EDE5FB; }
+    .qa-label { font-size: 10px; font-weight: 700; color: #4B5563; text-align: center; line-height: 1.3; }
+
+    /* ── Zlatna kartica zdravlja ──────────────────────────────────── */
+    .zlatna-card {
+      margin: 18px 16px 0;
+      background: linear-gradient(135deg, #1a2e1a 0%, #0D2B24 60%, #163020 100%);
+      border-radius: 22px;
+      padding: 18px 18px 16px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(212,175,55,0.25);
+    }
+    .zk-shine1 {
+      position: absolute; border-radius: 50%; pointer-events: none;
+      width: 160px; height: 160px;
+      background: radial-gradient(circle, rgba(212,175,55,0.12) 0%, transparent 70%);
+      top: -50px; right: -40px;
+    }
+    .zk-shine2 {
+      position: absolute; border-radius: 50%; pointer-events: none;
+      width: 100px; height: 100px;
+      background: radial-gradient(circle, rgba(212,175,55,0.07) 0%, transparent 70%);
+      bottom: -30px; left: 10px;
+    }
+    .zk-inner { position: relative; z-index: 1; }
+    .zk-top {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+    }
+    .zk-label-row { display: flex; align-items: center; gap: 8px; }
+    .zk-star-icon {
+      width: 30px; height: 30px;
+      background: rgba(212,175,55,0.18);
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+    }
+    .zk-label { font-size: 12px; font-weight: 800; color: rgba(212,175,55,0.9); letter-spacing: 0.04em; }
+    .zk-nivo {
+      background: rgba(212,175,55,0.15);
+      border: 1px solid rgba(212,175,55,0.35);
+      border-radius: 20px; padding: 3px 10px;
+      font-size: 10px; font-weight: 800; color: #D4AF37;
+    }
+
+    /* Poslednje posete */
+    .zk-posete { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+    .zk-poseta {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(212,175,55,0.1);
+      border-radius: 11px; padding: 8px 11px;
+    }
+    .zk-poseta-ikon {
+      width: 32px; height: 32px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .zk-poseta-info { flex: 1; min-width: 0; }
+    .zk-poseta-naziv { font-size: 12px; font-weight: 800; color: #fff; letter-spacing: -0.2px; }
+    .zk-poseta-datum { font-size: 10px; color: rgba(255,255,255,0.45); font-weight: 600; margin-top: 1px; }
+    .zk-poseta-badge {
+      font-size: 9px; font-weight: 800;
+      padding: 3px 7px; border-radius: 8px; flex-shrink: 0;
+    }
+    .badge-pogodnost { background: rgba(212,175,55,0.18); color: #D4AF37; }
+    .badge-pecat     { background: rgba(46,196,160,0.18); color: #2EC4A0; }
+
+    /* Pogodnosti footer */
+    .zk-footer {
+      background: rgba(212,175,55,0.08);
+      border: 1px solid rgba(212,175,55,0.15);
+      border-radius: 11px; padding: 9px 12px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .zk-footer-txt { font-size: 11px; color: rgba(255,255,255,0.65); font-weight: 600; }
+    .zk-footer-txt strong { color: #D4AF37; }
+    .zk-footer-btn {
+      font-size: 10px; font-weight: 800; color: #D4AF37;
+      cursor: pointer; white-space: nowrap;
+    }
+
+    /* ── Zdravstvena staza ───────────────────────────────────────── */
+    .staza-card {
+      margin: 18px 16px 0;
+      background: #1B6B5A;
+      border-radius: 22px; padding: 17px 18px;
+      position: relative; overflow: hidden;
+    }
+    .staza-inner { position: relative; z-index: 1; }
+    .staza-top {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+    }
+    .staza-label-row { display: flex; align-items: center; gap: 8px; }
+    .staza-icon {
+      width: 30px; height: 30px;
+      background: rgba(46,196,160,0.22);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center; font-size: 15px;
+    }
+    .staza-label { font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.75); }
+    .staza-badge {
+      background: rgba(46,196,160,0.22);
+      border: 1px solid rgba(46,196,160,0.45);
+      border-radius: 20px; padding: 3px 10px;
+      font-size: 10px; font-weight: 800; color: #2EC4A0;
+    }
+    .staza-track { display: flex; align-items: center; margin-bottom: 13px; }
+    .step-node {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 800; flex-shrink: 0;
+    }
+    .step-done    { background: #2EC4A0; color: #0D2B24; }
+    .step-current { background: #fff; color: #1B6B5A; box-shadow: 0 0 0 3px rgba(46,196,160,0.35); }
+    .step-empty   { background: rgba(255,255,255,0.09); border: 1.5px dashed rgba(255,255,255,0.2); }
+    .step-trophy  { background: rgba(255,255,255,0.09); border: 1.5px dashed rgba(255,255,255,0.2); font-size: 13px; }
+    .step-line      { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.1); }
+    .step-line-done { background: #2EC4A0; }
+    .staza-footer { display: flex; align-items: center; justify-content: space-between; }
+    .staza-sub { font-size: 11px; color: rgba(255,255,255,0.58); font-weight: 600; }
+    .staza-sub strong { color: #fff; }
+    .staza-cta { font-size: 10px; font-weight: 800; color: #2EC4A0; cursor: pointer; }
+
+    /* Nagrade pregled */
+    .nagrade-row { display: flex; gap: 8px; padding: 10px 16px 0; }
+    .nagrada-item {
+      flex: 1; background: #fff;
+      border: 1px solid #E2EFE9; border-radius: 14px;
+      padding: 10px 8px;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      cursor: pointer;
+    }
+    .nagrada-emoji { font-size: 20px; }
+    .nagrada-korak {
+      font-size: 9px; font-weight: 800; color: #0F6E56;
+      background: #D1F5E8; border-radius: 10px; padding: 2px 7px;
+    }
+    .nagrada-naziv { font-size: 9px; font-weight: 700; color: #374151; text-align: center; line-height: 1.4; }
+
+    /* ── Mreža brige scroll ──────────────────────────────────────── */
+    .mreza-scroll {
+      display: flex; gap: 10px; padding: 0 16px;
+      overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .mreza-scroll::-webkit-scrollbar { display: none; }
+    .mreza-card {
+      min-width: 148px; background: #fff;
+      border-radius: 18px; border: 1px solid #E2EFE9;
+      overflow: hidden; flex-shrink: 0;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: transform 0.15s;
+    }
+    .mreza-card:active { transform: scale(0.97); }
+    .mc-thumb {
+      height: 68px;
+      display: flex; align-items: center; justify-content: center; font-size: 26px;
+    }
+    .mc-g { background: #D1F5E8; }
+    .mc-b { background: #D6E8FA; }
+    .mc-o { background: #FCE8D2; }
+    .mc-body { padding: 9px 11px 11px; }
+    .mc-type {
+      font-size: 9px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.07em; color: #9CA3AF; margin-bottom: 2px;
+    }
+    .mc-name { font-size: 12px; font-weight: 800; color: #0D2B24; margin-bottom: 5px; letter-spacing: -0.2px; }
+    .mc-meta { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .mc-tim { display: flex; align-items: center; gap: 3px; }
+    .mc-tim-dot { width: 5px; height: 5px; border-radius: 50%; background: #2EC4A0; }
+    .mc-tim-txt { font-size: 9px; font-weight: 700; color: #2EC4A0; }
+    .mc-star { font-size: 9px; color: #F59E0B; font-weight: 700; }
+    .mc-dist { font-size: 9px; color: #9CA3AF; font-weight: 600; }
+
+    /* ── Radar baner ─────────────────────────────────────────────── */
+    .radar-baner {
+      margin: 18px 16px 0;
+      background: #0D2B24;
+      border-radius: 14px; padding: 12px 14px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .radar-levo { display: flex; align-items: center; gap: 10px; }
+    .radar-pins { display: flex; align-items: flex-end; gap: 3px; flex-shrink: 0; }
+    .rpin {
+      border-radius: 50% 50% 50% 0; transform: rotate(-45deg); flex-shrink: 0;
+    }
+    .radar-txt-main { font-size: 12px; font-weight: 700; color: #fff; }
+    .radar-txt-sub  { font-size: 10px; color: rgba(255,255,255,0.48); font-weight: 600; margin-top: 2px; }
+    .radar-btn {
+      background: #2EC4A0; border-radius: 9px; padding: 6px 12px;
+      font-size: 11px; font-weight: 800; color: #0D2B24; white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* ── Vaš zdravstveni tim ─────────────────────────────────────── */
+    .tim-card {
+      margin: 18px 16px 0; background: #fff;
+      border: 1px solid #E2EFE9; border-radius: 20px; padding: 14px 16px;
+    }
+    .tim-sub { font-size: 12px; color: #6B7280; font-weight: 600; margin-bottom: 12px; line-height: 1.5; }
+    .tim-sub strong { color: #1B6B5A; }
+    .tim-members { display: flex; flex-direction: column; gap: 8px; }
+    .tim-member {
+      display: flex; align-items: center; gap: 11px;
+      background: #F4FBF8; border-radius: 13px; padding: 9px 12px;
+    }
+    .tim-avatar {
+      width: 38px; height: 38px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .tim-info { flex: 1; min-width: 0; }
+    .tim-name { font-size: 12px; font-weight: 800; color: #0D2B24; letter-spacing: -0.2px; }
+    .tim-role { font-size: 10px; color: #6B7280; font-weight: 600; margin-top: 1px; }
+    .tim-badge {
+      display: flex; align-items: center; gap: 3px;
+      background: #D1F5E8; border-radius: 8px; padding: 3px 8px; flex-shrink: 0;
+    }
+    .tim-badge-dot { width: 5px; height: 5px; border-radius: 50%; background: #2EC4A0; }
+    .tim-badge-txt { font-size: 9px; font-weight: 800; color: #0F6E56; }
+
+    /* ── Nav bar ─────────────────────────────────────────────────── */
+    .nav-bar {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 430px;
+      background: #fff; border-top: 1px solid #E2EFE9;
+      display: flex; justify-content: space-around;
+      padding: 10px 0 max(14px, env(safe-area-inset-bottom));
+      z-index: 100;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .nav-ico {
+      width: 42px; height: 30px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; transition: background 0.15s;
+    }
+    .nav-ico.active { background: #D1F5E8; }
+    .nav-label { font-size: 9px; font-weight: 700; color: #9CA3AF; }
+    .nav-label.active { color: #1B6B5A; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="orb" style="width:200px;height:200px;background:#2EC4A0;opacity:0.10;top:-70px;right:-50px;"></div>
+    <div class="orb" style="width:90px;height:90px;background:#fff;opacity:0.07;bottom:-15px;left:-15px;"></div>
+    <div class="hero-top">
+      <div class="logo">
+        <div class="logo-mark">HC</div>
+        <span class="logo-text">HealthConnect</span>
+      </div>
+      <div class="city-chip">
+        <div class="city-dot"></div>
+        <span class="city-name" id="grad-naziv">Kraljevo</span>
+      </div>
+    </div>
+    <div class="hero-body">
+      <div class="hero-greeting">Dobro jutro 👋</div>
+      <h1 class="hero-title">Pronađi apoteku ili<br><em>lekara u blizini</em></h1>
+      <div class="search-bar">
+        <svg class="s-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Apoteka, lekar, specijalnost..." id="search-input">
+        <svg class="s-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- BRZI PRISTUP -->
+  <div class="section">
+    <div class="section-header"><span class="section-title">Brzi pristup</span></div>
+  </div>
+  <div class="quick-grid">
+    <div class="qa-item" onclick="otvori('radar.html?tip=apoteka')">
+      <div class="qa-icon qi-green">💊</div>
+      <span class="qa-label">Apoteke</span>
+    </div>
+    <div class="qa-item" onclick="otvori('radar.html?tip=lekar')">
+      <div class="qa-icon qi-blue">🩺</div>
+      <span class="qa-label">Lekari</span>
+    </div>
+    <div class="qa-item" onclick="otvori('zakazivanje.html')">
+      <div class="qa-icon qi-orange">📅</div>
+      <span class="qa-label">Zakazivanje</span>
+    </div>
+    <div class="qa-item" onclick="otvori('nagrade.html')">
+      <div class="qa-icon qi-purple">🏆</div>
+      <span class="qa-label">Nagrade</span>
+    </div>
+  </div>
+
+  <!-- ZLATNA KARTICA ZDRAVLJA -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Zlatna kartica zdravlja</span>
+      <a href="kartica.html" class="section-link">Detalji →</a>
+    </div>
+  </div>
+  <div class="zlatna-card">
+    <div class="zk-shine1"></div>
+    <div class="zk-shine2"></div>
+    <div class="zk-inner">
+      <div class="zk-top">
+        <div class="zk-label-row">
+          <div class="zk-star-icon">⭐</div>
+          <span class="zk-label">Zlatna kartica zdravlja</span>
+        </div>
+        <span class="zk-nivo">Nivo 2</span>
+      </div>
+
+      <!-- Poslednje posete i pogodnosti -->
+      <div class="zk-posete" id="zk-posete">
+        <div class="zk-poseta">
+          <div class="zk-poseta-ikon" style="background:rgba(46,196,160,0.15);">💊</div>
+          <div class="zk-poseta-info">
+            <div class="zk-poseta-naziv">Apoteka Sunce</div>
+            <div class="zk-poseta-datum">Danas, 09:14 · Kraljevo</div>
+          </div>
+          <span class="zk-poseta-badge badge-pogodnost">−10%</span>
+        </div>
+        <div class="zk-poseta">
+          <div class="zk-poseta-ikon" style="background:rgba(59,130,246,0.15);">🩺</div>
+          <div class="zk-poseta-info">
+            <div class="zk-poseta-naziv">Dr Milovanović</div>
+            <div class="zk-poseta-datum">Juče, 11:30 · Kraljevo</div>
+          </div>
+          <span class="zk-poseta-badge badge-pecat">+1 korak</span>
+        </div>
+        <div class="zk-poseta">
+          <div class="zk-poseta-ikon" style="background:rgba(252,131,50,0.15);">❤️</div>
+          <div class="zk-poseta-info">
+            <div class="zk-poseta-naziv">Dr Jovanović</div>
+            <div class="zk-poseta-datum">18. jun · Kraljevo</div>
+          </div>
+          <span class="zk-poseta-badge badge-pecat">+1 korak</span>
+        </div>
+      </div>
+
+      <div class="zk-footer">
+        <div class="zk-footer-txt">
+          Aktivne pogodnosti u <strong id="zk-krug-naziv">mreži brige</strong>
+        </div>
+        <span class="zk-footer-btn" onclick="otvori('pogodnosti.html')">Pogledaj sve →</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ZDRAVSTVENA STAZA -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Zdravstvena staza</span>
+      <a href="nagrade.html" class="section-link">Nagrade →</a>
+    </div>
+  </div>
+  <div class="staza-card">
+    <div class="orb" style="width:130px;height:130px;background:#2EC4A0;opacity:0.10;top:-40px;right:-35px;border-radius:50%;position:absolute;"></div>
+    <div class="staza-inner">
+      <div class="staza-top">
+        <div class="staza-label-row">
+          <div class="staza-icon">🥾</div>
+          <span class="staza-label">Korak <span id="staza-tr">6</span> od 10</span>
+        </div>
+        <span class="staza-badge" id="staza-proc">60% puta</span>
+      </div>
+      <div class="staza-track" id="staza-track"></div>
+      <div class="staza-footer">
+        <span class="staza-sub">Još <strong id="staza-pre">4 posete</strong> do nagrade</span>
+        <span class="staza-cta" onclick="otvori('nagrade.html')">Pogledaj nagrade →</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="nagrade-row">
+    <div class="nagrada-item" onclick="otvori('nagrade.html')">
+      <div class="nagrada-emoji">💊</div>
+      <div class="nagrada-korak">korak 5</div>
+      <div class="nagrada-naziv">Vitamini gratis</div>
+    </div>
+    <div class="nagrada-item" onclick="otvori('nagrade.html')">
+      <div class="nagrada-emoji">🩺</div>
+      <div class="nagrada-korak">korak 10</div>
+      <div class="nagrada-naziv">Besplatan pregled</div>
+    </div>
+    <div class="nagrada-item" onclick="otvori('nagrade.html')">
+      <div class="nagrada-emoji">🎁</div>
+      <div class="nagrada-korak">korak 20</div>
+      <div class="nagrada-naziv">Premium paket</div>
+    </div>
+  </div>
+
+  <!-- MREŽA BRIGE U BLIZINI -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Mreža brige — Kraljevo</span>
+      <a href="radar.html" class="section-link">Sve →</a>
+    </div>
+  </div>
+  <div class="mreza-scroll">
+    <div class="mreza-card" onclick="otvori('profil.html?s=apoteka-sunce')">
+      <div class="mc-thumb mc-g">💊</div>
+      <div class="mc-body">
+        <div class="mc-type">Apoteka</div>
+        <div class="mc-name">Apoteka Sunce</div>
+        <div class="mc-meta">
+          <div class="mc-tim"><div class="mc-tim-dot"></div><span class="mc-tim-txt">Vaš tim</span></div>
+          <span class="mc-star">★ 4.9</span>
+          <span class="mc-dist">· 210m</span>
+        </div>
+      </div>
+    </div>
+    <div class="mreza-card" onclick="otvori('profil.html?s=dr-milovanovic')">
+      <div class="mc-thumb mc-b">🩺</div>
+      <div class="mc-body">
+        <div class="mc-type">Opšta praksa</div>
+        <div class="mc-name">Dr Milovanović</div>
+        <div class="mc-meta">
+          <div class="mc-tim"><div class="mc-tim-dot"></div><span class="mc-tim-txt">Vaš tim</span></div>
+          <span class="mc-star">★ 4.8</span>
+          <span class="mc-dist">· 380m</span>
+        </div>
+      </div>
+    </div>
+    <div class="mreza-card" onclick="otvori('profil.html?s=klinika-ras')">
+      <div class="mc-thumb mc-o">🏥</div>
+      <div class="mc-body">
+        <div class="mc-type">Klinika</div>
+        <div class="mc-name">Klinika Raš</div>
+        <div class="mc-meta">
+          <span class="mc-star">★ 4.7</span>
+          <span class="mc-dist">· 900m</span>
+        </div>
+      </div>
+    </div>
+    <div class="mreza-card" onclick="otvori('profil.html?s=dr-jovanovic')">
+      <div class="mc-thumb mc-b">❤️</div>
+      <div class="mc-body">
+        <div class="mc-type">Kardiolog</div>
+        <div class="mc-name">Dr Jovanović</div>
+        <div class="mc-meta">
+          <div class="mc-tim"><div class="mc-tim-dot"></div><span class="mc-tim-txt">Vaš tim</span></div>
+          <span class="mc-star">★ 4.9</span>
+          <span class="mc-dist">· 1.2km</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RADAR BANER (kompaktan) -->
+  <div class="radar-baner" onclick="otvori('radar.html')">
+    <div class="radar-levo">
+      <div class="radar-pins">
+        <div class="rpin" style="width:13px;height:13px;background:#2EC4A0;"></div>
+        <div class="rpin" style="width:17px;height:17px;background:#1B6B5A;"></div>
+        <div class="rpin" style="width:11px;height:11px;background:#D4AF37;"></div>
+      </div>
+      <div>
+        <div class="radar-txt-main">11 mesta u radijusu 2km</div>
+        <div class="radar-txt-sub">Kraljevo · Drugi gradovi dostupni na radaru</div>
+      </div>
+    </div>
+    <div class="radar-btn">Otvori radar →</div>
+  </div>
+
+  <!-- VAŠ ZDRAVSTVENI TIM -->
+  <div class="section">
+    <div class="section-header"><span class="section-title">Vaš zdravstveni tim</span></div>
+  </div>
+  <div class="tim-card">
+    <div class="tim-sub">
+      <strong>Dr Milovanović, Apoteka Sunce</strong> i još 2 stručnjaka brinu o vama
+    </div>
+    <div class="tim-members">
+      <div class="tim-member">
+        <div class="tim-avatar" style="background:#D1F5E8;">💊</div>
+        <div class="tim-info">
+          <div class="tim-name">Apoteka Sunce</div>
+          <div class="tim-role">Apoteka · Kraljevo centar</div>
+        </div>
+        <div class="tim-badge"><div class="tim-badge-dot"></div><span class="tim-badge-txt">Proverena</span></div>
+      </div>
+      <div class="tim-member">
+        <div class="tim-avatar" style="background:#D6E8FA;">🩺</div>
+        <div class="tim-info">
+          <div class="tim-name">Dr Milovanović</div>
+          <div class="tim-role">Opšta praksa</div>
+        </div>
+        <div class="tim-badge"><div class="tim-badge-dot"></div><span class="tim-badge-txt">Proverena</span></div>
+      </div>
+      <div class="tim-member">
+        <div class="tim-avatar" style="background:#FCE8D2;">❤️</div>
+        <div class="tim-info">
+          <div class="tim-name">Dr Jovanović</div>
+          <div class="tim-role">Kardiolog</div>
+        </div>
+        <div class="tim-badge"><div class="tim-badge-dot"></div><span class="tim-badge-txt">Proverena</span></div>
+      </div>
+      <div class="tim-member">
+        <div class="tim-avatar" style="background:#EDE5FB;">🔬</div>
+        <div class="tim-info">
+          <div class="tim-name">Lab Dijagnostika</div>
+          <div class="tim-role">Laboratorija</div>
+        </div>
+        <div class="tim-badge"><div class="tim-badge-dot"></div><span class="tim-badge-txt">Proverena</span></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- .app -->
+
+<!-- NAV BAR -->
+<nav class="nav-bar">
+  <div class="nav-item" onclick="otvori('index.html')">
+    <div class="nav-ico active">
+      <svg style="width:21px;height:21px;color:#1B6B5A" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <span class="nav-label active">Početna</span>
+  </div>
+  <div class="nav-item" onclick="otvori('radar.html')">
+    <div class="nav-ico">
+      <svg style="width:21px;height:21px;color:#9CA3AF" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    </div>
+    <span class="nav-label">Radar</span>
+  </div>
+  <div class="nav-item" onclick="otvori('stamp.html')">
+    <div class="nav-ico">
+      <svg style="width:21px;height:21px;color:#9CA3AF" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8M12 8v8"/></svg>
+    </div>
+    <span class="nav-label">Skeniraj</span>
+  </div>
+  <div class="nav-item" onclick="otvori('nagrade.html')">
+    <div class="nav-ico">
+      <svg style="width:21px;height:21px;color:#9CA3AF" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+    </div>
+    <span class="nav-label">Nagrade</span>
+  </div>
+  <div class="nav-item" onclick="otvori('profil.html')">
+    <div class="nav-ico">
+      <svg style="width:21px;height:21px;color:#9CA3AF" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+    <span class="nav-label">Profil</span>
+  </div>
+</nav>
+
+<script>
+function otvori(url) { window.location.href = url; }
+
+// ── Grad iz localStorage ──────────────────────────────────────────
+(function() {
+  const grad = localStorage.getItem('hc_grad') || 'Kraljevo';
+  document.getElementById('grad-naziv').textContent = grad;
+})();
+
+// ── Zdravstvena staza ─────────────────────────────────────────────
+(function() {
+  const UKUPNO = 10;
+  const n = parseInt(localStorage.getItem('hc_koraci') || '6');
+  const pre = UKUPNO - n;
+  document.getElementById('staza-tr').textContent = n;
+  document.getElementById('staza-proc').textContent = Math.round((n/UKUPNO)*100) + '% puta';
+  document.getElementById('staza-pre').textContent = pre + (pre === 1 ? ' poseta' : ' posete');
+  const track = document.getElementById('staza-track');
+  for (let i = 1; i <= UKUPNO; i++) {
+    if (i > 1) {
+      const l = document.createElement('div');
+      l.className = 'step-line' + (i - 1 <= n ? ' step-line-done' : '');
+      track.appendChild(l);
+    }
+    const s = document.createElement('div');
+    if (i === UKUPNO)      { s.className = 'step-node step-trophy'; s.textContent = '🏆'; }
+    else if (i < n)        { s.className = 'step-node step-done';    s.textContent = '✓'; }
+    else if (i === n)      { s.className = 'step-node step-current'; s.textContent = i; }
+    else                   { s.className = 'step-node step-empty'; }
+    track.appendChild(s);
+  }
+})();
+
+// ── Zlatna kartica — posete iz localStorage ───────────────────────
+(function() {
+  const posete = JSON.parse(localStorage.getItem('hc_posete') || '[]');
+  if (posete.length === 0) return; // ostaju demo podaci
+  const container = document.getElementById('zk-posete');
+  container.innerHTML = '';
+  posete.slice(0,3).forEach(function(p) {
+    const div = document.createElement('div');
+    div.className = 'zk-poseta';
+    div.innerHTML =
+      '<div class="zk-poseta-ikon" style="background:rgba(46,196,160,0.15);">' + (p.emoji || '🏥') + '</div>' +
+      '<div class="zk-poseta-info">' +
+        '<div class="zk-poseta-naziv">' + p.naziv + '</div>' +
+        '<div class="zk-poseta-datum">' + p.datum + ' · ' + (p.grad || 'Kraljevo') + '</div>' +
+      '</div>' +
+      '<span class="zk-poseta-badge ' + (p.popust ? 'badge-pogodnost' : 'badge-pecat') + '">' +
+        (p.popust ? p.popust : '+1 korak') + '</span>';
+    container.appendChild(div);
+  });
+  const krug = localStorage.getItem('hc_krug_naziv');
+  if (krug) document.getElementById('zk-krug-naziv').textContent = krug;
+})();
+
+// ── Pretraga ──────────────────────────────────────────────────────
+document.getElementById('search-input').addEventListener('focus', function() {
+  otvori('pretraga.html');
+});
+
+// ── Service Worker ────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(function(){});
+}
+</script>
+</body>
+</html>
