@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="sr-Latn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>StayVB — Više rezervacija, bez provizije</title>
+<meta name="description" content="Sistem koji vaše goste pretvara u ambasadore vašeg apartmana.">
+<meta name="theme-color" content="#0f172a">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#080f1e;color:white;min-height:100vh}
+
+.hero{background:linear-gradient(160deg,#0d1f3d 0%,#080f1e 70%);padding:52px 24px 44px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(251,191,36,0.07),transparent 70%);pointer-events:none}
+.logo{display:inline-flex;align-items:center;gap:8px;margin-bottom:28px;padding:8px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);border-radius:999px}
+.logo-icon{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,rgba(251,191,36,0.25),rgba(245,158,11,0.12));border:1px solid rgba(251,191,36,0.35);display:flex;align-items:center;justify-content:center;font-size:13px}
+.logo-text{font-size:12px;font-weight:900;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.16em}
+.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:7px 16px;border-radius:999px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#6ee7b7;margin-bottom:22px}
+.eyebrow span{width:7px;height:7px;border-radius:50%;background:#6ee7b7;animation:blink 1.6s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.hero h1{font-size:clamp(1.8rem,5.5vw,2.7rem);font-weight:900;letter-spacing:-0.04em;line-height:1.1;margin-bottom:18px}
+.gold{color:#fbbf24}.green{color:#6ee7b7}
+.hero-lead{font-size:14px;color:rgba(255,255,255,0.55);font-weight:600;line-height:1.8;max-width:420px;margin:0 auto 32px}
+.hero-lead strong{color:rgba(255,255,255,0.85);font-weight:800}
+.btn-primary{display:inline-block;padding:17px 36px;background:linear-gradient(135deg,#d97706,#f59e0b);color:#0f172a;border-radius:16px;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;cursor:pointer;border:none;font-family:inherit;box-shadow:0 12px 32px rgba(245,158,11,0.35);transition:transform 0.18s}
+.btn-primary:active{transform:scale(0.97)}
+.hero-note{font-size:11px;color:rgba(255,255,255,0.28);font-weight:600;margin-top:12px}
+
+.section{padding:44px 24px;max-width:580px;margin:0 auto}
+.section-dark{background:rgba(0,0,0,0.25);border-top:1px solid rgba(255,255,255,0.05);border-bottom:1px solid rgba(255,255,255,0.05)}
+.section-label{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.18em;color:rgba(255,255,255,0.30);margin-bottom:10px;text-align:center}
+.section h2{font-size:1.25rem;font-weight:900;letter-spacing:-0.03em;line-height:1.3;margin-bottom:14px;text-align:center}
+.section p{font-size:13px;color:rgba(255,255,255,0.50);font-weight:600;line-height:1.8}
+.section p strong{color:rgba(255,255,255,0.82);font-weight:800}
+
+/* Koraci */
+.steps{display:flex;flex-direction:column;gap:0;margin-top:24px}
+.step{display:flex;gap:16px;padding:20px 0;border-bottom:1px solid rgba(255,255,255,0.06)}
+.step:last-child{border-bottom:none}
+.step-num{width:38px;height:38px;border-radius:12px;background:rgba(251,191,36,0.10);border:1px solid rgba(251,191,36,0.22);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;margin-top:2px}
+.step-title{font-size:14px;font-weight:900;margin-bottom:5px}
+.step-desc{font-size:12px;color:rgba(255,255,255,0.45);font-weight:600;line-height:1.65}
+
+/* Plan kartice */
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:28px}
+@media(max-width:460px){.plans{grid-template-columns:1fr}}
+.plan{border-radius:20px;padding:24px 20px;position:relative;cursor:pointer;transition:all 0.2s;border:1.5px solid transparent}
+.plan-free{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.09)}
+.plan-premium{background:linear-gradient(145deg,rgba(251,191,36,0.07),rgba(245,158,11,0.03));border-color:rgba(251,191,36,0.28)}
+.plan.selected-free{border-color:rgba(16,185,129,0.55);background:rgba(16,185,129,0.07);box-shadow:0 0 0 1px rgba(16,185,129,0.30)}
+.plan.selected-premium{border-color:rgba(251,191,36,0.65);background:rgba(251,191,36,0.09);box-shadow:0 0 0 1px rgba(251,191,36,0.40)}
+.plan-recommended{position:absolute;top:-11px;right:14px;background:linear-gradient(135deg,#d97706,#f59e0b);color:#0f172a;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;padding:3px 10px;border-radius:999px}
+.plan-icon{font-size:1.7rem;margin-bottom:10px}
+.plan-name{font-size:14px;font-weight:900;margin-bottom:4px}
+.plan-price{font-size:1.5rem;font-weight:900;margin-bottom:4px;letter-spacing:-0.03em}
+.plan-price sub{font-size:11px;color:rgba(255,255,255,0.40);font-weight:700}
+.plan-premium .plan-price{color:#fbbf24}
+.plan-billing{font-size:10px;color:rgba(255,255,255,0.35);font-weight:700;margin-bottom:16px}
+.plan-features{list-style:none;display:flex;flex-direction:column;gap:7px}
+.plan-features li{display:flex;align-items:flex-start;gap:7px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);line-height:1.45}
+.plan-features li::before{content:'✓';font-weight:900;flex-shrink:0;margin-top:1px}
+.plan-free .plan-features li::before{color:#6ee7b7}
+.plan-premium .plan-features li::before{color:#fbbf24}
+.plan-features li.plus::before{content:'＋';color:rgba(251,191,36,0.6)}
+.plan-select-indicator{margin-top:16px;padding:8px;border-radius:10px;font-size:11px;font-weight:800;text-align:center;transition:all 0.2s;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.35)}
+.selected-free .plan-select-indicator{background:rgba(16,185,129,0.15);color:#6ee7b7}
+.selected-premium .plan-select-indicator{background:rgba(251,191,36,0.15);color:#fbbf24}
+
+/* Forma */
+.form-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:22px;padding:28px 22px;margin-top:28px}
+.form-card h3{font-size:1rem;font-weight:900;margin-bottom:6px}
+.form-card p{font-size:12px;color:rgba(255,255,255,0.42);font-weight:600;margin-bottom:22px;line-height:1.65}
+.field{margin-bottom:14px}
+.field label{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.35);display:block;margin-bottom:6px}
+.field input,.field textarea{width:100%;padding:14px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);border-radius:13px;color:white;font-size:14px;font-weight:600;font-family:inherit;outline:none;transition:border-color 0.2s}
+.field input::placeholder,.field textarea::placeholder{color:rgba(255,255,255,0.20)}
+.field input:focus,.field textarea:focus{border-color:rgba(251,191,36,0.42);background:rgba(255,255,255,0.07)}
+.btn-submit{width:100%;padding:17px;background:linear-gradient(135deg,#d97706,#f59e0b);color:#0f172a;border:none;border-radius:15px;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;cursor:pointer;font-family:inherit;box-shadow:0 10px 28px rgba(245,158,11,0.28);transition:transform 0.18s;margin-top:6px}
+.btn-submit:active{transform:scale(0.97)}
+.btn-submit:disabled{opacity:0.6;cursor:not-allowed}
+.form-msg{font-size:12px;font-weight:800;text-align:center;margin-top:12px;min-height:16px;color:#f87171}
+
+/* Garancije */
+.guarantees{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.guarantee{display:flex;align-items:center;gap:10px;padding:13px 15px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid rgba(255,255,255,0.06)}
+.guarantee-icon{font-size:1.1rem;flex-shrink:0}
+.guarantee-text{font-size:11px;color:rgba(255,255,255,0.42);font-weight:600;line-height:1.5}
+
+#success-screen{display:none;padding:72px 24px;text-align:center}
+#success-screen .big{font-size:4rem;margin-bottom:20px}
+#success-screen h2{font-size:1.5rem;font-weight:900;color:#fbbf24;letter-spacing:-0.03em;margin-bottom:12px}
+#success-screen p{font-size:13px;color:rgba(255,255,255,0.48);font-weight:600;line-height:1.8;max-width:320px;margin:0 auto 28px}
+.btn-ghost{padding:14px 28px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:13px;color:rgba(255,255,255,0.60);font-size:12px;font-weight:800;text-decoration:none;display:inline-block;font-family:inherit;text-transform:uppercase;letter-spacing:0.08em}
+
+.footer{text-align:center;padding:24px;font-size:11px;color:rgba(255,255,255,0.18);border-top:1px solid rgba(255,255,255,0.05)}
+</style>
+</head>
+<body>
+<div id="main-content">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="logo"><div class="logo-icon">⚡</div><span class="logo-text">StayVB</span></div>
+  <div class="eyebrow"><span></span>Za vlasnike smeštaja u Vrnjačkoj Banji</div>
+  <h1>Vaš apartman vide gosti<br>koji <span class="gold">traže smeštaj</span><br>i koji se <span class="green">vraćaju u Vrnjačku Banju</span></h1>
+  <p class="hero-lead">
+    StayVB je digitalni vodič koji svaki gost u Vrnjačkoj Banji otvori čim stigne. Vidljivi ste od prvog dana, na više jezika, bez posrednika i bez provizije.
+  </p>
+  <button class="btn-primary" onclick="document.getElementById('planovi').scrollIntoView({behavior:'smooth'})">
+    Pogledajte planove →
+  </button>
+  <div class="hero-note">Aktivacija za 24 sata. Bez ugovora.</div>
+</div>
+
+<!-- PROBLEM -->
+<div class="section-dark">
+  <div class="section" style="text-align:center">
+    <div class="section-label">Zašto je ovo važno</div>
+    <h2>Gost stiže u Vrnjačku Banju i ne zna ništa o njoj</h2>
+    <p>
+      Zamislite gosta koji dolazi prvi put. Ne zna koji je restoran dobar, gde ima atrakcija za decu, šta se dešava večeras u gradu. <strong>Uzima telefon i traži informacije.</strong>
+      <br><br>
+      StayVB je aplikacija koja mu odgovara na sva ta pitanja i koja mu, dok pretražuje, prikazuje vaš apartman kao preporučeno mesto za sledeći boravak. Ili ga vodi na Vas kada se hvali prijatelju: <strong>"Vidi gde sam odmarao, bilo je super. Dođi i ti, obezbedio sam ti rezervaciju. "</strong>
+      <br><br>
+      Booking sajtovi  to ne rade, ali uzimaju od vas 15 do 20% svake rezervacije. StayVB ne uzima ništa od rezervacije. Godišnja pretplata je fiksna i manja od jednog noćenja.
+      <br><br>
+      Još jedna stvar. Kad gost ode kući, ti sajtovi zaboravljaju na vas. StayVB ne. Ovde je Vaš apartman vidljiv u mesečnom newsletteru koji prima svaki gost koji je ikada koristio aplikaciju, u celoj Vrnjačkoj Banji. Vrnjačka Banja nije samo letnje odredište. Vašem apartmanu treba vidljivost tokom cele godine.
+    </p>
+  </div>
+</div>
+
+<!-- KAKO RADI -->
+<div class="section">
+  <div class="section-label">Proces</div>
+  <h2>Kako izgleda u praksi</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">🔑</div>
+      <div>
+        <div class="step-title">Prijavite se danas</div>
+        <div class="step-desc">Popunite formu ispod. Javimo se u roku od 24 sata, postavimo Vaš profil i pošaljemo QR kod sa stalkom koji postavljate u apartman.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">📱</div>
+      <div>
+        <div class="step-title">Gost skenira QR i otvara se ceo vodič</div>
+        <div class="step-desc">Svaki gost vidi WiFi lozinku, vaše posebne ponude, šta ima u gradu, restorane, atrakcije, događaje. Sve na njihovom jeziku automatski. Vaš apartman je polazna tačka celog istraživanja Vrnjačke Banje.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">⭐</div>
+      <div>
+        <div class="step-title">Gost skuplja pečate i preporučuje Vas</div>
+        <div class="step-desc">Loyalty program nagrađuje goste koji posete mesta u Banji. Gost koji je kod vas skupio pečat, kad prijatelj pita "gde da odsednem", otvara aplikaciju i pokazuje vaš profil. Vi ne plaćate ništa za tu preporuku.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">📊</div>
+      <div>
+        <div class="step-title">Pratite rezultate iz svog panela</div>
+        <div class="step-desc">Svaki dan vidite koliko gostiju je pregledalo vaš profil, koliko ih je kliknulo na WhatsApp kontakt, koliko pečata je skupljeno kod vas. Ko Vas je pdoelio u storiju, ko Vas je preporučio prijatelju.  Realni podaci, u realnom vremenu.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLANOVI -->
+<div class="section-dark" id="planovi">
+  <div class="section">
+    <div class="section-label">Planovi</div>
+    <h2>Odaberite šta vam odgovara</h2>
+    <p style="text-align:center">Počnite besplatno i nadogradite kad vidite prve rezultate. Bez ugovora, bez skrivenih troškova.</p>
+
+    <div class="plans">
+      <!-- FREE -->
+      <div class="plan plan-free" id="card-free" onclick="selectPlan('free')">
+        <div class="plan-icon">🏠</div>
+        <div class="plan-name">Osnovni</div>
+        <div class="plan-price">0 <sub>RSD</sub></div>
+        <div class="plan-billing">besplatno, za početak</div>
+        <ul class="plan-features">
+          <li>Digitalni vodič Vrnjačke Banje za vaše goste</li>
+          <li>WiFi lozinka i kontakt u aplikaciji</li>
+          <li>Direktan kontakt</li>
+          <li>6 jezika automatski</li>
+          <li>QR kod za smeštaj</li>
+          <li>Statistike poseta</li>
+        </ul>
+        <div class="plan-select-indicator" id="ind-free">Odaberi osnovni</div>
+      </div>
+
+      <!-- PREMIUM -->
+      <div class="plan plan-premium selected-premium" id="card-premium" onclick="selectPlan('premium')">
+        <div class="plan-recommended">Preporučeno</div>
+        <div class="plan-icon">⭐</div>
+        <div class="plan-name">Premium</div>
+        <div class="plan-price">6.000 <sub>RSD</sub></div>
+        <div class="plan-billing">godišnje — 500 RSD mesečno</div>
+        <ul class="plan-features">
+          <li>Sve iz osnovnog plana</li>
+          <li>Vaš apartman vidljiv gostima tokom cele godine čak i kad odu kući</li>
+          <li>Vaš apartman u mesečnom newsletteru koji ide svim prethodnim gostima</li>
+          <li>Gosti ostvaruju popuste u lokalima i restoranima širom Vrnjačke Banje</li>
+          <li>Loyalty pečati i nagrade — gosti preporučuju vas sledećem gostu</li>
+          <li>Pozovi prijatelja — svaki gost postaje ambasador vašeg apartmana</li>
+          <li>Posebna ponuda za goste direktno u aplikaciji</li>
+          <li>Instagram kampanja sa vašim gostima</li>
+          <li class="plus">⭐ Premium oznaka na profilu</li>
+          <li class="plus">Detaljne statistike i analitika</li>
+          <li class="plus">Prioritetna podrška</li>
+        </ul>
+        <div class="plan-select-indicator" id="ind-premium">✓ Odabrano</div>
+      </div>
+    </div>
+
+    <!-- Napomena o ceni -->
+    <div style="margin-top:16px;padding:16px 18px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.18);border-radius:14px;font-size:12px;color:rgba(255,255,255,0.55);font-weight:600;line-height:1.7">
+      <strong style="color:#fbbf24">Premium plan = 16 RSD po danu.</strong> Jedna noćenja u apartmanu pokriva celu godišnju pretplatu. Booking.com uzima 15 do 20% od svake rezervacije, kod nas je to nula. Vi zadržavate ceo prihod od svake rezervacije. Radar mapa popusta i loyalty pečata dostupna je samo premium partnerima.
+    </div>
+  </div>
+</div>
+
+<!-- FORMA -->
+<div class="section" id="forma">
+  <div class="section-label">Prijava</div>
+  <h2>Prijavite se — javimo se danas</h2>
+  <div class="form-card">
+    <h3>Ostavite kontakt</h3>
+    <p>Javimo se putem Vibera ili WhatsApp-a i za 24 sata vaš apartman je vidljiv svim gostima Vrnjačke Banje.</p>
+
+    <div class="field">
+      <label>Vaše ime</label>
+      <input id="f-name" type="text" placeholder="npr. Marko Marković" autocomplete="name">
+    </div>
+    <div class="field">
+      <label>Naziv apartmana ili vile</label>
+      <input id="f-object" type="text" placeholder="npr. Apartman Sunce, Vila Jasna">
+    </div>
+    <div class="field">
+      <label>Telefon za Viber ili WhatsApp</label>
+      <input id="f-phone" type="tel" placeholder="+381 6X XXX XXXX" autocomplete="tel" inputmode="tel">
+    </div>
+    <div class="field">
+      <label>Napomena (opciono)</label>
+      <textarea id="f-note" rows="2" placeholder="Pitanja, posebni zahtevi..."></textarea>
+    </div>
+
+    <input type="hidden" id="selected-plan" value="premium">
+
+    <button class="btn-submit" id="submit-btn" onclick="submitForm()">
+      Pošalji prijavu →
+    </button>
+    <div class="form-msg" id="form-msg"></div>
+  </div>
+
+  <div class="guarantees">
+    <div class="guarantee">
+      <div class="guarantee-icon">🔒</div>
+      <div class="guarantee-text">Vaši podaci se čuvaju isključivo za kontaktiranje. Nikakve spam poruke.</div>
+    </div>
+    <div class="guarantee">
+      <div class="guarantee-icon">📱</div>
+      <div class="guarantee-text">Javimo se putem Vibera ili WhatsApp-a na broj koji navedete, najkasnije do kraja dana.</div>
+    </div>
+    <div class="guarantee">
+      <div class="guarantee-icon">⚡</div>
+      <div class="guarantee-text">Aktivacija sistema traje 24 sata od potvrde. Odmah dobijate QR kod i pristup panelu.</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">© 2026 StayVB · Digitalni vodič Vrnjačke Banje</div>
+
+</div>
+
+<!-- SUCCESS -->
+<div id="success-screen">
+  <div class="big">🎉</div>
+  <h2>Prijava primljena!</h2>
+  <p>Javljamo se danas. Za 24 sata vaš apartman je vidljiv svim gostima Vrnjačke Banje koji će u nju doći.</p>
+  <a href="index.html" class="btn-ghost">Pogledajte kako izgleda iz perspektive gosta →</a>
+</div>
+
+<script>
+const sb = C.db();
+let selectedPlan = 'premium';
+
+function selectPlan(plan){
+  selectedPlan = plan;
+  document.getElementById('selected-plan').value = plan;
+
+  document.getElementById('card-free').className    = 'plan plan-free'    + (plan==='free'?' selected-free':'');
+  document.getElementById('card-premium').className = 'plan plan-premium' + (plan==='premium'?' selected-premium':'');
+
+  document.getElementById('ind-free').textContent    = plan==='free'    ? '✓ Odabrano' : 'Odaberi osnovni';
+  document.getElementById('ind-premium').textContent = plan==='premium' ? '✓ Odabrano' : 'Odaberi premium';
+
+  // Skroluj do forme
+  setTimeout(()=>document.getElementById('forma').scrollIntoView({behavior:'smooth'}), 150);
+}
+
+async function submitForm(){
+  const name   = document.getElementById('f-name').value.trim();
+  const object = document.getElementById('f-object').value.trim();
+  const phone  = document.getElementById('f-phone').value.trim();
+  const note   = document.getElementById('f-note').value.trim();
+  const plan   = selectedPlan;
+  const msg    = document.getElementById('form-msg');
+  const btn    = document.getElementById('submit-btn');
+
+  if(!name)  { msg.textContent='Unesite vaše ime.';           return; }
+  if(!object){ msg.textContent='Unesite naziv apartmana.';    return; }
+  if(!phone) { msg.textContent='Unesite broj telefona.';      return; }
+
+  msg.textContent=''; btn.disabled=true; btn.textContent='Šaljem...';
+
+  const {error} = await sb.from('partner_leads').insert({
+    name,
+    object_name:   object,
+    object_type:   'apartment',
+    phone,
+    plan_interest: plan,
+    note:          note||null,
+    status:        'new',
+    submitted_at:  new Date().toISOString()
+  });
+
+  if(error){
+    msg.textContent='Greška. Pokušajte ponovo.';
+    btn.disabled=false; btn.textContent='Pošalji prijavu →';
+    return;
+  }
+
+  document.getElementById('main-content').style.display='none';
+  document.getElementById('success-screen').style.display='block';
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
