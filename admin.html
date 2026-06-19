@@ -199,6 +199,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="nav-item" onclick="nav('revenue',this)"><span class="nav-icon">📋</span>Prihodi</div>
     <div class="nav-section">Alati</div>
     <div class="nav-item" onclick="nav('qr',this)"><span class="nav-icon">📱</span>QR Generator</div>
+    <div class="nav-section">Marketing</div>
+    <div class="nav-item" onclick="nav('leads',this)"><span class="nav-icon">🎯</span>Prijave<span class="nav-badge" id="nb-leads" style="display:none">0</span></div>
   </div>
   <div class="sidebar-bottom">
     <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" onclick="StayVBGuard.logoutAdmin()">🚪 Odjavi se</button>
@@ -544,8 +546,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
           <button class="btn btn-blue btn-sm" onclick="generateBillingNow()">⚙️ Generiši billing</button>
         </div>
       </div>
-
-      <!-- KPI — 4 kartice -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px">
         <div class="billing-sum-card" style="border-top:3px solid var(--gold)">
           <div class="billing-sum-num" id="bill-total" style="color:var(--gold)">—</div>
@@ -568,8 +568,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
           <div style="font-size:10px;color:var(--muted);margin-top:4px" id="bill-pct"></div>
         </div>
       </div>
-
-      <!-- Progress bar naplate -->
       <div class="tbl-card" style="padding:16px 20px;margin-bottom:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <span style="font-size:11px;font-weight:800;color:var(--muted)">Procenat naplate za mesec</span>
@@ -579,15 +577,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
           <div id="bill-progress" style="height:100%;border-radius:999px;background:linear-gradient(90deg,#10b981,#34d399);transition:width 0.8s ease;width:0%"></div>
         </div>
       </div>
-
-      <!-- Filteri -->
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
         <button class="btn btn-ghost btn-sm bill-f" data-f="all"     onclick="setBillFilter('all')"    style="font-weight:900;background:rgba(255,255,255,0.10)">Svi</button>
         <button class="btn btn-ghost btn-sm bill-f" data-f="paid"    onclick="setBillFilter('paid')"   style="color:#6ee7b7">✓ Platili</button>
         <button class="btn btn-ghost btn-sm bill-f" data-f="unpaid"  onclick="setBillFilter('unpaid')" style="color:#fca5a5">✗ Nisu platili</button>
         <button class="btn btn-ghost btn-sm bill-f" data-f="expired" onclick="setBillFilter('expired')" style="color:#fbbf24">⚠️ Istekla pretplata</button>
       </div>
-
       <div class="tbl-card"><div class="tbl-wrap" id="billing-tbl"></div></div>
     </div>
 
@@ -613,14 +608,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <div class="chart-wrap" style="height:220px"><canvas id="chart-rev-monthly"></canvas></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-        <div class="chart-card">
-          <div class="chart-title">Prihodi po granama</div>
-          <div class="chart-wrap" style="height:200px"><canvas id="chart-rev-types"></canvas></div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-title">Struktura prihoda po tipu</div>
-          <div class="chart-wrap" style="height:200px"><canvas id="chart-rev-pie"></canvas></div>
-        </div>
+        <div class="chart-card"><div class="chart-title">Prihodi po granama</div><div class="chart-wrap" style="height:200px"><canvas id="chart-rev-types"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title">Struktura prihoda po tipu</div><div class="chart-wrap" style="height:200px"><canvas id="chart-rev-pie"></canvas></div></div>
       </div>
       <div class="tbl-card" style="margin-bottom:16px;padding:20px">
         <div class="tbl-title" style="margin-bottom:16px">📊 Detalji po granama</div>
@@ -630,6 +619,22 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <div class="tbl-title" style="margin-bottom:12px">📅 Pregled po mesecima</div>
         <div id="rev-months-tbl"></div>
       </div>
+    </div>
+
+    <!-- ═══ PRIJAVE ═══ -->
+    <div id="page-leads" class="page">
+      <div class="sec-header">
+        <div><div class="sec-title">Prijave partnera</div><div class="sec-sub">Zainteresovani vlasnici objekata sa join.html stranice</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="loadLeads()">🔄 Osvježi</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm lead-f" data-f="all"       onclick="setLeadFilter('all')"       style="font-weight:900;background:rgba(255,255,255,0.10)">Sve</button>
+        <button class="btn btn-ghost btn-sm lead-f" data-f="new"       onclick="setLeadFilter('new')"       style="color:#fbbf24">🆕 Nove</button>
+        <button class="btn btn-ghost btn-sm lead-f" data-f="contacted" onclick="setLeadFilter('contacted')" style="color:#93c5fd">📞 Kontaktirani</button>
+        <button class="btn btn-ghost btn-sm lead-f" data-f="converted" onclick="setLeadFilter('converted')" style="color:#6ee7b7">✓ Konvertovani</button>
+        <button class="btn btn-ghost btn-sm lead-f" data-f="declined"  onclick="setLeadFilter('declined')"  style="color:#fca5a5">✕ Odbijeni</button>
+      </div>
+      <div class="tbl-card"><div class="tbl-wrap" id="leads-tbl"></div></div>
     </div>
 
     <!-- ═══ QR ═══ -->
@@ -710,11 +715,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="field">
       <label>⭐ Google Review link</label>
       <input id="edit-review-url" placeholder="https://g.page/r/.../review">
-    </div>
-    <div class="field">
-      <label>🍽 Link na meni / ponudu</label>
-      <input id="edit-menu-url" placeholder="https://... (sajt, Glovo, PDF...)">
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;font-weight:600">Samo admin — prikazuje se gostima na landing stranici.</div>
     </div>
     <div class="field-row">
       <div class="field"><label>Lat</label><input id="edit-lat"></div>
@@ -906,6 +906,7 @@ const PAGE_META = {
   billing:['Naplata','Mesečna pretplata po partneru'],
   revenue:['Prihodi','Istorija naplate'],
   qr:['QR Generator','QR kodovi i partner URL-ovi'],
+  leads:['Prijave partnera','Zainteresovani vlasnici objekata'],
   cityinfo:['City Info','Kategorije i mali biznisi'],
   properties:['Nekretnine','Vaš dom u Banji — direktna prodaja']
 };
@@ -913,7 +914,7 @@ const PAGE_META = {
 const LOADERS = {
   dashboard:loadDashboard, stats:loadStats, partners:loadPartners,
   stamps:loadStamps, loyalty:loadLoyalty, events:loadEvents,
-  billing:loadBilling, revenue:loadRevenue, qr:loadQR, properties:loadProperties
+  billing:loadBilling, revenue:loadRevenue, qr:loadQR, properties:loadProperties, leads:loadLeads
 };
 
 function nav(id, el){
@@ -1020,13 +1021,15 @@ async function loadDashboard(){
     .eq('month_year',month)
     .in('status',['pending','overdue']);
 
-  document.getElementById('unpaid-list').innerHTML=(unpaid||[]).length===0
-    ?'<p style="font-size:12px;color:#6ee7b7;font-weight:700;padding:8px 0">✅ Svi su platili ovaj mesec!</p>'
-    :`<table class="tbl"><thead><tr><th>Partner</th><th>Iznos</th><th>Status</th></tr></thead><tbody>
+  document.getElementById('unpaid-list').innerHTML = (unpaid||[]).length===0
+    ? '<p style="font-size:12px;color:#6ee7b7;font-weight:700">✅ Svi su platili ovaj mesec!</p>'
+    : `<table class="tbl"><thead><tr><th>Kod</th><th>Partner</th><th>Iznos</th><th>Status</th><th></th></tr></thead><tbody>
       ${(unpaid||[]).map(b=>`<tr>
-        <td><div style="font-weight:800">${esc(b.partners?.name||'')}</div><div style="font-size:10px;color:var(--muted)">${esc(b.partners?.partner_code||'')}</div></td>
+        <td><span class="p-code">${esc(b.partners?.partner_code||'')}</span></td>
+        <td style="font-weight:800">${esc(b.partners?.name||'')}</td>
         <td style="color:var(--gold);font-weight:900">${fmtRsd(b.amount_rsd)}</td>
         <td>${payBadge(b.status)}</td>
+        <td><button class="btn btn-green btn-sm" onclick="markPaid('${b.partner_id}','${month}',this)">✓ Platio</button></td>
       </tr>`).join('')}</tbody></table>`;
 }
 
@@ -1808,7 +1811,7 @@ async function delPartner(id){
   loadPartners();
 }
 
-async function openEdit(id){
+function openEdit(id){
   const p=allPartners.find(x=>x.id===id); if(!p) return;
   document.getElementById('edit-id').value=p.id;
   document.getElementById('edit-title').textContent='✏️ '+p.name;
@@ -1818,8 +1821,6 @@ async function openEdit(id){
   document.getElementById('edit-phone').value=p.phone||'';
   document.getElementById('edit-wa').value=p.whatsapp||'';
   document.getElementById('edit-review-url').value=p.google_review_url||'';
-  document.getElementById('edit-menu-url').value='';
-  try{const {data:pc}=await sb.from('partner_content').select('menu_url').eq('partner_id',p.id).maybeSingle();document.getElementById('edit-menu-url').value=pc?.menu_url||'';}catch(e){}
   document.getElementById('edit-lat').value=p.lat||'';
   document.getElementById('edit-lng').value=p.lng||'';
   document.getElementById('edit-note').value=p.admin_note||'';
@@ -1883,8 +1884,6 @@ async function saveEdit(){
   if(pin && pin.length===4) u.pin=pin;
   else if(pin && pin.length!==4){ const m=document.getElementById('edit-msg'); m.textContent='⚠️ PIN mora biti tačno 4 cifre.'; m.className='form-msg err'; return; }
   await sb.from('partners').update(u).eq('id',id);
-  const menuUrl=(document.getElementById('edit-menu-url')?.value||'').trim();
-  await sb.from('partner_content').upsert({partner_id:id,menu_url:menuUrl||null,updated_at:new Date().toISOString()},{onConflict:'partner_id'});
   const m=document.getElementById('edit-msg'); m.textContent='✓ Sačuvano!'; m.className='form-msg ok';
   setTimeout(async ()=>{
     closeModal('modal-edit');
@@ -1928,7 +1927,6 @@ async function savePartner(){
 
 // ── Billing ───────────────────────────────────────────────────────
 async function loadBilling(){
-  // Uvek tekući mesec, real-time stanje
   const now=new Date();
   const month=now.toISOString().slice(0,7);
   const today=now.toISOString().split('T')[0];
@@ -1936,21 +1934,16 @@ async function loadBilling(){
   const el=document.getElementById('billing-date-label');
   if(el) el.textContent='Stanje na dan: '+now.toLocaleDateString('sr-RS',{day:'2-digit',month:'2-digit',year:'numeric'})+' — '+monthLabel;
 
-  // Uzmi SVE aktivne partnere
   const {data:partners}=await sb.from('partners')
     .select('id,name,type,partner_code,is_premium,subscription_expires,monthly_price')
     .eq('is_active',true).order('name');
 
-  // Uzmi billing zapise za ovaj mesec
-  const {data:bills, error:billErr}=await sb.from('partner_billing')
+  const {data:bills}=await sb.from('partner_billing')
     .select('*').eq('month_year',month);
-
-
 
   const billMap={};
   (bills||[]).forEach(b=>{ billMap[b.partner_id]=b; });
 
-  // Spoji — svaki partner uvek prikazan
   const list=(partners||[]).map(p=>({p, b:billMap[p.id]||null}));
 
   const paidList=list.filter(r=>r.b?.status==='paid');
@@ -1958,7 +1951,6 @@ async function loadBilling(){
   const total=list.reduce((s,r)=>s+(r.b?.amount_rsd||r.p.monthly_price||0),0);
   const paid=paidList.reduce((s,r)=>s+(r.b?.amount_rsd||0),0);
   const pend=unpaidList.reduce((s,r)=>s+(r.b?.amount_rsd||r.p.monthly_price||0),0);
-
   const diff=total-paid;
   const pct=total>0?Math.round(paid/total*100):0;
   const pctColor=pct>=80?'#6ee7b7':pct>=50?'#fcd34d':'#fca5a5';
@@ -1976,8 +1968,7 @@ async function loadBilling(){
   document.getElementById('bill-progress').style.width=pct+'%';
   document.getElementById('bill-progress').style.background=pct>=80
     ?'linear-gradient(90deg,#10b981,#34d399)'
-    :pct>=50
-    ?'linear-gradient(90deg,#f59e0b,#fbbf24)'
+    :pct>=50?'linear-gradient(90deg,#f59e0b,#fbbf24)'
     :'linear-gradient(90deg,#ef4444,#f87171)';
 
   window._billList=list;
@@ -2103,66 +2094,47 @@ async function loadRevenue(){
     toEl.value=now.toISOString().slice(0,7);
   }
   const fromM=fromEl.value, toM=toEl.value;
-
   const {data}=await sb.from('partner_billing')
     .select('month_year,status,amount_rsd,partners(type)')
     .gte('month_year',fromM).lte('month_year',toM)
     .order('month_year',{ascending:true});
   const rows=data||[];
-
   const byMonth={};
   const typeLabels={hotel:'Hoteli',apartment:'Apartmani',restaurant:'Restorani',attraction:'Atrakcije',business:'Mali biznisi'};
   const typeColors={hotel:'#3b82f6',apartment:'#8b5cf6',restaurant:'#f59e0b',attraction:'#10b981',business:'#ec4899'};
   const byType={hotel:{paid:0,pending:0},apartment:{paid:0,pending:0},restaurant:{paid:0,pending:0},attraction:{paid:0,pending:0},business:{paid:0,pending:0}};
-
   rows.forEach(b=>{
     if(!byMonth[b.month_year]) byMonth[b.month_year]={total:0,paid:0,pending:0,count:0};
-    byMonth[b.month_year].total+=b.amount_rsd;
-    byMonth[b.month_year].count++;
+    byMonth[b.month_year].total+=b.amount_rsd; byMonth[b.month_year].count++;
     if(b.status==='paid'){ byMonth[b.month_year].paid+=b.amount_rsd; const t=b.partners?.type; if(t&&byType[t]) byType[t].paid+=b.amount_rsd; }
     else { byMonth[b.month_year].pending+=b.amount_rsd; const t=b.partners?.type; if(t&&byType[t]) byType[t].pending+=b.amount_rsd; }
   });
-
   const grandTotal=rows.reduce((s,b)=>s+b.amount_rsd,0);
   const grandPaid=rows.filter(b=>b.status==='paid').reduce((s,b)=>s+b.amount_rsd,0);
   const grandPend=rows.filter(b=>b.status!=='paid').reduce((s,b)=>s+b.amount_rsd,0);
   const paidPct=grandTotal>0?Math.round(grandPaid/grandTotal*100):0;
-
   document.getElementById('rev-total').textContent=fmtRsd(grandTotal);
   document.getElementById('rev-paid').textContent=fmtRsd(grandPaid);
   document.getElementById('rev-pend').textContent=fmtRsd(grandPend);
   document.getElementById('rev-paid-pct').textContent=paidPct+'% od ukupnog';
   document.getElementById('rev-pend-pct').textContent=(100-paidPct)+'% od ukupnog';
-
-  // Chart 1: stacked bar po mesecima
   const months=Object.keys(byMonth);
   renderChart('chart-rev-monthly','bar',months,[
-    {label:'Naplaćeno', data:months.map(m=>byMonth[m].paid),    backgroundColor:'rgba(16,185,129,0.75)',borderRadius:4},
-    {label:'Neplaćeno', data:months.map(m=>byMonth[m].pending), backgroundColor:'rgba(239,68,68,0.55)', borderRadius:4}
+    {label:'Naplaćeno',data:months.map(m=>byMonth[m].paid),backgroundColor:'rgba(16,185,129,0.75)',borderRadius:4},
+    {label:'Neplaćeno',data:months.map(m=>byMonth[m].pending),backgroundColor:'rgba(239,68,68,0.55)',borderRadius:4}
   ],{scales:{x:{stacked:true,ticks:{color:'rgba(255,255,255,0.4)',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'}},y:{stacked:true,ticks:{color:'rgba(255,255,255,0.4)',font:{size:10},callback:v=>fmtRsd(v)},grid:{color:'rgba(255,255,255,0.05)'}}}});
-
-  // Chart 2: horizontalni bar po granama
   const tKeys=Object.keys(typeLabels).filter(t=>byType[t].paid>0||byType[t].pending>0);
-  if(tKeys.length){
-    renderChart('chart-rev-types','bar',tKeys.map(t=>typeLabels[t]),[
-      {label:'Naplaćeno', data:tKeys.map(t=>byType[t].paid),    backgroundColor:tKeys.map(t=>typeColors[t]+'CC'),borderRadius:4},
-      {label:'Neplaćeno', data:tKeys.map(t=>byType[t].pending), backgroundColor:tKeys.map(t=>typeColors[t]+'44'),borderRadius:4}
-    ],{indexAxis:'y',scales:{x:{ticks:{color:'rgba(255,255,255,0.4)',font:{size:10},callback:v=>fmtRsd(v)},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'rgba(255,255,255,0.6)',font:{size:10,weight:'700'}},grid:{display:false}}}});
-  }
-
-  // Chart 3: doughnut
+  if(tKeys.length) renderChart('chart-rev-types','bar',tKeys.map(t=>typeLabels[t]),[
+    {label:'Naplaćeno',data:tKeys.map(t=>byType[t].paid),backgroundColor:tKeys.map(t=>typeColors[t]+'CC'),borderRadius:4},
+    {label:'Neplaćeno',data:tKeys.map(t=>byType[t].pending),backgroundColor:tKeys.map(t=>typeColors[t]+'44'),borderRadius:4}
+  ],{indexAxis:'y',scales:{x:{ticks:{color:'rgba(255,255,255,0.4)',font:{size:10},callback:v=>fmtRsd(v)},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'rgba(255,255,255,0.6)',font:{size:10,weight:'700'}},grid:{display:false}}}});
   const pKeys=Object.keys(typeLabels).filter(t=>byType[t].paid>0);
-  if(pKeys.length){
-    renderChart('chart-rev-pie','doughnut',pKeys.map(t=>typeLabels[t]),
-      [{data:pKeys.map(t=>byType[t].paid),backgroundColor:pKeys.map(t=>typeColors[t]+'CC'),borderWidth:0,hoverOffset:6}],
-      {plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,0.6)',font:{size:10},padding:10}}}}
-    );
-  }
-
-  // Progress barovi
+  if(pKeys.length) renderChart('chart-rev-pie','doughnut',pKeys.map(t=>typeLabels[t]),
+    [{data:pKeys.map(t=>byType[t].paid),backgroundColor:pKeys.map(t=>typeColors[t]+'CC'),borderWidth:0,hoverOffset:6}],
+    {plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,0.6)',font:{size:10},padding:10}}}});
   const totalPaidAll=Object.values(byType).reduce((s,v)=>s+v.paid,0);
   document.getElementById('rev-types-detail').innerHTML=Object.entries(typeLabels).map(([t,label])=>{
-    const paid=byType[t].paid, pend=byType[t].pending, tot=paid+pend;
+    const paid=byType[t].paid,pend=byType[t].pending,tot=paid+pend;
     if(tot===0) return '';
     const pct=totalPaidAll>0?Math.round(paid/totalPaidAll*100):0;
     const pPct=tot>0?Math.round(paid/tot*100):0;
@@ -2181,8 +2153,6 @@ async function loadRevenue(){
       </div>
     </div>`;
   }).join('');
-
-  // Tabela po mesecima
   const entries=Object.entries(byMonth).reverse();
   document.getElementById('rev-months-tbl').innerHTML=!entries.length
     ?'<p style="color:var(--muted);font-size:12px;padding:12px">Nema podataka za izabrani period.</p>'
@@ -2223,11 +2193,7 @@ async function loadStamps(){
       </tr>`).join('')}</tbody>
     </table>`;
 }
-async function togS(id,f,v){
-  const {error}=await sb.from('stamp_locations').update({[f]:v}).eq('id',id);
-  if(error){alert('Greška: '+error.message);}
-  loadStamps();
-}
+async function togS(id,f,v){await sb.from('stamp_locations').update({[f]:v}).eq('id',id);}
 async function delStamp(id){if(!confirm('Obrisati?'))return;await sb.from('stamp_locations').delete().eq('id',id);loadStamps();}
 function openNewStamp(){['ms-name','ms-desc','ms-lat','ms-lng'].forEach(id=>document.getElementById(id).value='');document.getElementById('ms-msg').textContent='';openModal('modal-stamp');}
 async function saveStamp(){
@@ -2520,6 +2486,102 @@ async function saveAssignment(){
     setTimeout(()=>{ closeModal('modal-assign-cat'); loadCityInfo(); }, 800);
 }
 
+// ── Leads ────────────────────────────────────────────────────────
+let allLeads = [];
+
+async function loadLeads(){
+  const {data} = await sb.from('partner_leads')
+    .select('*').order('submitted_at',{ascending:false});
+  allLeads = data||[];
+
+  const newCount = allLeads.filter(l=>l.status==='new').length;
+  const badge = document.getElementById('nb-leads');
+  if(badge){
+    badge.textContent = newCount;
+    badge.style.display = newCount>0 ? 'inline' : 'none';
+  }
+
+  window._leadFilter = window._leadFilter||'all';
+  renderLeadsTable(allLeads, window._leadFilter);
+}
+
+function setLeadFilter(f){
+  window._leadFilter = f;
+  document.querySelectorAll('.lead-f').forEach(b=>{
+    const on = b.dataset.f===f;
+    b.style.background = on?'rgba(255,255,255,0.10)':'';
+    b.style.fontWeight  = on?'900':'700';
+  });
+  renderLeadsTable(allLeads, f);
+}
+
+function renderLeadsTable(list, filter){
+  let rows = list;
+  if(filter!=='all') rows = list.filter(l=>l.status===filter);
+
+  const statusBadge = s => ({
+    new:       '<span class="badge b-pending">🆕 Nova</span>',
+    contacted: '<span class="badge" style="background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.25)">📞 Kontaktiran</span>',
+    converted: '<span class="badge b-paid">✓ Konvertovan</span>',
+    declined:  '<span class="badge b-overdue">✕ Odbijen</span>'
+  }[s]||'<span class="badge b-off">—</span>');
+
+  const planBadge = p => p==='premium'
+    ? '<span class="badge" style="background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.25)">⭐ Premium</span>'
+    : '<span class="badge b-on">Besplatno</span>';
+
+  const typeLabel = t => ({apartment:'🏠 Apartman',hotel:'🏨 Hotel',restaurant:'🍽 Restoran',attraction:'🎡 Atrakcija',business:'🛍 Biznis'}[t]||t);
+
+  if(!rows.length){
+    document.getElementById('leads-tbl').innerHTML = '<p style="color:var(--muted);padding:24px;font-size:13px;font-weight:700;text-align:center">Nema prijava za ovaj filter.</p>';
+    return;
+  }
+
+  document.getElementById('leads-tbl').innerHTML = `
+    <table class="tbl">
+      <thead><tr>
+        <th>Podnosilac</th><th>Objekat</th><th>Kontakt</th>
+        <th>Plan</th><th>Status</th><th>Datum</th><th>Akcija</th>
+      </tr></thead>
+      <tbody>${rows.map(l=>`<tr style="${l.status==='new'?'background:rgba(251,191,36,0.03)':''}">
+        <td>
+          <div style="font-weight:800">${esc(l.name)}</div>
+          ${l.note?`<div style="font-size:10px;color:var(--muted);margin-top:2px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">💬 ${esc(l.note)}</div>`:''}
+        </td>
+        <td>
+          <div style="font-weight:700">${esc(l.object_name)}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">${typeLabel(l.object_type)}</div>
+        </td>
+        <td>
+          <a href="https://wa.me/${(l.phone||'').replace(/[^0-9]/g,'')}" target="_blank"
+             style="font-size:12px;font-weight:800;color:#6ee7b7;text-decoration:none">
+            📱 ${esc(l.phone)}
+          </a>
+        </td>
+        <td>${planBadge(l.plan_interest)}</td>
+        <td>${statusBadge(l.status)}</td>
+        <td style="font-size:11px;color:var(--muted);white-space:nowrap">${fmtDate(l.submitted_at)}</td>
+        <td>
+          <div style="display:flex;gap:5px;flex-wrap:wrap">
+            ${l.status==='new'?`<button class="btn btn-blue btn-sm" onclick="updateLeadStatus('${l.id}','contacted',this)">📞 Kontaktiran</button>`:''}
+            ${l.status==='contacted'?`
+              <button class="btn btn-green btn-sm" onclick="updateLeadStatus('${l.id}','converted',this)">✓ Konvertuj</button>
+              <button class="btn btn-red btn-sm" onclick="updateLeadStatus('${l.id}','declined',this)">✕</button>`:''}
+            ${l.status==='new'?`<button class="btn btn-red btn-sm" onclick="updateLeadStatus('${l.id}','declined',this)">✕</button>`:''}
+          </div>
+        </td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+}
+
+async function updateLeadStatus(id, status, btn){
+  btn.disabled=true;
+  const updates = {status};
+  if(status==='contacted') updates.contacted_at = new Date().toISOString();
+  await sb.from('partner_leads').update(updates).eq('id',id);
+  loadLeads();
+}
+
 // ── QR ────────────────────────────────────────────────────────────
 let allQrPartners = [];
 
@@ -2548,7 +2610,7 @@ function renderQRList(data){
   }
 
   list.innerHTML=data.map(p=>{
-    const gUrl=(p.type==='apartment'||p.type==='hotel')?`${base}index.html?id=${p.partner_code}`:`${base}landing.html?id=${p.partner_code}`;
+    const gUrl=(p.type==='apartment'||p.type==='hotel')?`${base}index.html?id=${p.partner_code}`:`${base}stamp.html?code=${p.partner_code}`;
     const pUrl=`${base}partner.html?t=${p.access_token}`;
     return `<div class="tbl-card" style="margin-bottom:12px;padding:18px">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
@@ -2572,7 +2634,7 @@ function renderQRList(data){
   }).join('');
 
   data.forEach(p=>{
-    const url=(p.type==='apartment'||p.type==='hotel')?`${base}index.html?id=${p.partner_code}`:`${base}landing.html?id=${p.partner_code}`;
+    const url=(p.type==='apartment'||p.type==='hotel')?`${base}index.html?id=${p.partner_code}`:`${base}stamp.html?code=${p.partner_code}`;
     QRCode.toCanvas(document.createElement('canvas'),url,{width:110,margin:1},(err,canvas)=>{
       if(!err){const el=document.getElementById('qr-'+p.id);if(el){el.innerHTML='';el.appendChild(canvas);}}
     });
@@ -2590,6 +2652,7 @@ document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if
 window.addEventListener('DOMContentLoaded',()=>{
   StayVBGuard.requireAdmin(()=>{
     loadDashboard();
+    loadLeads();
     setInterval(()=>{
       const active=document.querySelector('.page.active');
       if(active?.id==='page-dashboard') loadDashboard();
