@@ -756,7 +756,7 @@ function trackAction(action){
     try{
         const token = C.getOrCreateGuestToken();
         sb.from('guests').select('id').eq('token',token).maybeSingle().then(({data:g})=>{
-            sb.from('partners').select('id').eq('partner_code',currentUnitId).maybeSingle().then(({data:p})=>{
+            sb.from('partners_public').select('id').eq('partner_code',currentUnitId).maybeSingle().then(({data:p})=>{
                 sb.from('analytics_clicks').insert({
                     partner_id: p?.id || null,
                     guest_id: g?.id || null,
@@ -802,7 +802,7 @@ async function shareStayVB(){
     try{
         const token = C.getOrCreateGuestToken();
         const {data:g} = await sb.from('guests').select('id').eq('token',token).maybeSingle();
-        const {data:p} = await sb.from('partners').select('id').eq('partner_code',currentUnitId).maybeSingle();
+        const {data:p} = await sb.from('partners_public').select('id').eq('partner_code',currentUnitId).maybeSingle();
         await sb.from('analytics_clicks').insert({
             partner_id: p?.id || null,
             guest_id: g?.id || null,
@@ -892,7 +892,7 @@ async function trackVisit(){
 
         let partnerId = null;
         if(currentUnitId){
-            const {data:p} = await sb.from('partners').select('id').eq('partner_code',currentUnitId).maybeSingle();
+            const {data:p} = await sb.from('partners_public').select('id').eq('partner_code',currentUnitId).maybeSingle();
             if(p) partnerId = p.id;
         }
 
@@ -909,7 +909,7 @@ async function loadPartnerData(){
     if(!currentUnitId) return;
 
     const { data: partner, error } = await sb
-        .from('partners')
+        .from('partners_public')
         .select('id, name, type, phone, whatsapp, loyalty_enabled, is_premium, referral_active, referral_code, referral_discount, google_review_url')
         .eq('partner_code', currentUnitId)
         .eq('is_active', true)
@@ -1002,7 +1002,7 @@ async function loadHH(){
     const nowMins = now.getHours()*60 + now.getMinutes();
 
     const { data: partners } = await sb
-        .from('partners')
+        .from('partners_public')
         .select('id, name, hh_start, hh_end')
         .eq('hh_active', true)
         .eq('hh_date', todayStr)
@@ -1252,7 +1252,7 @@ async function loadCityInfo(){
         .order('sort_order');
     cityCategories = cats || [];
 
-    const {data:partners} = await sb.from('partners')
+    const {data:partners} = await sb.from('partners_public')
         .select('id,name,phone,whatsapp,city_category_id')
         .eq('is_active', true)
         .eq('show_in_city_info', true)
@@ -1337,7 +1337,7 @@ async function startApp(lang){
         // Čuvaj u localStorage SAMO ako je hotel ili apartman
         // Restoran/biznis/atrakcija ne smeju da prebrišu smeštaj gosta
         try{
-            const { data: pt } = await sb.from('partners')
+            const { data: pt } = await sb.from('partners_public')
                 .select('type').eq('partner_code', urlUnitId).eq('is_active',true).maybeSingle();
             if(pt && (pt.type === 'hotel' || pt.type === 'apartment')){
                 localStorage.setItem('stayvb_unit_id', urlUnitId);
@@ -1362,7 +1362,7 @@ async function startApp(lang){
 
     trackVisit();
 
-    try{ await sb.from('partners').select('id').limit(1); } catch(e){}
+    try{ await sb.from('partners_public').select('id').limit(1); } catch(e){}
 
     try{
         const timeout = new Promise(resolve => setTimeout(resolve, 8000));
