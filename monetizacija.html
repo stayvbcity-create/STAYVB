@@ -6,702 +6,686 @@
 <title>StayVB — Digital Twin</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#060810;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden;height:100vh;width:100vw}
+body{background:#07090f;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden;height:100vh;width:100vw}
+#app{display:flex;flex-direction:column;height:100vh}
 
-#app{display:flex;flex-direction:column;height:100vh;width:100vw}
+/* TOPBAR */
+#topbar{display:flex;align-items:center;justify-content:space-between;padding:8px 20px;background:rgba(7,9,15,0.98);border-bottom:0.5px solid rgba(255,255,255,0.05);flex-shrink:0;z-index:20}
+.logo{font-size:16px;font-weight:700;letter-spacing:-0.03em}
+.logo em{color:#22d3ee;font-style:normal}
+.tagline{font-size:8px;color:#1e293b;letter-spacing:0.14em;text-transform:uppercase;margin-top:2px}
+.mode-btns{display:flex;gap:5px}
+.mbtn{font-size:11px;padding:4px 14px;border-radius:20px;cursor:pointer;border:0.5px solid rgba(255,255,255,0.08);background:transparent;color:#334155;transition:all 0.2s}
+.mbtn.on{background:#22d3ee;color:#07090f;border-color:#22d3ee;font-weight:600}
+.kpis{display:flex;gap:20px}
+.kpi{text-align:right}
+.kv{font-size:13px;font-weight:600}
+.kl{font-size:7px;color:#1e293b;letter-spacing:0.1em;text-transform:uppercase;margin-top:1px}
 
-/* TOP BAR */
-#topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:rgba(6,8,16,0.95);border-bottom:0.5px solid rgba(255,255,255,0.06);flex-shrink:0;z-index:10}
-.logo{font-size:18px;font-weight:700;letter-spacing:-0.03em}
-.logo span{color:#22d3ee}
-.tagline{font-size:10px;color:#475569;letter-spacing:0.14em;text-transform:uppercase;margin-top:1px}
-.mode-btns{display:flex;gap:6px}
-.mode-btn{font-size:11px;padding:5px 14px;border-radius:20px;cursor:pointer;border:0.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:#64748b;transition:all 0.2s}
-.mode-btn.active{background:#22d3ee;color:#060810;border-color:#22d3ee;font-weight:600}
-.top-stats{display:flex;gap:16px}
-.top-stat{text-align:right}
-.top-stat-val{font-size:15px;font-weight:600}
-.top-stat-lbl{font-size:9px;color:#475569;letter-spacing:0.1em;text-transform:uppercase}
-
-/* MAIN AREA */
+/* MAIN */
 #main{display:flex;flex:1;overflow:hidden;position:relative}
-
-/* MAP */
 #map-wrap{flex:1;position:relative;overflow:hidden}
-#map-canvas{position:absolute;inset:0;width:100%;height:100%}
+#c{position:absolute;inset:0;width:100%;height:100%}
 
-/* RIGHT PANEL */
-#right-panel{width:200px;background:rgba(6,8,16,0.9);border-left:0.5px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:0;overflow:hidden;flex-shrink:0}
-.panel-section{padding:12px 14px;border-bottom:0.5px solid rgba(255,255,255,0.05)}
-.panel-title{font-size:9px;color:#475569;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:8px}
-.venue-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
-.venue-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.venue-name{font-size:9px;color:#94a3b8;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.venue-rev{font-size:9px;font-weight:600;color:#22c55e;text-align:right;min-width:38px}
-.venue-bar-wrap{height:2px;background:rgba(255,255,255,0.06);border-radius:1px;margin-top:2px;margin-left:12px}
-.venue-bar{height:2px;background:#22c55e;border-radius:1px;transition:width 0.3s}
+/* SIDE PANEL */
+#side{width:200px;background:rgba(7,9,15,0.97);border-left:0.5px solid rgba(255,255,255,0.04);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.sp{padding:11px 13px;border-bottom:0.5px solid rgba(255,255,255,0.04)}
+.st{font-size:8px;color:#1e293b;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:7px}
+.vr{display:flex;align-items:center;gap:5px;margin-bottom:2px}
+.vd{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.vn{font-size:8px;color:#334155;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vv{font-size:8px;font-weight:600;color:#fbbf24;min-width:32px;text-align:right}
+.vbar{height:2px;background:rgba(255,255,255,0.04);border-radius:1px;margin:1px 0 3px 10px}
+.vfill{height:2px;border-radius:1px;transition:width 0.5s}
 
-/* MINI CHARTS */
-#chart-rev{display:block}
-#chart-eff{display:block}
+/* INSIGHT MESSAGES */
+#insights{flex:1;overflow:hidden;padding:11px 13px;position:relative}
+.ins-msg{position:absolute;left:13px;right:13px;background:rgba(251,191,36,0.06);border:0.5px solid rgba(251,191,36,0.15);border-left:2px solid #fbbf24;border-radius:0 6px 6px 0;padding:8px 10px;font-size:8.5px;color:#94a3b8;line-height:1.6;opacity:0;transform:translateY(6px);transition:all 0.5s;pointer-events:none}
+.ins-msg.vis{opacity:1;transform:none}
+.ins-msg .ins-ico{font-size:11px;display:block;margin-bottom:3px}
+.ins-msg strong{color:#fbbf24;font-weight:600}
 
-/* BOTTOM BAR */
-#bottombar{display:flex;align-items:center;gap:16px;padding:7px 20px;background:rgba(6,8,16,0.95);border-top:0.5px solid rgba(255,255,255,0.06);flex-shrink:0}
-.bot-metric{display:flex;flex-direction:column;min-width:80px}
-.bot-val{font-size:14px;font-weight:600}
-.bot-lbl{font-size:9px;color:#475569;letter-spacing:0.08em;text-transform:uppercase;margin-top:1px}
-.bot-sep{width:0.5px;height:28px;background:rgba(255,255,255,0.06)}
-.legend{display:flex;gap:12px;margin-left:auto;align-items:center}
-.leg{display:flex;align-items:center;gap:5px;font-size:10px;color:#64748b}
-.leg-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+/* FEED */
+#feed-wrap{padding:11px 13px;border-top:0.5px solid rgba(255,255,255,0.04)}
+.fi{font-size:8px;color:#334155;line-height:1.5;margin-bottom:4px;opacity:0;transform:translateY(-3px);transition:all 0.4s}
+.fi.vis{opacity:1;transform:none}
+.fi-hi{color:#fbbf24}
+.fi-lo{color:#1e293b}
+
+/* BOTTOMBAR */
+#bot{display:flex;height:40px;background:rgba(7,9,15,0.98);border-top:0.5px solid rgba(255,255,255,0.04);flex-shrink:0}
+.bm{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;border-right:0.5px solid rgba(255,255,255,0.04)}
+.bv{font-size:12px;font-weight:600}
+.bl{font-size:7px;color:#1e293b;letter-spacing:0.08em;text-transform:uppercase}
+.legbar{display:flex;gap:10px;align-items:center;padding:0 14px}
+.li{display:flex;align-items:center;gap:4px;font-size:8px;color:#1e293b}
+.ld{width:6px;height:6px;border-radius:50%}
 </style>
 </head>
 <body>
 <div id="app">
 
-  <div id="topbar">
-    <div>
-      <div class="logo">Stay<span>VB</span> <span style="font-size:11px;color:#475569;font-weight:400">Digital Twin</span></div>
-      <div class="tagline">Vrnjačka Banja — tok turista u realnom vremenu</div>
-    </div>
-    <div class="mode-btns">
-      <button class="mode-btn active" id="btn-before" onclick="setMode('before')">Bez sistema</button>
-      <button class="mode-btn" id="btn-after" onclick="setMode('after')">Sa StayVB</button>
-      <button class="mode-btn" id="btn-both" onclick="setMode('both')">Uporedi</button>
-    </div>
-    <div class="top-stats">
-      <div class="top-stat"><div class="top-stat-val" id="ts-tourists" style="color:#60a5fa">0</div><div class="top-stat-lbl">turista</div></div>
-      <div class="top-stat"><div class="top-stat-val" id="ts-captured" style="color:#22c55e">0</div><div class="top-stat-lbl">prihod</div></div>
-      <div class="top-stat"><div class="top-stat-val" id="ts-eff" style="color:#22d3ee">0%</div><div class="top-stat-lbl">efikasnost</div></div>
-      <div class="top-stat"><div class="top-stat-val" id="ts-lost" style="color:#ef4444">0</div><div class="top-stat-lbl">izgubljeno</div></div>
-    </div>
+<div id="topbar">
+  <div>
+    <div class="logo">Stay<em>VB</em> <span style="font-size:9px;color:#0f172a;font-weight:400;letter-spacing:.05em">DIGITAL TWIN</span></div>
+    <div class="tagline">Vrnjačka Banja · simulacija toka turista · 3.000/dan</div>
   </div>
-
-  <div id="main">
-    <div id="map-wrap">
-      <canvas id="map-canvas"></canvas>
-    </div>
-
-    <div id="right-panel">
-      <div class="panel-section">
-        <div class="panel-title">Prihod po objektu</div>
-        <div id="venue-list"></div>
-      </div>
-      <div class="panel-section" style="flex:1">
-        <div class="panel-title">Prihod (kumulativ)</div>
-        <canvas id="chart-rev" height="80"></canvas>
-      </div>
-      <div class="panel-section" style="flex:1">
-        <div class="panel-title">Efikasnost toka %</div>
-        <canvas id="chart-eff" height="80"></canvas>
-      </div>
-      <div class="panel-section">
-        <div class="panel-title">Potencijal / dan</div>
-        <div style="font-size:18px;font-weight:700;color:#a78bfa">3.0M RSD</div>
-        <div style="font-size:9px;color:#475569;margin-top:2px">3.000 tur × 1.000 RSD</div>
-        <div style="margin-top:8px;height:3px;background:rgba(255,255,255,0.06);border-radius:2px">
-          <div id="potential-bar" style="height:3px;background:#a78bfa;border-radius:2px;width:0%;transition:width 0.5s"></div>
-        </div>
-        <div style="font-size:9px;color:#a78bfa;margin-top:3px" id="potential-pct">0% realizovano</div>
-      </div>
-    </div>
+  <div class="mode-btns">
+    <button class="mbtn on" id="btn-before" onclick="setMode('before')">Bez sistema</button>
+    <button class="mbtn" id="btn-after" onclick="setMode('after')">Sa StayVB</button>
+    <button class="mbtn" id="btn-both" onclick="setMode('both')">Uporedi</button>
   </div>
-
-  <div id="bottombar">
-    <div class="bot-metric"><div class="bot-val" id="b-flow" style="color:#60a5fa">0</div><div class="bot-lbl">turista/min</div></div>
-    <div class="bot-sep"></div>
-    <div class="bot-metric"><div class="bot-val" id="b-cap" style="color:#22c55e">0 RSD</div><div class="bot-lbl">uhvaćeno</div></div>
-    <div class="bot-sep"></div>
-    <div class="bot-metric"><div class="bot-val" id="b-lost" style="color:#ef4444">0 RSD</div><div class="bot-lbl">izgubljeno</div></div>
-    <div class="bot-sep"></div>
-    <div class="bot-metric"><div class="bot-val" id="b-tourists">0</div><div class="bot-lbl">ukupno</div></div>
-    <div class="bot-sep"></div>
-    <div class="bot-metric"><div class="bot-val" id="b-eff" style="color:#22d3ee">—</div><div class="bot-lbl">efikasnost</div></div>
-    <div class="legend">
-      <div class="leg"><div class="leg-dot" style="background:#60a5fa"></div>turista</div>
-      <div class="leg"><div class="leg-dot" style="background:#22c55e"></div>uhvaćen</div>
-      <div class="leg"><div class="leg-dot" style="background:#ef4444"></div>izgubljen</div>
-      <div class="leg"><div class="leg-dot" style="background:#a78bfa"></div>StayVB mreža</div>
-    </div>
+  <div class="kpis">
+    <div class="kpi"><div class="kv" id="k-t" style="color:#60a5fa">0</div><div class="kl">turista</div></div>
+    <div class="kpi"><div class="kv" id="k-c" style="color:#fbbf24">0</div><div class="kl">prihod RSD</div></div>
+    <div class="kpi"><div class="kv" id="k-e" style="color:#22d3ee">—</div><div class="kl">efikasnost</div></div>
+    <div class="kpi"><div class="kv" id="k-l" style="color:#334155">0</div><div class="kl">izgubljeno</div></div>
   </div>
-
 </div>
 
+<div id="main">
+  <div id="map-wrap"><canvas id="c"></canvas></div>
+  <div id="side">
+    <div class="sp">
+      <div class="st">Prihod po objektu</div>
+      <div id="vlist"></div>
+    </div>
+    <div class="sp">
+      <div class="st">Potencijal / dan</div>
+      <div style="font-size:15px;font-weight:700;color:#fbbf24">3.0M RSD</div>
+      <div style="height:2px;background:rgba(255,255,255,0.04);border-radius:1px;margin:5px 0 2px">
+        <div id="pbar" style="height:2px;background:linear-gradient(90deg,#92400e,#fbbf24);border-radius:1px;width:0%;transition:width .6s"></div>
+      </div>
+      <div style="font-size:8px;color:#78350f" id="ppct">0% realizovano</div>
+    </div>
+    <div id="insights">
+      <div class="st">Uvid sistema</div>
+      <div id="ins-container" style="position:relative;height:180px"></div>
+    </div>
+    <div id="feed-wrap">
+      <div class="st">Aktivnost</div>
+      <div id="feed"></div>
+    </div>
+  </div>
+</div>
+
+<div id="bot">
+  <div class="bm"><div class="bv" id="b-t" style="color:#60a5fa">0</div><div class="bl">turista ukupno</div></div>
+  <div class="bm"><div class="bv" id="b-c" style="color:#fbbf24">0 RSD</div><div class="bl">uhvaćeno</div></div>
+  <div class="bm"><div class="bv" id="b-l" style="color:#334155">0 RSD</div><div class="bl">izgubljeno</div></div>
+  <div class="bm" style="border-right:none"><div class="bv" id="b-e" style="color:#22d3ee">—</div><div class="bl">efikasnost</div></div>
+  <div style="border-left:.5px solid rgba(255,255,255,.04);height:100%;display:flex;align-items:center">
+    <div class="legbar">
+      <div class="li"><div class="ld" style="background:#60a5fa"></div>turista</div>
+      <div class="li"><div class="ld" style="background:#fbbf24"></div>monetizovan</div>
+      <div class="li"><div class="ld" style="background:#1e293b;border:.5px solid #334155"></div>izgubljen</div>
+      <div class="li"><div class="ld" style="background:#a78bfa"></div>StayVB mreža</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- #app -->
+
 <script>
-const canvas = document.getElementById('map-canvas');
+/* ═══════════════════════════════════════════
+   CANVAS SETUP
+═══════════════════════════════════════════ */
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 const DPR = window.devicePixelRatio || 1;
 
 function resize() {
-  const wrap = document.getElementById('map-wrap');
-  canvas.width = wrap.clientWidth * DPR;
-  canvas.height = wrap.clientHeight * DPR;
-  ctx.scale(DPR, DPR);
+  const w = document.getElementById('map-wrap');
+  canvas.width  = w.clientWidth  * DPR;
+  canvas.height = w.clientHeight * DPR;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 }
 resize();
 window.addEventListener('resize', resize);
+const W = () => canvas.width  / DPR;
+const H = () => canvas.height / DPR;
 
-let W = () => canvas.width / DPR;
-let H = () => canvas.height / DPR;
-
-// VRNJAČKA BANJA — realne koordinate pretvorene u relativne (0-1)
-// Bounding box: lat 43.608–43.638, lng 20.875–20.910
-const LAT_MIN = 43.608, LAT_MAX = 43.638;
-const LNG_MIN = 20.875, LNG_MAX = 20.910;
-
-function geo(lat, lng) {
-  const x = (lng - LNG_MIN) / (LNG_MAX - LNG_MIN);
-  const y = 1 - (lat - LAT_MIN) / (LAT_MAX - LAT_MIN);
-  return { rx: x, ry: y };
-}
-
-function px(rx, ry) {
-  const margin = 60;
+/* ═══════════════════════════════════════════
+   GEO → SCREEN   (širi bounding box)
+═══════════════════════════════════════════ */
+const LA0=43.594, LA1=43.652, LN0=20.862, LN1=20.922;
+function g2s(lat, lng) {
+  const PAD = 60;
   return {
-    x: margin + rx * (W() - margin*2),
-    y: margin + ry * (H() - margin*2)
+    x: PAD + (lng-LN0)/(LN1-LN0) * (W()-PAD*2),
+    y: PAD + (1-(lat-LA0)/(LA1-LA0)) * (H()-PAD*2)
   };
 }
 
+/* ═══════════════════════════════════════════
+   VENUES — razmaknutiji raspored
+═══════════════════════════════════════════ */
 const VENUES = [
-  { name:'Hotel Fontana',        ...geo(43.6244, 20.8962), color:'#3b82f6', cap:0.16, revenue:0, pulse:0, icon:'H' },
-  { name:'Hotel Zvezda',         ...geo(43.6221, 20.8945), color:'#6366f1', cap:0.12, revenue:0, pulse:0, icon:'H' },
-  { name:'Zepter Hotel',         ...geo(43.6210, 20.8943), color:'#8b5cf6', cap:0.14, revenue:0, pulse:0, icon:'H' },
-  { name:'Hotel Merkur',         ...geo(43.6198, 20.8930), color:'#a78bfa', cap:0.13, revenue:0, pulse:0, icon:'H' },
-  { name:'Restoran Dukat',       ...geo(43.6235, 20.8975), color:'#f59e0b', cap:0.18, revenue:0, pulse:0, icon:'R' },
-  { name:'Restoran Tri Golubice',...geo(43.6252, 20.8988), color:'#f97316', cap:0.14, revenue:0, pulse:0, icon:'R' },
-  { name:'Kafić Central',        ...geo(43.6228, 20.8968), color:'#fbbf24', cap:0.20, revenue:0, pulse:0, icon:'K' },
-  { name:'Aqua Park Raj',        ...geo(43.6178, 20.8915), color:'#06b6d4', cap:0.10, revenue:0, pulse:0, icon:'A' },
-  { name:'Spa & Wellness',       ...geo(43.6215, 20.8958), color:'#ec4899', cap:0.11, revenue:0, pulse:0, icon:'S' },
-  { name:'Rent-a-Bike VB',       ...geo(43.6265, 20.8950), color:'#10b981', cap:0.09, revenue:0, pulse:0, icon:'B' },
-  { name:'Most ljubavi',         ...geo(43.6240, 20.8935), color:'#f43f5e', cap:0.08, revenue:0, pulse:0, icon:'M' },
-  { name:'Terme park',           ...geo(43.6188, 20.8945), color:'#14b8a6', cap:0.12, revenue:0, pulse:0, icon:'T' },
+  { name:'Hotel Fontana',    lat:43.6244, lng:20.8962, color:'#3b82f6', short:'Fontana',  icon:'H', revenue:0, pulse:0, psz:0 },
+  { name:'Hotel Zvezda',     lat:43.6183, lng:20.8932, color:'#6366f1', short:'Zvezda',   icon:'H', revenue:0, pulse:0, psz:0 },
+  { name:'Zepter Hotel',     lat:43.6278, lng:20.8880, color:'#8b5cf6', short:'Zepter',   icon:'H', revenue:0, pulse:0, psz:0 },
+  { name:'Hotel Merkur',     lat:43.6162, lng:20.8975, color:'#a78bfa', short:'Merkur',   icon:'H', revenue:0, pulse:0, psz:0 },
+  { name:'Restoran Dukat',   lat:43.6248, lng:20.9005, color:'#f59e0b', short:'Dukat',    icon:'R', revenue:0, pulse:0, psz:0 },
+  { name:'Rest. Tri Gol.',   lat:43.6265, lng:20.8858, color:'#f97316', short:'Tri Gol.', icon:'R', revenue:0, pulse:0, psz:0 },
+  { name:'Kafić Central',    lat:43.6218, lng:20.8950, color:'#fbbf24', short:'Kafić',    icon:'K', revenue:0, pulse:0, psz:0 },
+  { name:'Aqua Park',        lat:43.6148, lng:20.8902, color:'#06b6d4', short:'Aqua',     icon:'A', revenue:0, pulse:0, psz:0 },
+  { name:'Spa & Wellness',   lat:43.6232, lng:20.8875, color:'#ec4899', short:'Spa',      icon:'S', revenue:0, pulse:0, psz:0 },
+  { name:'Bike Rent VB',     lat:43.6295, lng:20.8960, color:'#10b981', short:'Bikes',    icon:'B', revenue:0, pulse:0, psz:0 },
+  { name:'Most ljubavi',     lat:43.6205, lng:20.8968, color:'#f43f5e', short:'Most',     icon:'♥', revenue:0, pulse:0, psz:0 },
+  { name:'Terme park',       lat:43.6145, lng:20.8952, color:'#14b8a6', short:'Terme',    icon:'T', revenue:0, pulse:0, psz:0 },
 ];
 
-// Putevi — glavne ulice VB (relativne koordinate)
+/* ═══════════════════════════════════════════
+   ROAD NETWORK — ulice Vrnjačke Banje
+   Svaki segment = niz [lat,lng] tačaka
+   Ukupno 16 ulica / putanja
+═══════════════════════════════════════════ */
 const ROADS = [
-  // Centralna ulica (Svetozara Markovića — horizontalno)
-  [geo(43.6195,20.8900), geo(43.6235,20.8900), geo(43.6245,20.8935), geo(43.6248,20.8975), geo(43.6252,20.9000)],
-  // Bulevar (vertikalno)
-  [geo(43.6175,20.8940), geo(43.6200,20.8942), geo(43.6230,20.8945), geo(43.6260,20.8948), geo(43.6275,20.8952)],
-  // Ulica Milunke Savić
-  [geo(43.6220,20.8900), geo(43.6222,20.8930), geo(43.6225,20.8960), geo(43.6228,20.8985)],
-  // Prečica Terme
-  [geo(43.6178,20.8915), geo(43.6190,20.8935), geo(43.6205,20.8950)],
+  // Ulica Svetozara Markovića (E-W centralna)
+  [[43.6218,20.8855],[43.6220,20.8875],[43.6222,20.8900],[43.6224,20.8930],[43.6226,20.8960],[43.6228,20.8990],[43.6230,20.9015]],
+  // Ulica Milunke Savić (paralelna, jug)
+  [[43.6195,20.8862],[43.6198,20.8892],[43.6200,20.8922],[43.6202,20.8952],[43.6204,20.8978],[43.6206,20.9005]],
+  // Bulevar (N-S os)
+  [[43.6300,20.8950],[43.6278,20.8952],[43.6255,20.8952],[43.6232,20.8952],[43.6210,20.8952],[43.6185,20.8952],[43.6160,20.8950],[43.6140,20.8950]],
+  // Ulica Vojvode Stepe (W strana)
+  [[43.6300,20.8875],[43.6278,20.8877],[43.6255,20.8878],[43.6232,20.8878],[43.6210,20.8878],[43.6188,20.8878],[43.6165,20.8880]],
+  // Ulica Ribarska (E strana)
+  [[43.6295,20.9010],[43.6272,20.9008],[43.6250,20.9006],[43.6228,20.9005],[43.6205,20.9004],[43.6182,20.9003]],
+  // Prečnica N (horizontalna sever)
+  [[43.6295,20.8870],[43.6295,20.8900],[43.6295,20.8930],[43.6295,20.8960],[43.6295,20.8990],[43.6295,20.9012]],
+  // Prečnica centar (horizontalna srednja)
+  [[43.6248,20.8858],[43.6248,20.8890],[43.6248,20.8920],[43.6248,20.8950],[43.6248,20.8980],[43.6248,20.9010]],
+  // Prečnica S (horizontalna jug)
+  [[43.6175,20.8860],[43.6175,20.8890],[43.6175,20.8920],[43.6175,20.8950],[43.6175,20.8980],[43.6175,20.9005]],
+  // Kriva ulica prema termama
+  [[43.6218,20.8950],[43.6205,20.8940],[43.6192,20.8928],[43.6178,20.8912],[43.6162,20.8900],[43.6148,20.8902]],
+  // Ulica prema Aqua parku
+  [[43.6175,20.8950],[43.6165,20.8935],[43.6155,20.8920],[43.6148,20.8905]],
+  // Dijagonala NW-SE
+  [[43.6278,20.8880],[43.6260,20.8900],[43.6242,20.8922],[43.6225,20.8945],[43.6207,20.8968],[43.6190,20.8988]],
+  // Sporedna ulica Most ljubavi
+  [[43.6218,20.8952],[43.6212,20.8960],[43.6205,20.8968],[43.6200,20.8975]],
+  // Aleja uz reku (W)
+  [[43.6145,20.8865],[43.6160,20.8868],[43.6178,20.8870],[43.6198,20.8872],[43.6218,20.8875]],
+  // Ulica prema hotelu Fontana
+  [[43.6248,20.8950],[43.6248,20.8962],[43.6246,20.8975],[43.6244,20.8990]],
+  // Vezna ulica E
+  [[43.6230,20.9005],[43.6218,20.9005],[43.6205,20.9005]],
+  // Obilazna N-W
+  [[43.6300,20.8875],[43.6285,20.8868],[43.6268,20.8862],[43.6250,20.8858],[43.6232,20.8855],[43.6215,20.8855]],
 ];
 
-const ENTRY_POINTS = [
-  geo(43.6175, 20.8900), // jug-zapad
-  geo(43.6280, 20.8900), // sever-zapad
-  geo(43.6175, 20.9010), // jug-istok
-  geo(43.6280, 20.9010), // sever-istok
+/* ═══════════════════════════════════════════
+   INSIGHT MESSAGES
+═══════════════════════════════════════════ */
+const INSIGHTS = [
+  { ico:'⚡', text:'Sistem je dizajniran da <strong>optimizuje protok novca</strong> u gradu kao upravljački ventil.' },
+  { ico:'💸', text:'Trenutna neefikasnost košta <strong>2 miliona evra godišnje</strong> koje jednostavno isparavaju.' },
+  { ico:'🎯', text:'Distribucijom vrednosti kroz <strong>50 ključnih tačaka</strong>, svaki partner može povratiti izgubljeni prihod.' },
+  { ico:'📈', text:'Svaki objekat može povratiti <strong>40.000 evra</strong> koje trenutno gubi — bez novih turista.' },
+  { ico:'🌊', text:'Turisti su fluid koji se kreće kroz urbani prostor. <strong>Otpor sistema</strong> nam košta novac.' },
+  { ico:'🔧', text:'StayVB deluje kao <strong>ventil</strong> koji preusmerava tok ka mestima gde je potražnja najveća.' },
+  { ico:'💡', text:'Nije stvar u <strong>više turista</strong> — stvar je u <strong>efikasnosti toka</strong> kroz grad.' },
+  { ico:'🏆', text:'To nije profit iz vazduha — to je <strong>vraćanje izgubljene kinetičke energije</strong> sistema.' },
 ];
 
-let mode = 'before';
-let captured = 0, lost = 0, touristCount = 0, tick = 0;
-let revHistory = [], effHistory = [];
-let tourists = [];
-let networkPulse = 0;
-
-const SPEED = 2.0;
-const TOURISTS_PER_MIN = 3000 / (24*60);
-const VALUE = 1000;
-const ESCAPE_RATE = 0.10; // 10% prolazi bez trošenja
-
-function setMode(m) {
-  mode = m;
-  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('btn-'+m).classList.add('active');
-  captured=0; lost=0; touristCount=0;
-  tourists=[];
-  revHistory=[]; effHistory=[];
-  VENUES.forEach(v=>{v.revenue=0;v.pulse=0;});
-  networkPulse=0;
+let insIdx = 0, insVisible = false;
+function rotateInsight() {
+  const container = document.getElementById('ins-container');
+  // Remove old
+  const old = container.querySelector('.ins-msg.vis');
+  if (old) { old.classList.remove('vis'); setTimeout(()=>old.remove(), 500); }
+  // Add new
+  const ins = INSIGHTS[insIdx % INSIGHTS.length];
+  insIdx++;
+  const d = document.createElement('div');
+  d.className = 'ins-msg';
+  d.innerHTML = `<span class="ins-ico">${ins.ico}</span>${ins.text}`;
+  d.style.top = '0';
+  container.appendChild(d);
+  setTimeout(()=>d.classList.add('vis'), 50);
+  setTimeout(rotateInsight, 5500);
 }
 
-document.querySelectorAll('.mode-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>setMode(btn.id.replace('btn-','')));
-});
+/* ═══════════════════════════════════════════
+   FEED
+═══════════════════════════════════════════ */
+const NF=['Marija','Ana','Jelena','Milica','Tamara','Sara','Ivana','Nina'];
+const NM=['Stefan','Nikola','Ivan','Luka','Petar','Miloš','Đorđe','Aleksa'];
+const AF=[
+  ['📸','fotografisala se u'],['⭐','ocenila sa 5★ —'],['📱','podelila story iz'],
+  ['❤️','zaljubila se u'],['🧖','relaksirala se u'],['🍹','naručila koktele u'],
+  ['🌸','šetala uz'],['🛎','rezervisala povratak —'],['💬','preporučila svima'],
+];
+const AM=[
+  ['📸','fotografisao se u'],['⭐','ocenio sa 5★ —'],['📱','podelio story iz'],
+  ['🍺','uživao u'],['💪','trening u'],['🍹','okusio specijalitete'],
+  ['🚲','iznajmio bicikl —'],['🛎','rezervisao —'],['💬','preporučio prijatelju'],
+];
+const AL=[
+  ['😶','prošao pored'],['🚶','nastavio bez zaustavljanja —'],['😕','otišao u nepoznato iz'],
+];
 
-function fmt(n) {
-  if(n>=1000000) return (n/1000000).toFixed(2)+'M';
-  if(n>=1000) return Math.round(n/1000)+'K';
-  return Math.round(n)+'';
+function addFeed(name, a, place, good) {
+  const f = document.getElementById('feed');
+  const d = document.createElement('div');
+  d.className = 'fi';
+  d.innerHTML = `<span style="font-size:10px">${a[0]}</span> <span style="color:#64748b;font-weight:500">${name}</span> <span style="color:#1e293b">${a[1]}</span> <span class="${good?'fi-hi':'fi-lo'}">${place}</span>`;
+  f.insertBefore(d, f.firstChild);
+  setTimeout(()=>d.classList.add('vis'), 20);
+  const items = f.querySelectorAll('.fi');
+  if (items.length > 10) items[items.length-1].remove();
 }
-function fmtRsd(n) { return fmt(n)+' RSD'; }
 
-// Road path computing
-function roadNetwork() {
-  const pts = [];
-  for(let road of ROADS) {
-    for(let i=0;i<road.length-1;i++) {
-      const a=px(road[i].rx,road[i].ry);
-      const b=px(road[i+1].rx,road[i+1].ry);
-      pts.push({ax:a.x,ay:a.y,bx:b.x,by:b.y});
+/* ═══════════════════════════════════════════
+   EXPLOSION
+═══════════════════════════════════════════ */
+class Explosion {
+  constructor(x, y, gold) {
+    this.done = false;
+    this.ps = [];
+    const n = gold ? 26 : 10;
+    for (let i = 0; i < n; i++) {
+      const a = Math.random()*Math.PI*2;
+      const s = (gold?1.6:0.8) + Math.random()*(gold?2.8:1.2);
+      this.ps.push({
+        x, y, vx:Math.cos(a)*s, vy:Math.sin(a)*s,
+        r: gold ? 2+Math.random()*2.5 : 1.2+Math.random()*1.2,
+        alpha:1,
+        hue: gold ? 38+Math.random()*20 : 210,
+        sat: gold ? 95 : 15,
+        lit: gold ? 58+Math.random()*18 : 40
+      });
     }
+    // Center flash
+    if (gold) this.flash = { x, y, r:0, alpha:0.7 };
+  }
+  update() {
+    let alive = 0;
+    for (const p of this.ps) {
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.045; p.vx*=0.97; p.vy*=0.97;
+      p.alpha -= gold?0.013:0.022;
+      if (p.alpha > 0) alive++;
+    }
+    if (this.flash) { this.flash.r+=2.5; this.flash.alpha-=0.06; if(this.flash.alpha<=0)this.flash=null; }
+    if (alive===0) this.done = true;
+  }
+  draw() {
+    if (this.flash) {
+      ctx.beginPath();
+      ctx.arc(this.flash.x,this.flash.y,this.flash.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(251,191,36,${this.flash.alpha*0.15})`;
+      ctx.fill();
+    }
+    for (const p of this.ps) {
+      if (p.alpha<=0) continue;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`hsla(${p.hue},${p.sat}%,${p.lit}%,${p.alpha})`;
+      ctx.fill();
+    }
+  }
+}
+let explosions = [];
+
+/* ═══════════════════════════════════════════
+   TOURIST
+═══════════════════════════════════════════ */
+let mode='before', captured=0, lost=0, touristCount=0, tick=0;
+let tourists=[], spawnAcc=0, netPulse=0;
+const SPEED=0.5;
+const PER_MIN=3000/(24*60);
+const VALUE=1000;
+
+function buildPath() {
+  // Pick random road, random starting point, walk it fully, optionally continue on another
+  const r1 = ROADS[Math.floor(Math.random()*ROADS.length)];
+  const si = Math.floor(Math.random()*Math.max(1,r1.length-1));
+  const pts = r1.slice(si);
+  if (Math.random()<0.45) {
+    const r2 = ROADS[Math.floor(Math.random()*ROADS.length)];
+    pts.push(...r2.slice(1));
   }
   return pts;
 }
 
-function getRandomRoadPoint() {
-  const road = ROADS[Math.floor(Math.random()*ROADS.length)];
-  const seg = Math.floor(Math.random()*(road.length-1));
-  const t = Math.random();
-  const a=road[seg], b=road[seg+1];
-  return { rx: a.rx+(b.rx-a.rx)*t, ry: a.ry+(b.ry-a.ry)*t };
-}
-
 class Tourist {
-  constructor(modeKey) {
-    this.modeKey = modeKey;
-    // Spawn na ulazu ili na rubu puta
-    const ep = ENTRY_POINTS[Math.floor(Math.random()*ENTRY_POINTS.length)];
-    const sp = px(ep.rx, ep.ry);
-    this.x = sp.x + (Math.random()-0.5)*20;
-    this.y = sp.y + (Math.random()-0.5)*20;
-    this.budget = VALUE;
-    this.r = 2.8;
-    this.attracted = null;
-    this.done = false;
-    this.captured = false;
-    this.coins = [];
-    this.hue = modeKey==='after' ? 140+Math.random()*30 : 200+Math.random()*25;
-    this.signalR = 0;
-    this.signalAlpha = 0;
-    // Target point on road to wander toward
-    this.targetRoad = this.newRoadTarget();
-    this.stepsOnRoad = 0;
-    this.maxSteps = 180 + Math.floor(Math.random()*240);
-    this.escaped = false;
-  }
-  newRoadTarget() {
-    const rp = getRandomRoadPoint();
-    return px(rp.rx, rp.ry);
+  constructor(mk) {
+    this.mk = mk;
+    this.female = Math.random()<0.53;
+    this.name = (this.female?NF:NM)[Math.floor(Math.random()*(this.female?NF.length:NM.length))];
+    this.path = buildPath();
+    this.pi = 0;
+    if (!this.path.length) { this.done=true; return; }
+    const sp = g2s(this.path[0][0], this.path[0][1]);
+    this.x = sp.x + (Math.random()-0.5)*6;
+    this.y = sp.y + (Math.random()-0.5)*6;
+    this.r = 2.0 + Math.random()*0.9;
+    this.spd = (0.5+Math.random()*0.45)*SPEED;
+    this.done=false; this.captured=false; this.attracted=null;
+    this.alpha=0; this.signalR=0; this.sigA=0; this.didFeed=false;
+    // Color: female warmer, male cooler; after=saturated, before=muted
+    this.hue = this.female ? (mk==='after'?340:290) : (mk==='after'?195:215);
+    this.sat = mk==='after' ? 70 : 22;
+    this.lit = mk==='after' ? 62 : 44;
+    // Target venue — picked from all venues with equal probability
+    const captureRate = mk==='after' ? 0.85 : 0.13;
+    this.targetV = Math.random()<captureRate ? VENUES[Math.floor(Math.random()*VENUES.length)] : null;
   }
   update() {
-    if(this.done) return;
+    if (this.done) return;
+    this.alpha = Math.min(1, this.alpha+0.08);
 
-    // Attraction logic
-    if(!this.attracted && !this.escaped) {
-      for(let v of VENUES) {
-        const vp = px(v.rx, v.ry);
-        const dist = Math.hypot(this.x-vp.x, this.y-vp.y);
-        const range = this.modeKey==='after' ? 80 : 25;
-        // Distribute evenly: prob weighted by cap but normalized
-        const prob = this.modeKey==='after'
-          ? v.cap * 0.12 * SPEED
-          : v.cap * 0.018 * SPEED;
-        if(dist < range && Math.random() < prob) {
-          this.attracted = v;
-          this.signalR = 4;
-          break;
+    if (this.attracted) {
+      const vp = g2s(this.attracted.lat, this.attracted.lng);
+      const dx=vp.x-this.x, dy=vp.y-this.y, d=Math.hypot(dx,dy);
+      if (d < 6) {
+        if (!this.captured) {
+          this.captured=true; captured+=VALUE; touristCount++;
+          this.attracted.revenue+=VALUE; this.attracted.pulse=1; this.attracted.psz=0;
+          explosions.push(new Explosion(vp.x, vp.y, true));
+          if (!this.didFeed && Math.random()<0.55) {
+            this.didFeed=true;
+            const acts=this.female?AF:AM;
+            const a=acts[Math.floor(Math.random()*acts.length)];
+            setTimeout(()=>addFeed(this.name,a,this.attracted.short,true), 100+Math.random()*600);
+          }
         }
-      }
-    }
-
-    if(this.attracted) {
-      const vp = px(this.attracted.rx, this.attracted.ry);
-      const dx=vp.x-this.x, dy=vp.y-this.y;
-      const dist=Math.hypot(dx,dy);
-      if(dist < 5) {
-        if(!this.captured) {
-          this.captured = true;
-          captured += this.budget;
-          touristCount++;
-          this.attracted.revenue += this.budget;
-          this.attracted.pulse = 1;
-          for(let i=0;i<7;i++) this.coins.push({
-            x:vp.x, y:vp.y,
-            vx:(Math.random()-0.5)*3,
-            vy:-Math.random()*3-0.5,
-            alpha:1, good:true
-          });
-        }
-        this.done = true;
+        this.done=true;
       } else {
-        this.x += (dx/dist)*1.8*SPEED;
-        this.y += (dy/dist)*1.8*SPEED;
-        if(this.modeKey==='after') {
-          this.signalR = Math.min(this.signalR+0.8, 16);
-          this.signalAlpha = 0.6;
-        }
+        this.x+=dx/d*1.6*SPEED;
+        this.y+=dy/d*1.6*SPEED;
+        if (this.mk==='after') { this.signalR=Math.min(20,this.signalR+1); this.sigA=0.75; }
       }
     } else {
-      // Wander on roads
-      const tdx = this.targetRoad.x - this.x;
-      const tdy = this.targetRoad.y - this.y;
-      const tdist = Math.hypot(tdx,tdy);
-      if(tdist < 8 || this.stepsOnRoad > this.maxSteps) {
-        this.stepsOnRoad = 0;
-        this.maxSteps = 120+Math.floor(Math.random()*180);
-        this.targetRoad = this.newRoadTarget();
-      }
-      this.x += (tdx/Math.max(tdist,1))*1.1*SPEED;
-      this.y += (tdy/Math.max(tdist,1))*1.1*SPEED;
-      this.stepsOnRoad++;
-
-      // Check if out of bounds → escaped
-      const margin = 20;
-      if(this.x < -margin || this.x > W()+margin || this.y < -margin || this.y > H()+margin) {
-        if(!this.captured) {
-          this.escaped = true;
-          lost += this.budget;
-          touristCount++;
-          for(let i=0;i<4;i++) this.coins.push({
-            x:this.x, y:this.y,
-            vx:(Math.random()-0.5)*2.5, vy:(Math.random()-0.5)*2.5,
-            alpha:1, good:false
-          });
+      // Walk road
+      if (this.pi >= this.path.length-1) {
+        if (!this.captured) {
+          lost+=VALUE; touristCount++;
+          const lp=g2s(this.path[this.path.length-1][0],this.path[this.path.length-1][1]);
+          explosions.push(new Explosion(lp.x, lp.y, false));
+          if (!this.didFeed && Math.random()<0.2) {
+            this.didFeed=true;
+            const a=AL[Math.floor(Math.random()*AL.length)];
+            setTimeout(()=>addFeed(this.name,a,'grada',false), 100);
+          }
         }
-        this.done = true;
+        this.done=true; return;
       }
+      const tp=g2s(this.path[this.pi+1][0],this.path[this.pi+1][1]);
+      const dx=tp.x-this.x, dy=tp.y-this.y, d=Math.hypot(dx,dy);
+      if (d<5) this.pi++;
+      else { this.x+=dx/d*this.spd; this.y+=dy/d*this.spd; }
 
-      // 10% escape chance after wandering long enough
-      if(this.stepsOnRoad > this.maxSteps * 0.8 && Math.random() < 0.002*SPEED) {
-        if(!this.captured && !this.escaped) {
-          this.escaped = true;
-          lost += this.budget;
-          touristCount++;
-          for(let i=0;i<3;i++) this.coins.push({
-            x:this.x, y:this.y,
-            vx:(Math.random()-0.5)*2, vy:-Math.random(),
-            alpha:1, good:false
-          });
-          this.done = true;
-        }
+      // Check attraction to target venue
+      if (this.targetV) {
+        const vp=g2s(this.targetV.lat,this.targetV.lng);
+        const vd=Math.hypot(this.x-vp.x,this.y-vp.y);
+        const range = this.mk==='after' ? 115 : 36;
+        if (vd<range && Math.random()<0.035*SPEED) this.attracted=this.targetV;
       }
     }
-
-    this.coins = this.coins.filter(c=>{
-      c.x+=c.vx*SPEED*0.4; c.y+=c.vy*SPEED*0.4; c.vy+=0.04; c.alpha-=0.02;
-      return c.alpha>0;
-    });
-    if(this.signalAlpha>0) this.signalAlpha-=0.03;
+    if (this.sigA>0) this.sigA-=0.015;
   }
-
   draw() {
-    // Signal ring
-    if(this.modeKey==='after' && this.signalR>0) {
+    if (this.alpha<0.01) return;
+    if (this.mk==='after' && this.signalR>0) {
       ctx.beginPath();
-      ctx.arc(this.x, this.y, this.signalR, 0, Math.PI*2);
-      ctx.strokeStyle=`rgba(167,139,250,${this.signalAlpha*0.7})`;
-      ctx.lineWidth=0.8;
-      ctx.stroke();
+      ctx.arc(this.x,this.y,this.signalR,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(167,139,250,${this.sigA*0.5})`;
+      ctx.lineWidth=0.7; ctx.stroke();
     }
-    // Dot
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
-    ctx.fillStyle = this.modeKey==='after'
-      ? `hsla(${this.hue},70%,62%,0.92)`
-      : `hsla(${this.hue},40%,62%,0.75)`;
+    ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+    ctx.fillStyle=`hsla(${this.hue},${this.sat}%,${this.lit}%,${this.alpha*0.9})`;
     ctx.fill();
-    // Coins
-    for(let c of this.coins) {
+    // Female marker — brighter center
+    if (this.female) {
       ctx.beginPath();
-      ctx.arc(c.x,c.y,2.2,0,Math.PI*2);
-      ctx.fillStyle=c.good?`rgba(34,197,94,${c.alpha})`:`rgba(239,68,68,${c.alpha})`;
+      ctx.arc(this.x,this.y,this.r*0.4,0,Math.PI*2);
+      ctx.fillStyle=`hsla(${this.hue},${this.sat+15}%,${this.lit+20}%,${this.alpha*0.6})`;
       ctx.fill();
     }
   }
 }
 
-// Chart helpers
-const REV_MAX = 3000000;
-let chartRevCtx, chartEffCtx;
-
-function initCharts() {
-  const cr = document.getElementById('chart-rev');
-  const ce = document.getElementById('chart-eff');
-  cr.width = 172; cr.height = 80;
-  ce.width = 172; ce.height = 80;
-  chartRevCtx = cr.getContext('2d');
-  chartEffCtx  = ce.getContext('2d');
+/* ═══════════════════════════════════════════
+   DRAW MAP ELEMENTS
+═══════════════════════════════════════════ */
+function drawBg() {
+  ctx.fillStyle='#07090f';
+  ctx.fillRect(0,0,W(),H());
+  // Faint grid
+  ctx.strokeStyle='rgba(255,255,255,0.012)';
+  ctx.lineWidth=0.5;
+  for(let x=0;x<W();x+=55){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H());ctx.stroke();}
+  for(let y=0;y<H();y+=55){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W(),y);ctx.stroke();}
 }
 
-function drawChart(c, data, color, maxY, dashed) {
-  const W=172, H=80, pad=4;
-  c.clearRect(0,0,W,H);
-  if(data.length<2) return;
-  // Grid
-  c.strokeStyle='rgba(255,255,255,0.04)';
-  c.lineWidth=0.5;
-  for(let i=1;i<4;i++){
-    const y=pad+(H-pad*2)*i/4;
-    c.beginPath(); c.moveTo(pad,y); c.lineTo(W-pad,y); c.stroke();
-  }
-  // Line
-  c.beginPath();
-  if(dashed) c.setLineDash([4,3]);
-  const step=(W-pad*2)/Math.max(data.length-1,1);
-  data.forEach((v,i)=>{
-    const x=pad+i*step;
-    const y=H-pad-(v/maxY)*(H-pad*2);
-    i===0?c.moveTo(x,y):c.lineTo(x,y);
-  });
-  c.strokeStyle=color;
-  c.lineWidth=1.5;
-  c.stroke();
-  c.setLineDash([]);
-  // Fill
-  c.lineTo(pad+(data.length-1)*step, H-pad);
-  c.lineTo(pad, H-pad);
-  c.closePath();
-  const grad=c.createLinearGradient(0,0,0,H);
-  grad.addColorStop(0,color.replace(')',',0.25)').replace('rgb','rgba'));
-  grad.addColorStop(1,'transparent');
-  c.fillStyle=grad;
-  c.fill();
-  // Last value
-  if(data.length>0){
-    c.fillStyle=color;
-    c.font='600 9px system-ui';
-    c.textAlign='right';
-    const lastVal = maxY===100 ? Math.round(data[data.length-1])+'%' : fmt(data[data.length-1]);
-    c.fillText(lastVal, W-pad, 12);
-  }
-}
+function drawTerrain() {
+  // Banjska reka (plava kriva)
+  ctx.beginPath();
+  const r0=g2s(43.594,20.864), r1=g2s(43.632,20.882), r2=g2s(43.652,20.896);
+  ctx.moveTo(r0.x,r0.y);
+  ctx.bezierCurveTo(r0.x+40,r0.y-20, r1.x-20,r1.y+15, r1.x,r1.y);
+  ctx.bezierCurveTo(r1.x+20,r1.y-5, r2.x-30,r2.y+10, r2.x,r2.y);
+  ctx.strokeStyle='rgba(6,182,212,0.13)'; ctx.lineWidth=5; ctx.stroke();
+  ctx.strokeStyle='rgba(6,182,212,0.05)'; ctx.lineWidth=10; ctx.stroke();
 
-function drawVenues(modeKey) {
-  for(let v of VENUES) {
-    const p = px(v.rx, v.ry);
-    // Pulse glow
-    if(v.pulse>0 && modeKey==='after') {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 18+v.pulse*12, 0, Math.PI*2);
-      ctx.fillStyle=`rgba(34,197,94,${v.pulse*0.12})`;
-      ctx.fill();
-    }
-    // Venue circle
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 13, 0, Math.PI*2);
-    ctx.fillStyle = modeKey==='after'
-      ? v.color+'33'
-      : 'rgba(30,35,50,0.8)';
-    ctx.strokeStyle = modeKey==='after'
-      ? v.color
-      : 'rgba(100,116,139,0.4)';
-    ctx.lineWidth = v.pulse>0 ? 1.5+v.pulse : 1;
-    ctx.fill();
-    ctx.stroke();
-    // Icon
-    ctx.fillStyle = modeKey==='after' ? v.color : '#475569';
-    ctx.font='500 9px system-ui';
-    ctx.textAlign='center';
-    ctx.fillText(v.icon, p.x, p.y+3);
-    // Label
-    ctx.fillStyle = modeKey==='after' ? '#94a3b8' : '#334155';
-    ctx.font='9px system-ui';
-    ctx.fillText(v.name, p.x, p.y+22);
-    // Revenue bar (after only)
-    if(modeKey==='after' && v.revenue>0) {
-      const maxRev = 500000;
-      const barW = Math.min(50, (v.revenue/maxRev)*50);
-      ctx.beginPath();
-      ctx.roundRect(p.x-25, p.y+25, 50, 3, 1.5);
-      ctx.fillStyle='rgba(34,197,94,0.15)';
-      ctx.fill();
-      ctx.beginPath();
-      ctx.roundRect(p.x-25, p.y+25, barW, 3, 1.5);
-      ctx.fillStyle='#22c55e';
-      ctx.fill();
-      ctx.fillStyle='#4ade80';
-      ctx.font='600 8px system-ui';
-      ctx.textAlign='center';
-      ctx.fillText('▲'+fmtShort(v.revenue), p.x, p.y+35);
-    }
-    if(v.pulse>0) v.pulse = Math.max(0, v.pulse-0.025);
-  }
+  // Park (zelena zona)
+  const pa=g2s(43.619,20.892), pb=g2s(43.626,20.902);
+  ctx.beginPath();
+  ctx.roundRect(Math.min(pa.x,pb.x),Math.min(pa.y,pb.y),Math.abs(pb.x-pa.x),Math.abs(pb.y-pa.y),8);
+  ctx.fillStyle='rgba(16,185,129,0.05)';
+  ctx.strokeStyle='rgba(16,185,129,0.08)';
+  ctx.lineWidth=0.5; ctx.fill(); ctx.stroke();
+  const pc=g2s(43.622,20.897);
+  ctx.fillStyle='rgba(16,185,129,0.2)'; ctx.font='9px system-ui'; ctx.textAlign='center';
+  ctx.fillText('🌲 Park', pc.x, pc.y);
+
+  // Terme zona
+  const ta=g2s(43.612,20.893), tb=g2s(43.618,20.900);
+  ctx.beginPath();
+  ctx.roundRect(Math.min(ta.x,tb.x),Math.min(ta.y,tb.y),Math.abs(tb.x-ta.x),Math.abs(tb.y-ta.y),6);
+  ctx.fillStyle='rgba(20,184,166,0.04)';
+  ctx.strokeStyle='rgba(20,184,166,0.06)';
+  ctx.lineWidth=0.5; ctx.fill(); ctx.stroke();
+  const tc=g2s(43.615,20.896);
+  ctx.fillStyle='rgba(20,184,166,0.2)'; ctx.font='8px system-ui'; ctx.textAlign='center';
+  ctx.fillText('♨ Terme', tc.x, tc.y);
 }
 
 function drawRoads() {
-  for(let road of ROADS) {
-    ctx.beginPath();
-    const first = px(road[0].rx, road[0].ry);
-    ctx.moveTo(first.x, first.y);
-    for(let i=1;i<road.length;i++) {
-      const p=px(road[i].rx,road[i].ry);
-      ctx.lineTo(p.x, p.y);
-    }
-    ctx.strokeStyle='rgba(148,163,184,0.14)';
-    ctx.lineWidth=4;
-    ctx.lineCap='round';
-    ctx.lineJoin='round';
-    ctx.stroke();
-    ctx.strokeStyle='rgba(148,163,184,0.06)';
-    ctx.lineWidth=8;
-    ctx.stroke();
+  for (const seg of ROADS) {
+    if (seg.length<2) continue;
+    const first=g2s(seg[0][0],seg[0][1]);
+    // Road shadow / width
+    ctx.beginPath(); ctx.moveTo(first.x,first.y);
+    for(let i=1;i<seg.length;i++){const p=g2s(seg[i][0],seg[i][1]);ctx.lineTo(p.x,p.y);}
+    ctx.strokeStyle='rgba(148,163,184,0.07)'; ctx.lineWidth=7;
+    ctx.lineCap='round'; ctx.lineJoin='round'; ctx.stroke();
+    // Road surface
+    ctx.beginPath(); ctx.moveTo(first.x,first.y);
+    for(let i=1;i<seg.length;i++){const p=g2s(seg[i][0],seg[i][1]);ctx.lineTo(p.x,p.y);}
+    ctx.strokeStyle='rgba(148,163,184,0.09)'; ctx.lineWidth=3; ctx.stroke();
+    // Center line
+    ctx.beginPath(); ctx.moveTo(first.x,first.y);
+    for(let i=1;i<seg.length;i++){const p=g2s(seg[i][0],seg[i][1]);ctx.lineTo(p.x,p.y);}
+    ctx.strokeStyle='rgba(255,255,255,0.018)'; ctx.lineWidth=0.5;
+    ctx.setLineDash([4,8]); ctx.stroke(); ctx.setLineDash([]);
   }
 }
 
-function drawNetwork() {
-  if(mode==='before') return;
-  networkPulse = (networkPulse+0.025*SPEED)%(Math.PI*2);
-  const alpha = 0.12 + Math.sin(networkPulse)*0.06;
-
-  // Lines between all venues
-  for(let i=0;i<VENUES.length;i++) {
-    for(let j=i+1;j<VENUES.length;j++) {
-      const a=px(VENUES[i].rx,VENUES[i].ry);
-      const b=px(VENUES[j].rx,VENUES[j].ry);
-      const dist=Math.hypot(a.x-b.x,a.y-b.y);
-      if(dist>220) continue;
-      const lineAlpha = alpha * (1-dist/220);
-      ctx.beginPath();
-      ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
-      ctx.strokeStyle=`rgba(167,139,250,${lineAlpha})`;
-      ctx.lineWidth=0.5;
-      ctx.setLineDash([3,5]);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Animated packet along line
-      const t=((tick*SPEED*0.008)+(i*0.3+j*0.17))%1;
-      const px2=a.x+(b.x-a.x)*t, py2=a.y+(b.y-a.y)*t;
-      ctx.beginPath();
-      ctx.arc(px2,py2,1.5,0,Math.PI*2);
-      ctx.fillStyle=`rgba(167,139,250,${0.5+Math.sin(networkPulse+i)*0.3})`;
-      ctx.fill();
+function drawNetwork(mk) {
+  if (mk==='before') return;
+  netPulse = (netPulse+0.009)%(Math.PI*2);
+  for (let i=0;i<VENUES.length;i++) {
+    for (let j=i+1;j<VENUES.length;j++) {
+      const a=g2s(VENUES[i].lat,VENUES[i].lng);
+      const b=g2s(VENUES[j].lat,VENUES[j].lng);
+      const d=Math.hypot(a.x-b.x,a.y-b.y);
+      if (d>210) continue;
+      const al=0.055*(1-d/210)*(0.55+Math.sin(netPulse+i*0.4)*0.45);
+      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
+      ctx.strokeStyle=`rgba(167,139,250,${al})`;
+      ctx.lineWidth=0.5; ctx.setLineDash([3,8]); ctx.stroke(); ctx.setLineDash([]);
+      // Data packet
+      const t=((tick*SPEED*0.0038)+(i*0.22+j*0.14))%1;
+      const px=a.x+(b.x-a.x)*t, py=a.y+(b.y-a.y)*t;
+      ctx.beginPath(); ctx.arc(px,py,1.3,0,Math.PI*2);
+      ctx.fillStyle=`rgba(167,139,250,${0.3+Math.sin(netPulse+i)*0.25})`; ctx.fill();
     }
   }
-
-  // Radii from each venue
-  for(let v of VENUES) {
-    const p=px(v.rx,v.ry);
-    const r=70+Math.sin(networkPulse+v.rx*10)*8;
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,r,0,Math.PI*2);
-    ctx.strokeStyle=`rgba(34,197,94,${0.04+Math.sin(networkPulse)*0.02})`;
-    ctx.lineWidth=0.5;
-    ctx.setLineDash([2,6]);
-    ctx.stroke();
-    ctx.setLineDash([]);
+  // Soft radii
+  for (const v of VENUES) {
+    const p=g2s(v.lat,v.lng);
+    const r=52+Math.sin(netPulse+v.lng*6)*5;
+    ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(34,211,238,${0.022+Math.sin(netPulse)*0.01})`;
+    ctx.lineWidth=0.4; ctx.setLineDash([2,10]); ctx.stroke(); ctx.setLineDash([]);
   }
 }
 
-function drawBackground() {
-  ctx.fillStyle='#060810';
-  ctx.fillRect(0,0,W(),H());
-  // Grid
-  ctx.strokeStyle='rgba(255,255,255,0.02)';
-  ctx.lineWidth=0.5;
-  const gs=40;
-  for(let x=0;x<W();x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H());ctx.stroke();}
-  for(let y=0;y<H();y+=gs){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W(),y);ctx.stroke();}
+function drawVenues(mk) {
+  for (const v of VENUES) {
+    const p=g2s(v.lat,v.lng);
+    // Capture pulse
+    if (v.pulse>0) {
+      v.psz = Math.min(v.psz+1.4, 30);
+      ctx.beginPath(); ctx.arc(p.x,p.y,15+v.psz,0,Math.PI*2);
+      ctx.fillStyle=`rgba(251,191,36,${v.pulse*0.08})`; ctx.fill();
+      v.pulse = Math.max(0,v.pulse-0.014);
+      if (v.pulse===0) v.psz=0;
+    }
+    // Outer ring (after only)
+    if (mk==='after') {
+      ctx.beginPath(); ctx.arc(p.x,p.y,16,0,Math.PI*2);
+      ctx.strokeStyle=v.color+'30'; ctx.lineWidth=1; ctx.stroke();
+    }
+    // Main circle
+    ctx.beginPath(); ctx.arc(p.x,p.y,12,0,Math.PI*2);
+    ctx.fillStyle = mk==='after' ? v.color+'1e' : 'rgba(12,18,30,0.92)';
+    ctx.strokeStyle = mk==='after' ? v.color : 'rgba(30,41,59,0.45)';
+    ctx.lineWidth = mk==='after' ? 1.4 : 0.6;
+    ctx.fill(); ctx.stroke();
+    // Icon
+    ctx.fillStyle = mk==='after' ? v.color : '#1e293b';
+    ctx.font='500 9px system-ui'; ctx.textAlign='center';
+    ctx.fillText(v.icon,p.x,p.y+3.2);
+    // Label
+    ctx.fillStyle = mk==='after' ? '#475569' : '#1e293b';
+    ctx.font='8px system-ui'; ctx.textAlign='center';
+    ctx.fillText(v.short,p.x,p.y+22);
+    // Revenue
+    if (mk==='after' && v.revenue>0) {
+      const bw=44;
+      ctx.beginPath(); ctx.roundRect(p.x-bw/2,p.y+26,bw,2.5,1);
+      ctx.fillStyle='rgba(251,191,36,0.1)'; ctx.fill();
+      const fw=Math.min(bw,(v.revenue/380000)*bw);
+      ctx.beginPath(); ctx.roundRect(p.x-bw/2,p.y+26,fw,2.5,1);
+      ctx.fillStyle='#fbbf24'; ctx.fill();
+      ctx.fillStyle='#d97706'; ctx.font='600 7px system-ui'; ctx.textAlign='center';
+      ctx.fillText('▲'+fmtS(v.revenue),p.x,p.y+36);
+    }
+  }
 }
 
-function fmtShort(n) {
-  if(n>=1000000) return (n/1000000).toFixed(1)+'M';
-  if(n>=1000) return Math.round(n/1000)+'K';
+/* ═══════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════ */
+function fmtS(n){
+  if(n>=1e6)return(n/1e6).toFixed(1)+'M';
+  if(n>=1e3)return Math.round(n/1e3)+'K';
   return Math.round(n)+'';
 }
+function fmtR(n){return fmtS(n)+' RSD';}
 
-function updateVenueList() {
-  const sorted=[...VENUES].sort((a,b)=>b.revenue-a.revenue);
-  const maxRev=sorted[0]?.revenue||1;
-  const html=sorted.map(v=>`
-    <div class="venue-row">
-      <div class="venue-dot" style="background:${v.color}"></div>
-      <div class="venue-name">${v.name}</div>
-      <div class="venue-rev">${v.revenue>0?fmtShort(v.revenue):'-'}</div>
-    </div>
-    <div class="venue-bar-wrap">
-      <div class="venue-bar" style="width:${Math.round(v.revenue/maxRev*100)}%;background:${v.color}88"></div>
-    </div>
-  `).join('');
-  document.getElementById('venue-list').innerHTML=html;
+function updateKPIs(){
+  const tot=captured+lost;
+  const eff=tot>0?Math.round(captured/tot*100):0;
+  document.getElementById('k-t').textContent=touristCount.toLocaleString();
+  document.getElementById('k-c').textContent=fmtR(captured);
+  document.getElementById('k-e').textContent=eff?eff+'%':'—';
+  document.getElementById('k-l').textContent=fmtR(lost);
+  document.getElementById('b-t').textContent=touristCount.toLocaleString();
+  document.getElementById('b-c').textContent=fmtR(captured);
+  document.getElementById('b-l').textContent=fmtR(lost);
+  document.getElementById('b-e').textContent=eff?eff+'%':'—';
+  const pct=Math.min(100,Math.round(captured/3000000*100));
+  document.getElementById('pbar').style.width=pct+'%';
+  document.getElementById('ppct').textContent=pct+'% realizovano';
 }
 
-// Spawn rate: 3000/day = 2.08/min
-let spawnAccum = 0;
+function updateVList(){
+  const sorted=[...VENUES].sort((a,b)=>b.revenue-a.revenue);
+  const mx=Math.max(1,...sorted.map(v=>v.revenue));
+  document.getElementById('vlist').innerHTML=sorted.map(v=>`
+    <div class="vr">
+      <div class="vd" style="background:${v.color}"></div>
+      <div class="vn">${v.short}</div>
+      <div class="vv">${v.revenue>0?fmtS(v.revenue):'-'}</div>
+    </div>
+    <div class="vbar"><div class="vfill" style="width:${Math.round(v.revenue/mx*100)}%;background:${v.color}88"></div></div>
+  `).join('');
+}
 
+/* ═══════════════════════════════════════════
+   MODE
+═══════════════════════════════════════════ */
+function setMode(m) {
+  mode=m;
+  document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('btn-'+m).classList.add('on');
+  captured=0;lost=0;touristCount=0;tick=0;
+  tourists=[];explosions=[];spawnAcc=0;netPulse=0;
+  VENUES.forEach(v=>{v.revenue=0;v.pulse=0;v.psz=0;});
+  document.getElementById('feed').innerHTML='';
+}
+document.querySelectorAll('.mbtn').forEach(b=>b.addEventListener('click',()=>setMode(b.id.replace('btn-',''))));
+
+/* ═══════════════════════════════════════════
+   MAIN LOOP
+═══════════════════════════════════════════ */
 function animate() {
   tick++;
   ctx.clearRect(0,0,W(),H());
-  drawBackground();
-  drawRoads();
-  drawNetwork();
+  drawBg(); drawTerrain(); drawRoads();
 
-  if(mode==='both') {
-    // Split screen
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(0,0,W()/2,H());
-    ctx.clip();
-    drawVenues('before');
-    ctx.restore();
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(W()/2,0,W()/2,H());
-    ctx.clip();
-    drawVenues('after');
-    ctx.restore();
+  if (mode==='both') {
+    const mid=W()/2;
+    ctx.save(); ctx.beginPath(); ctx.rect(0,0,mid,H()); ctx.clip();
+    drawNetwork('before'); drawVenues('before'); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.rect(mid,0,W(),H()); ctx.clip();
+    drawNetwork('after'); drawVenues('after'); ctx.restore();
     // Divider
-    ctx.beginPath();
-    ctx.moveTo(W()/2,0); ctx.lineTo(W()/2,H());
-    ctx.strokeStyle='rgba(255,255,255,0.08)';
-    ctx.lineWidth=1;
-    ctx.setLineDash([5,5]); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle='rgba(239,68,68,0.7)'; ctx.font='500 10px system-ui'; ctx.textAlign='left';
-    ctx.fillText('A  bez sistema',12,18);
-    ctx.fillStyle='rgba(34,197,94,0.7)'; ctx.textAlign='right';
-    ctx.fillText('B  sa StayVB',W()-12,18);
-
-    // Spawn both
-    spawnAccum += (TOURISTS_PER_MIN * SPEED) / 60;
-    while(spawnAccum>=1) {
-      tourists.push(new Tourist('before'));
-      tourists.push(new Tourist('after'));
-      spawnAccum-=1;
-    }
+    ctx.beginPath(); ctx.moveTo(mid,0); ctx.lineTo(mid,H());
+    ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=1;
+    ctx.setLineDash([5,6]); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='rgba(71,85,105,0.5)'; ctx.font='500 9px system-ui'; ctx.textAlign='left';
+    ctx.fillText('A  bez sistema',12,16);
+    ctx.fillStyle='rgba(34,197,94,0.6)'; ctx.textAlign='right';
+    ctx.fillText('B  sa StayVB',W()-12,16);
+    spawnAcc+=(PER_MIN*SPEED)/60;
+    while(spawnAcc>=1){ tourists.push(new Tourist('before')); tourists.push(new Tourist('after')); spawnAcc--; }
   } else {
-    drawVenues(mode);
-    spawnAccum += (TOURISTS_PER_MIN * SPEED) / 60;
-    while(spawnAccum>=1) {
-      tourists.push(new Tourist(mode));
-      spawnAccum-=1;
-    }
+    drawNetwork(mode); drawVenues(mode);
+    spawnAcc+=(PER_MIN*SPEED)/60;
+    while(spawnAcc>=1){ tourists.push(new Tourist(mode)); spawnAcc--; }
   }
 
-  // Update + draw tourists (cap at 400 for perf)
-  if(tourists.length>400) tourists=tourists.slice(tourists.length-400);
-  tourists = tourists.filter(t=>{ t.update(); return !t.done; });
+  if(tourists.length>800) tourists=tourists.slice(tourists.length-800);
+  tourists=tourists.filter(t=>{t.update();return !t.done;});
   tourists.forEach(t=>t.draw());
-  // Draw done coins (still visible)
-  tourists.forEach(t=>t.draw());
+  explosions=explosions.filter(e=>{e.update();e.draw();return !e.done;});
 
-  // Charts (every 90 ticks)
-  if(tick%90===0) {
-    const total=captured+lost;
-    revHistory.push(captured);
-    effHistory.push(total>0?Math.round(captured/total*100):0);
-    if(revHistory.length>40){revHistory.shift();effHistory.shift();}
-    drawChart(chartRevCtx, revHistory, '#22c55e', REV_MAX, false);
-    drawChart(chartEffCtx, effHistory, '#22d3ee', 100, false);
-    updateVenueList();
-  }
-
-  // Metrics
-  const total=captured+lost;
-  const eff=total>0?Math.round(captured/total*100):0;
-  const perMin=Math.round(touristCount/(tick/60*SPEED));
-  document.getElementById('ts-tourists').textContent=touristCount.toLocaleString();
-  document.getElementById('ts-captured').textContent=fmtShort(captured)+' RSD';
-  document.getElementById('ts-eff').textContent=eff+'%';
-  document.getElementById('ts-lost').textContent=fmtShort(lost)+' RSD';
-  document.getElementById('b-flow').textContent=isNaN(perMin)?'—':perMin;
-  document.getElementById('b-cap').textContent=fmtShort(captured)+' RSD';
-  document.getElementById('b-lost').textContent=fmtShort(lost)+' RSD';
-  document.getElementById('b-tourists').textContent=touristCount.toLocaleString();
-  document.getElementById('b-eff').textContent=eff+'%';
-
-  const pct=Math.min(100,Math.round(captured/3000000*100));
-  document.getElementById('potential-bar').style.width=pct+'%';
-  document.getElementById('potential-pct').textContent=pct+'% realizovano';
+  if(tick%8===0) updateKPIs();
+  if(tick%180===0) updateVList();
 
   requestAnimationFrame(animate);
 }
 
-initCharts();
+// Start
+rotateInsight();
 animate();
 </script>
 </body>
