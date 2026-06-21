@@ -95,7 +95,7 @@ async function init(){
 
     try{
         // Uzmi partnera
-        const {data:p} = await sb.from('partners')
+        const {data:p} = await sb.from('partners_public')
             .select('id,name,type,phone,whatsapp,google_review_url')
             .eq('partner_code', PARTNER_ID)
             .eq('is_active', true)
