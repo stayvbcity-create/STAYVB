@@ -394,7 +394,7 @@ async function init(){
 
   // Učitaj partnere - restorani, atrakcije, mali biznisi + hoteli/restorani koji imaju aktivan HH
   const { data:partners } = await sb
-    .from('partners')
+    .from('partners_public')
     .select('id, name, type, lat, lng, hh_active, hh_start, hh_end, hh_date, phone, whatsapp, partner_code, partner_content(short_desc, current_offer, offer_expires_at, hh_info)')
     .eq('is_active', true)
     .not('lat', 'is', null)
