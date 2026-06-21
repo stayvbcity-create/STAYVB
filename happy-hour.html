@@ -160,7 +160,7 @@ async function load(){
 
   // Uzmi sve partnere sa HH = true za danas + njihov sadržaj
   const { data:partners } = await sb
-    .from('partners')
+    .from('partners_public')
     .select('id, name, type, partner_code, hh_active, hh_start, hh_end, hh_date, hh_visibility, lat, lng, whatsapp, phone, google_review_url, partner_content(hh_info, address)')
     .eq('hh_active', true)
     .eq('hh_date', todayStr)
