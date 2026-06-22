@@ -654,9 +654,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
           <div class="chart-title" style="margin:0">Posete po danima</div>
           <div style="display:flex;gap:6px">
-            <button class="btn btn-ghost btn-sm lv-range" data-r="14"  onclick="setLVRange(14)"  style="opacity:0.5">14 dana</button>
-            <button class="btn btn-ghost btn-sm lv-range" data-r="30"  onclick="setLVRange(30)">30 dana</button>
-            <button class="btn btn-ghost btn-sm lv-range" data-r="90"  onclick="setLVRange(90)"  style="opacity:0.5">3 meseca</button>
+            <button class="btn btn-ghost btn-sm lv-range" data-r="14" onclick="setLVRange(14)" style="opacity:0.5">14 dana</button>
+            <button class="btn btn-ghost btn-sm lv-range" data-r="30" onclick="setLVRange(30)">30 dana</button>
+            <button class="btn btn-ghost btn-sm lv-range" data-r="90" onclick="setLVRange(90)" style="opacity:0.5">3 meseca</button>
           </div>
         </div>
         <div class="chart-wrap" style="height:220px"><canvas id="chart-lv"></canvas></div>
@@ -2730,11 +2730,11 @@ async function loadLandingViews(){
   const cnt7  = Object.entries(byDate).filter(([d])=>d>=d7.toISOString().split('T')[0]).reduce((s,[,v])=>s+v,0);
   const cnt30 = Object.entries(byDate).filter(([d])=>d>=d30.toISOString().split('T')[0]).reduce((s,[,v])=>s+v,0);
 
-  const el = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
-  el('lv-today', byDate[today]||0);
-  el('lv-7d', cnt7);
-  el('lv-30d', cnt30);
-  el('lv-total', lvAllData.length);
+  const setEl = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+  setEl('lv-today', byDate[today]||0);
+  setEl('lv-7d', cnt7);
+  setEl('lv-30d', cnt30);
+  setEl('lv-total', lvAllData.length);
 
   renderLVChart(byDate);
   renderLVTable(byDate);
