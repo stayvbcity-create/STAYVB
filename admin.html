@@ -677,18 +677,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
           </table>
         </div>
       </div>
-      <div style="margin-top:20px;padding:16px 18px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.18);border-radius:14px">
-        <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:#60a5fa;margin-bottom:8px">SQL tabela potrebna u Supabase</div>
-        <pre style="font-size:11px;color:rgba(255,255,255,0.55);font-family:monospace;white-space:pre-wrap;line-height:1.7">CREATE TABLE page_views (
-  id bigserial PRIMARY KEY,
-  page text NOT NULL DEFAULT 'join',
-  date date NOT NULL DEFAULT CURRENT_DATE,
-  visited_at timestamptz NOT NULL DEFAULT now()
-);
-ALTER TABLE page_views ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "anon insert" ON page_views FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY "auth select" ON page_views FOR SELECT TO authenticated USING (true);</pre>
-      </div>
     </div>
 
     <!-- ═══ QR ═══ -->
