@@ -201,6 +201,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="nav-item" onclick="nav('qr',this)"><span class="nav-icon">📱</span>QR Generator</div>
     <div class="nav-section">Marketing</div>
     <div class="nav-item" onclick="nav('leads',this)"><span class="nav-icon">🎯</span>Prijave<span class="nav-badge" id="nb-leads" style="display:none">0</span></div>
+    <div class="nav-item" onclick="nav('landingviews',this)"><span class="nav-icon">👁️</span>Landing posete</div>
   </div>
   <div class="sidebar-bottom">
     <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" onclick="StayVBGuard.logoutAdmin()">🚪 Odjavi se</button>
@@ -637,6 +638,59 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="tbl-card"><div class="tbl-wrap" id="leads-tbl"></div></div>
     </div>
 
+    <!-- ═══ LANDING POSETE ═══ -->
+    <div id="page-landingviews" class="page">
+      <div class="sec-header">
+        <div><div class="sec-title">Landing posete — join.html</div><div class="sec-sub">Koliko vlasnika je posetilo stranicu za prijavu po danima</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="loadLandingViews()">🔄 Osvježi</button>
+      </div>
+      <div class="stats-row" style="margin-bottom:20px">
+        <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,#3b82f6,#60a5fa)"></div><div class="stat-num" id="lv-today" style="color:#93c5fd">—</div><div class="stat-label">Danas</div></div>
+        <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,#8b5cf6,#a78bfa)"></div><div class="stat-num" id="lv-7d" style="color:#c4b5fd">—</div><div class="stat-label">Posednjih 7 dana</div></div>
+        <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,#d97706,#fbbf24)"></div><div class="stat-num" id="lv-30d" style="color:#fbbf24">—</div><div class="stat-label">Posednjih 30 dana</div></div>
+        <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,#059669,#34d399)"></div><div class="stat-num" id="lv-total" style="color:#6ee7b7">—</div><div class="stat-label">Ukupno</div></div>
+      </div>
+      <div class="chart-card" style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <div class="chart-title" style="margin:0">Posete po danima</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm lv-range" data-r="14" onclick="setLVRange(14)" style="opacity:0.5">14 dana</button>
+            <button class="btn btn-ghost btn-sm lv-range" data-r="30" onclick="setLVRange(30)">30 dana</button>
+            <button class="btn btn-ghost btn-sm lv-range" data-r="90" onclick="setLVRange(90)" style="opacity:0.5">3 meseca</button>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:220px"><canvas id="chart-lv"></canvas></div>
+      </div>
+      <div class="tbl-card">
+        <div class="tbl-header">
+          <div class="tbl-title">Dnevni detalji</div>
+          <span id="lv-note" style="font-size:10px;color:var(--muted);font-weight:700"></span>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl" style="min-width:400px">
+            <thead><tr>
+              <th>Datum</th>
+              <th style="text-align:center">Poseta</th>
+              <th style="text-align:right">Trend</th>
+            </tr></thead>
+            <tbody id="lv-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div style="margin-top:20px;padding:16px 18px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.18);border-radius:14px">
+        <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:#60a5fa;margin-bottom:8px">SQL tabela potrebna u Supabase</div>
+        <pre style="font-size:11px;color:rgba(255,255,255,0.55);font-family:monospace;white-space:pre-wrap;line-height:1.7">CREATE TABLE page_views (
+  id bigserial PRIMARY KEY,
+  page text NOT NULL DEFAULT 'join',
+  date date NOT NULL DEFAULT CURRENT_DATE,
+  visited_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE page_views ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anon insert" ON page_views FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY "auth select" ON page_views FOR SELECT TO authenticated USING (true);</pre>
+      </div>
+    </div>
+
     <!-- ═══ QR ═══ -->
     <div id="page-qr" class="page">
       <div class="sec-header"><div><div class="sec-title">QR Generator</div><div class="sec-sub">QR kodovi i partner URL-ovi</div></div></div>
@@ -907,6 +961,7 @@ const PAGE_META = {
   revenue:['Prihodi','Istorija naplate'],
   qr:['QR Generator','QR kodovi i partner URL-ovi'],
   leads:['Prijave partnera','Zainteresovani vlasnici objekata'],
+  landingviews:['Landing posete','Posete join.html po danima'],
   cityinfo:['City Info','Kategorije i mali biznisi'],
   properties:['Nekretnine','Vaš dom u Banji — direktna prodaja']
 };
@@ -914,7 +969,7 @@ const PAGE_META = {
 const LOADERS = {
   dashboard:loadDashboard, stats:loadStats, partners:loadPartners,
   stamps:loadStamps, loyalty:loadLoyalty, events:loadEvents,
-  billing:loadBilling, revenue:loadRevenue, qr:loadQR, properties:loadProperties, leads:loadLeads
+  billing:loadBilling, revenue:loadRevenue, qr:loadQR, properties:loadProperties, leads:loadLeads, landingviews:loadLandingViews
 };
 
 function nav(id, el){
@@ -2643,6 +2698,92 @@ function renderQRList(data){
 function dlQR(cid,name){const c=document.querySelector('#'+cid+' canvas');if(!c){alert('QR nije generisan.');return;}const a=document.createElement('a');a.href=c.toDataURL();a.download=name+'-qr.png';a.click();}
 function cpTxt(t){navigator.clipboard.writeText(t).then(()=>alert('Kopirano!'));}
 
+// ── Landing Views ─────────────────────────────────────────────────
+let lvChart = null;
+let lvRange = 30;
+let lvAllData = [];
+
+async function loadLandingViews(){
+  const since = new Date();
+  since.setDate(since.getDate() - 90);
+  const { data, error } = await sb
+    .from('page_views')
+    .select('date, visited_at')
+    .eq('page','join')
+    .gte('date', since.toISOString().split('T')[0])
+    .order('date', { ascending: false });
+
+  if(error){
+    document.getElementById('lv-tbody').innerHTML =
+      '<tr><td colspan="3" style="color:#f87171;padding:16px">Tabela page_views nije kreirana. Pogledajte SQL uputstvo ispod.</td></tr>';
+    ['lv-today','lv-7d','lv-30d','lv-total'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='?'; });
+    return;
+  }
+
+  lvAllData = data || [];
+  const byDate = {};
+  lvAllData.forEach(r => { byDate[r.date] = (byDate[r.date]||0)+1; });
+
+  const today = new Date().toISOString().split('T')[0];
+  const d7 = new Date(); d7.setDate(d7.getDate()-7);
+  const d30 = new Date(); d30.setDate(d30.getDate()-30);
+  const cnt7  = Object.entries(byDate).filter(([d])=>d>=d7.toISOString().split('T')[0]).reduce((s,[,v])=>s+v,0);
+  const cnt30 = Object.entries(byDate).filter(([d])=>d>=d30.toISOString().split('T')[0]).reduce((s,[,v])=>s+v,0);
+
+  const setEl = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+  setEl('lv-today', byDate[today]||0);
+  setEl('lv-7d', cnt7);
+  setEl('lv-30d', cnt30);
+  setEl('lv-total', lvAllData.length);
+
+  renderLVChart(byDate);
+  renderLVTable(byDate);
+}
+
+function setLVRange(r){
+  lvRange = r;
+  document.querySelectorAll('.lv-range').forEach(b=>{ b.style.opacity = parseInt(b.dataset.r)===r?'1':'0.5'; });
+  const byDate = {};
+  lvAllData.forEach(row=>{ byDate[row.date]=(byDate[row.date]||0)+1; });
+  renderLVChart(byDate);
+  renderLVTable(byDate);
+}
+
+function renderLVChart(byDate){
+  const days=[], counts=[];
+  for(let i=lvRange-1;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const key=d.toISOString().split('T')[0];
+    days.push(key.slice(5));
+    counts.push(byDate[key]||0);
+  }
+  const ctx=document.getElementById('chart-lv').getContext('2d');
+  if(lvChart) lvChart.destroy();
+  lvChart=new Chart(ctx,{
+    type:'bar',
+    data:{labels:days,datasets:[{label:'Posete',data:counts,backgroundColor:'rgba(59,130,246,0.55)',borderColor:'#3b82f6',borderWidth:1.5,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'rgba(255,255,255,0.40)',font:{size:10}}},
+              y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'rgba(255,255,255,0.40)',font:{size:10}},beginAtZero:true}}}
+  });
+}
+
+function renderLVTable(byDate){
+  const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-lvRange);
+  const cutoffStr=cutoff.toISOString().split('T')[0];
+  const sorted=Object.entries(byDate).filter(([d])=>d>=cutoffStr).sort((a,b)=>b[0].localeCompare(a[0]));
+  const max=Math.max(...sorted.map(([,v])=>v),1);
+  const tbody=document.getElementById('lv-tbody');
+  tbody.innerHTML=sorted.map(([date,cnt],i)=>{
+    const prev=sorted[i+1]?.[1]||0;
+    const trend=cnt>prev?`<span style="color:#6ee7b7">▲ +${cnt-prev}</span>`:cnt<prev?`<span style="color:#fca5a5">▼ ${cnt-prev}</span>`:'<span style="color:rgba(255,255,255,0.3)">—</span>';
+    const bar=`<div style="display:inline-block;height:6px;width:${Math.round(cnt/max*80)}px;background:#3b82f6;border-radius:3px;vertical-align:middle;margin-left:8px"></div>`;
+    return `<tr><td style="font-weight:800">${date}</td><td style="text-align:center;font-weight:900;color:#93c5fd">${cnt}${bar}</td><td style="text-align:right">${trend}</td></tr>`;
+  }).join('')||'<tr><td colspan="3" style="color:rgba(255,255,255,0.3);padding:16px;text-align:center">Nema podataka za izabrani period</td></tr>';
+  const lv_note=document.getElementById('lv-note');
+  if(lv_note) lv_note.textContent=`${sorted.length} dana · ${sorted.reduce((s,[,v])=>s+v,0)} ukupno`;
+}
+
 // ── Helpers ───────────────────────────────────────────────────────
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
@@ -2650,55 +2791,7 @@ document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if
 
 // ── Boot ──────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded',()=>{
-  StayVBGuard.requireAdmin(async ()=>{
-
-    // ── DEBUG PANEL ──────────────────────────────────────────────
-    const dbg = document.createElement('div');
-    dbg.id = 'debug-panel';
-    dbg.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#0d1829;border-top:2px solid #fbbf24;padding:12px 20px;font-family:monospace;font-size:11px;max-height:220px;overflow-y:auto';
-    dbg.innerHTML = '<div style="color:#fbbf24;font-weight:900;margin-bottom:6px">🔍 DEBUG — zatvorite kada sve radi (uklonite admin_debug.html)</div>';
-    document.body.appendChild(dbg);
-
-    function log(msg, ok){
-      const el = document.createElement('div');
-      el.style.color = ok === true ? '#6ee7b7' : ok === false ? '#f87171' : '#94a3b8';
-      el.textContent = (ok === true ? '✓ ' : ok === false ? '✗ ' : '· ') + msg;
-      dbg.appendChild(el);
-      dbg.scrollTop = dbg.scrollHeight;
-      console.log(msg);
-    }
-
-    log('Supabase klijent: ' + (sb ? 'OK' : 'NULL'), !!sb);
-
-    // Test 1: direktno čitanje partners
-    const {data: p1, error: e1} = await sb.from('partners').select('id,name').limit(3);
-    log('partners SELECT: ' + (e1 ? e1.message : (p1?.length||0) + ' redova'), !e1);
-
-    // Test 2: partner_billing
-    const {data: p2, error: e2} = await sb.from('partner_billing').select('id').limit(3);
-    log('partner_billing SELECT: ' + (e2 ? e2.message : (p2?.length||0) + ' redova'), !e2);
-
-    // Test 3: get_system_stats RPC
-    const {data: p3, error: e3} = await sb.rpc('get_system_stats');
-    log('RPC get_system_stats: ' + (e3 ? e3.message : JSON.stringify(p3)?.slice(0,80)), !e3);
-
-    // Test 4: analytics_clicks
-    const {data: p4, error: e4} = await sb.from('analytics_clicks').select('id').limit(3);
-    log('analytics_clicks SELECT: ' + (e4 ? e4.message : (p4?.length||0) + ' redova'), !e4);
-
-    // Test 5: guests
-    const {data: p5, error: e5} = await sb.from('guests').select('id').limit(3);
-    log('guests SELECT: ' + (e5 ? e5.message : (p5?.length||0) + ' redova'), !e5);
-
-    // Test 6: partner_billing join
-    const {data: p6, error: e6} = await sb.from('partner_billing').select('id,partners(type)').limit(3);
-    log('partner_billing+partners JOIN: ' + (e6 ? e6.message : (p6?.length||0) + ' redova'), !e6);
-
-    // Test 7: partners sa access_token (za QR)
-    const {data: p7, error: e7} = await sb.from('partners').select('id,name,access_token,pin').limit(1);
-    log('partners access_token+pin: ' + (e7 ? e7.message : JSON.stringify(p7?.[0])?.slice(0,80)), !e7);
-
-    log('--- Pokrećem loadDashboard ---');
+  StayVBGuard.requireAdmin(()=>{
     loadDashboard();
     loadLeads();
     setInterval(()=>{
