@@ -323,7 +323,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.18)}
     <span class="h1-free">Počnite besplatno danas.</span>
   </h1>
   <p class="hero-desc">
-    Svaka rezervacija kroz booking platformu košta Vas <strong>15–20% zauvek</strong>. Gosti koji su bili zadovoljni ne vraćaju se jer ih niko ne poziva nazad. Izračunajte koliko gubite — i vidite kako to zaustaviti.
+    Svaka rezervacija kroz booking platformu košta Vas <strong>15–20% zauvek</strong>. Gosti koji su bili zadovoljni ne vraćaju se jer ih niko ne poziva nazad. A oni koji su trenutno kod Vas — niko im ne nudi ništa dodatno. Izračunajte koliko gubite — i vidite kako to zaustaviti.
   </p>
   <button class="btn-cta" onclick="document.getElementById('kalkulator').scrollIntoView({behavior:'smooth'})">
     Izračunajte gubitak →
@@ -385,9 +385,9 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.18)}
       <span class="rc-badge">30% se vraća uz StayVB</span>
     </div>
     <div class="rc rc-c">
-      <div class="rc-lbl">Propuštene preporuke</div>
+      <div class="rc-lbl">Propuštene preporuke i upsell</div>
       <div class="rc-num" id="r-referral">—</div>
-      <div class="rc-desc">RSD/god — novi gosti koji ne dolaze jer nema automatizovanih preporuka</div>
+      <div class="rc-desc">RSD/god — novi gosti bez automatizovanih preporuka + prihod koji gubite jer gostima tokom boravka ne nudite ništa dodatno</div>
       <span class="rc-badge">Premium automatizuje</span>
     </div>
   </div>
@@ -525,10 +525,10 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.18)}
         <li>Loyalty pečati — gosti preporučuju Vas dalje</li>
         <li>"Pozovi prijatelja" — automatizovane preporuke</li>
         <li>VIP status — gost dobija popuste u gradu</li>
-        <li>Posebna ponuda u aplikaciji za Vaše goste</li>
+        <li><strong>Posebne ponude tokom boravka</strong> — izlet, transfer, doček, doručak — direktno u aplikaciji gosta</li>
         <li>Instagram kampanja sa Vašim gostima</li>
         <li class="plus">Detaljne statistike i analitika</li>
-        <li class="plus">Premium oznaka na profilu</li>
+        <li class="plus">Premium oznaka — imidž modernog domaćina</li>
         <li class="plus">Prioritetna podrška</li>
       </ul>
       <div class="p-note">✓ Jedno noćenje pokriva godišnju pretplatu. Svaka direktna rezervacija — 100% Vaša zarada.</div>
@@ -542,6 +542,9 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.18)}
   <div class="price-note" style="margin-top:14px">
     <strong style="color:var(--gold);font-size:14px">Računica je prosta:</strong><br>
     Booking platforme uzimaju oko 2.250 RSD od jedne rezervacije od 15.000 RSD. Za StayVB Premium plaćate <strong style="color:#e8eaf0">6.000 RSD godišnje</strong> — i to je sve. <strong style="color:#e8eaf0">Svaka direktna rezervacija = 100% Vaša.</strong> Nakon prve dve direktne rezervacije, StayVB Vam se za celu godinu isplatio.
+  </div>
+  <div style="margin-top:12px;padding:14px 18px;background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:14px;font-size:11px;color:rgba(232,234,240,0.32);font-weight:600;line-height:1.75">
+    Rezultati zavise od sezonalnosti, tipa smeštaja i aktivnosti vlasnika. StayVB je alat — koliko ga koristite, toliko i radi. Čak i bez direktnih rezervacija, dobijate digitalni vodič za goste, stalak sa QR kodom i imidž modernog domaćina koji gradi poverenje gostiju — što samo po sebi doprinosi boljim recenzijama i preporukama.
   </div>
 </div>
 </section>
@@ -628,22 +631,30 @@ function calc(){
   const returnGuests  = Math.round(bookings * returnRate);
   const returnRevenue = Math.round(returnGuests * resVal);
 
-  /* 3. PROPUŠTENE PREPORUKE (novo)
-     Logika: svaki 5. gost (20%) koji je koristio "Pozovi prijatelja" dovede novog gosta.
-     Bez StayVB-a taj kanal ne postoji.
-     Premium automatizuje: referral link, loyalty, Instagram share. */
+  /* 3. PROPUŠTENE PREPORUKE + UPSELL TOKOM BORAVKA
+     a) Preporuke: 20% gostiju dovede novog gosta kroz "Pozovi prijatelja".
+        Bez StayVB-a taj kanal ne postoji.
+     b) Upsell tokom boravka: Premium omogućava ponudu dodatnih stavki gostu
+        (izlet, transfer, doručak, doček...). Konzervativno: 15% gostiju kupi
+        nešto prosečne vrednosti 2.000 RSD po boravku. */
   const referralRate   = 0.20;
   const referralGuests = Math.round(bookings * referralRate);
   const referralRev    = Math.round(referralGuests * resVal);
 
-  const total = commission + returnRevenue + referralRev;
+  const upsellRate  = 0.15;
+  const upsellValue = 2000;
+  const upsellRev   = Math.round(bookings * upsellRate * upsellValue);
+
+  const referralTotal = referralRev + upsellRev;
+
+  const total = commission + returnRevenue + referralTotal;
   const roi   = Math.round(total / 6000);
 
   /* ── Prikaz kartica ── */
   const setCard = (id, n) => { const el=document.getElementById(id); if(el){el.textContent=fmt(n); el.style.animation='none'; void el.offsetWidth; el.style.animation='num .35s ease both';} };
   setCard('r-comm', commission);
   setCard('r-return', returnRevenue);
-  setCard('r-referral', referralRev);
+  setCard('r-referral', referralTotal);
 
   /* ── Barovi ── */
   const maxB = Math.max(total, 6001) * 1.08;
@@ -654,12 +665,12 @@ function calc(){
   };
   setPct('bf-comm', commission);
   setPct('bf-return', returnRevenue);
-  setPct('bf-referral', referralRev);
+  setPct('bf-referral', referralTotal);
   setPct('bf-sub', 6000);
 
   document.getElementById('bv-comm').textContent    = fmtFull(commission);
   document.getElementById('bv-return').textContent  = fmtFull(returnRevenue);
-  document.getElementById('bv-referral').textContent= fmtFull(referralRev);
+  document.getElementById('bv-referral').textContent= fmtFull(referralTotal);
 
   /* ── Verdict ── */
   document.getElementById('v-total').textContent = total.toLocaleString('sr-RS')+' RSD';
