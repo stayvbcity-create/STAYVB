@@ -326,7 +326,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.18)}
     <span class="h1-free">Počnite besplatno danas.</span>
   </h1>
   <p class="hero-desc">
-    Svaka rezervacija kroz booking platformu košta Vas <strong>15–20% od zarade</strong>. Gosti koji su bili zadovoljni ne vraćaju se jer ih niko ne poziva nazad. A oni koji su trenutno kod Vas, niko im ne nudi ništa dodatno. Izračunajte koliko gubite i vidite kako to zaustaviti.
+    Svaka rezervacija kroz neku od booking platformi košta Vas <strong>15–20% od zarade</strong>. Gosti koji su bili zadovoljni se ne vraćaju jer ih niko ne poziva nazad. A oni koji su trenutno kod Vas, niko im ne nudi ništa dodatno. Izračunajte koliko gubite i vidite kako to zaustaviti.
   </p>
   <button class="btn-cta" onclick="document.getElementById('kalkulator').scrollIntoView({behavior:'smooth'})">
     Izračunajte gubitak →
@@ -641,6 +641,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.18)}
 <script>
 const sb = C.db();
 let selectedPlan = 'premium';
+let selectedDuration = 'year';
 
 (async function(){
   try{
@@ -781,7 +782,6 @@ function selectPlan(plan){ selectOpt(plan==='free'?'free':'year'); }
 function selectDuration(dur){ selectOpt(dur==='half'?'half':'year'); }
 
 /* ── Forma ── */
-let selectedDuration = 'year';
 
 async function submitForm(){
   const name  =document.getElementById('f-name').value.trim();
