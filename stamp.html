@@ -81,7 +81,17 @@ body.translated-ltr,body.translated-rtl{margin-top:0!important}
 .consent-row{display:flex;align-items:flex-start;gap:10px;margin:12px 0 4px}
 .consent-row input[type=checkbox]{width:18px;height:18px;border-radius:5px;accent-color:#f59e0b;margin-top:1px;flex-shrink:0;cursor:pointer}
 .consent-text{font-size:11px;color:rgba(255,255,255,0.45);font-weight:600;line-height:1.5}
-.consent-text strong{color:rgba(255,255,255,0.65)}
+/* ── Public view (gost sa ulice) ── */
+.pub-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);border-radius:1.5rem;padding:20px;margin-bottom:12px}
+.pub-offer{background:linear-gradient(135deg,#7c3aed,#4f46e5);border-radius:1.5rem;padding:18px 20px;margin-bottom:12px;box-shadow:0 8px 24px rgba(124,58,237,0.30)}
+.pub-offer-lbl{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.65);margin-bottom:6px}
+.pub-offer-txt{font-size:14px;font-weight:800;color:white;line-height:1.5}
+.pub-prices-lbl{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.35);margin-bottom:8px}
+.pub-prices-txt{font-size:13px;font-weight:700;color:rgba(255,255,255,0.80);line-height:1.8}
+.pub-link{display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:1.4rem;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.22);text-decoration:none;margin-bottom:12px}
+.pub-wa{display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:1.4rem;background:rgba(16,185,129,0.10);border:1px solid rgba(16,185,129,0.22);text-decoration:none;margin-bottom:12px}
+.pub-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);margin:8px 0 16px}
+.pub-loyalty-banner{background:linear-gradient(135deg,rgba(251,191,36,0.10),rgba(245,158,11,0.05));border:1px solid rgba(251,191,36,0.22);border-radius:1.5rem;padding:20px;text-align:center;margin-bottom:12px}
 </style>
 </head>
 <body>
@@ -385,21 +395,176 @@ async function submitReward(){
   document.getElementById('main-screen').innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;gap:16px"><div style="font-size:3.5rem">🎁</div><h2 style="font-size:1.4rem;font-weight:900;color:#fbbf24;margin:0">Zahtev poslat!</h2><p style="font-size:13px;color:rgba(255,255,255,0.6);font-weight:600;max-width:280px;line-height:1.6;margin:0">Kontaktiraćemo te uskoro.</p><a href="index.html" class="btn-gold" style="max-width:240px;display:block;text-align:center;text-decoration:none;padding:16px">← Nazad na vodič</a></div>`;
 }
 
+// ── Public view — za oba tipa posetilaca ─────────────────────────
+async function renderPublicView(locationCode, isGuest = false, stampResult = null){
+  const screen = document.getElementById('main-screen');
+  screen.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh"><div style="width:36px;height:36px;border:3px solid rgba(255,255,255,0.08);border-top-color:#fbbf24;border-radius:50%;animation:spin 0.8s linear infinite"></div></div>`;
+
+  const {data:loc} = await sb.from('stamp_locations')
+    .select('id,name,partner_id')
+    .eq('location_code', locationCode)
+    .maybeSingle();
+
+  // Javna lokacija bez partnera — idi na loyalty
+  if(!loc || !loc.partner_id){
+    await renderMain();
+    if(stampResult){
+      if(stampResult.ok && !stampResult.isDup) showToast(`⭐ Novi pečat: ${stampResult.name}!`, true);
+      else if(stampResult.isDup) showToast('Već imaš pečat sa ove lokacije ✓', false);
+    }
+    return;
+  }
+
+  const {data:p} = await sb.from('partners')
+    .select('id,name,type,phone,whatsapp,google_review_url')
+    .eq('id', loc.partner_id)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if(!p){ await renderMain(); return; }
+
+  const {data:pc} = await sb.from('partner_content')
+    .select('extra_offer,service_prices,current_offer,offer_expires_at,menu_url')
+    .eq('partner_id', p.id)
+    .maybeSingle();
+
+  const c = pc || {};
+  const ICONS = {hotel:'🏨',restaurant:'🍽️',attraction:'🎡',business:'🛍️',apartment:'🏠'};
+  const LABELS = {hotel:'Hotel',restaurant:'Restoran',attraction:'Atrakcija',business:'Biznis',apartment:'Apartman'};
+  const activeOffer = c.current_offer || c.extra_offer;
+
+  let html = '';
+
+  // Pečat obaveštenje za poznate goste
+  if(isGuest && stampResult?.ok){
+    const stampMsg = stampResult.isDup
+      ? `<div style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);border-radius:14px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
+           <span style="font-size:1.4rem">✓</span>
+           <div style="font-size:12px;font-weight:800;color:#fcd34d">Već imaš pečat sa ove lokacije</div>
+         </div>`
+      : `<div style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);border-radius:14px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
+           <span style="font-size:1.4rem">⭐</span>
+           <div style="font-size:12px;font-weight:800;color:#6ee7b7">Novi pečat: ${esc(stampResult.name)}!</div>
+         </div>`;
+    html += stampMsg;
+  }
+
+  // Header
+  html += `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+      <div style="width:52px;height:52px;border-radius:16px;background:rgba(251,191,36,0.10);border:1px solid rgba(251,191,36,0.28);display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0">${ICONS[p.type]||'📍'}</div>
+      <div>
+        <div style="font-size:1.1rem;font-weight:900;letter-spacing:-0.02em;line-height:1.1">${esc(p.name)}</div>
+        <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.35);margin-top:3px">${LABELS[p.type]||'Partner'} · Vrnjačka Banja</div>
+      </div>
+    </div>`;
+
+  // Aktivna ponuda
+  if(activeOffer){
+    const offerLabel = {restaurant:'🔥 Aktuelna ponuda',business:'🎯 Posebna promocija',attraction:'✨ Posebna ponuda'}[p.type]||'🎯 Ponuda';
+    html += `<div class="pub-offer">
+      <div class="pub-offer-lbl">${offerLabel}</div>
+      <div class="pub-offer-txt">${esc(activeOffer)}</div>
+      ${c.offer_expires_at?`<div style="font-size:10px;color:rgba(255,255,255,0.50);margin-top:8px;font-weight:700">⏰ Važi do: ${new Date(c.offer_expires_at).toLocaleDateString('sr-RS')}</div>`:''}
+    </div>`;
+  }
+
+  // Cenovnik / meni
+  if(c.service_prices){
+    const priceLabel = {restaurant:'🍽️ Meni i cene',business:'📋 Naše usluge',attraction:'🎟️ Cene ulaznica'}[p.type]||'📋 Cenovnik';
+    html += `<div class="pub-card">
+      <div class="pub-prices-lbl">${priceLabel}</div>
+      <div class="pub-prices-txt">${esc(c.service_prices).replace(/\n/g,'<br>').replace(/\|/g,' · ')}</div>
+    </div>`;
+  }
+
+  // Link na meni
+  if(c.menu_url){
+    const menuLabel = {restaurant:'🍽️ Pogledaj meni',business:'📋 Pogledaj ponudu',attraction:'🎟️ Cene i informacije'}[p.type]||'🔗 Više informacija';
+    html += `<a href="${c.menu_url}" target="_blank" rel="noopener" class="pub-link">
+      <span style="font-size:1.4rem">🔗</span>
+      <div style="flex:1"><div style="font-size:13px;font-weight:900;color:#93c5fd">${menuLabel}</div><div style="font-size:10px;color:rgba(255,255,255,0.35);font-weight:600;margin-top:2px">Otvara se u novom tabu</div></div>
+      <span style="font-size:18px;color:rgba(255,255,255,0.25)">→</span>
+    </a>`;
+  }
+
+  // WhatsApp
+  const phone = p.whatsapp || p.phone || '';
+  if(phone){
+    html += `<a href="https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent('Zdravo, vidim vas na StayVB!')}" class="pub-wa">
+      <span style="font-size:1.4rem">📱</span>
+      <div><div style="font-size:13px;font-weight:900;color:#6ee7b7">Kontaktirajte nas</div><div style="font-size:11px;color:rgba(255,255,255,0.40);font-weight:600;margin-top:2px">${esc(phone)}</div></div>
+    </a>`;
+  }
+
+  // Google recenzija
+  if(p.google_review_url){
+    html += `<a href="${p.google_review_url}" target="_blank" rel="noopener"
+      style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:1.4rem;background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.18);text-decoration:none;margin-bottom:12px">
+      <span style="font-size:1.4rem">⭐</span>
+      <div>
+        <div style="font-size:13px;font-weight:900;color:#fbbf24">Ocenite nas na Google-u</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.35);font-weight:600;margin-top:2px">Vaša ocena nam mnogo znači</div>
+      </div>
+      <span style="margin-left:auto;font-size:18px;opacity:0.4">→</span>
+    </a>`;
+  }
+
+  html += `<div class="pub-divider"></div>`;
+
+  // Dno — različito za gosta i prolaznika
+  if(isGuest){
+    html += `<button class="btn-gold" onclick="renderMain()" style="margin-bottom:10px">⭐ Moji pečati →</button>
+    <a href="index.html" class="btn-ghost" style="display:block;text-align:center;text-decoration:none;padding:14px">🗺️ Nazad na vodič</a>`;
+  } else {
+    html += `<div class="pub-loyalty-banner">
+      <div style="font-size:2rem;margin-bottom:10px">🗺️</div>
+      <div style="font-size:14px;font-weight:900;color:#fbbf24;margin-bottom:6px">Otkrijte Vrnjačku Banju</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.50);font-weight:600;line-height:1.6;margin-bottom:16px">Događaji, atrakcije, popusti i loyalty pečati — sve na jednom mestu</div>
+      <button class="btn-gold" onclick="window.location.href='index.html'" style="margin-bottom:10px">🗺️ Otvori vodič →</button>
+      <div style="margin-top:8px">
+        <button onclick="enterLoyalty()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:3px">Već sam gost — skupljam pečate ⭐</button>
+      </div>
+    </div>`;
+  }
+
+  screen.innerHTML = html;
+}
+
+function enterLoyalty(){
+  // Gost želi da uđe u loyalty — prikaži normalnu stamp stranicu
+  renderMain();
+  const token = C.getOrCreateGuestToken();
+  sb.from('guests').select('email').eq('token',token).maybeSingle().then(({data:guestCheck}) => {
+    if(shouldShowEmailModal(guestCheck)) setTimeout(openEmailModal, 600);
+  });
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
   if(LOCATION_CODE){
-    const result=await processCode(LOCATION_CODE);
-    await renderMain();
-    if(result.ok&&!result.isDup) showToast(`⭐ Novi pečat: ${result.name}!`,true);
-    else if(result.isDup) showToast('Već imaš pečat sa ove lokacije ✓',false);
-    else showToast(result.msg,false);
+    const token = C.getOrCreateGuestToken();
+    const {data:existingGuest} = await sb.from('guests')
+      .select('id,email')
+      .eq('token', token)
+      .maybeSingle();
+
+    const isReturningGuest = !!(existingGuest?.id);
+
+    if(isReturningGuest){
+      // Poznati gost — procesuiraj pečat, pa prikaži info o partneru
+      const result = await processCode(LOCATION_CODE);
+      await renderPublicView(LOCATION_CODE, true, result);
+    } else {
+      // Novi/nepoznati gost — prikaži public view bez loyalty
+      await renderPublicView(LOCATION_CODE, false, null);
+    }
   } else {
     await renderMain();
-  }
-  // Email modal — obavezan, provjeri 900ms nakon učitavanja
-  const token=C.getOrCreateGuestToken();
-  const {data:guestCheck}=await sb.from('guests').select('email').eq('token',token).maybeSingle();
-  if(shouldShowEmailModal(guestCheck)){
-    setTimeout(openEmailModal,900);
+    const token = C.getOrCreateGuestToken();
+    const {data:guestCheck} = await sb.from('guests').select('email').eq('token',token).maybeSingle();
+    if(shouldShowEmailModal(guestCheck)){
+      setTimeout(openEmailModal, 900);
+    }
   }
 });
 </script>
