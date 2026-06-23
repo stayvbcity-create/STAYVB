@@ -324,8 +324,10 @@ function switchTab(id,btn){
 async function processCode(code){
   if(!code) return {ok:false,msg:'Nevažeći QR kod.'};
   const token = C.getOrCreateGuestToken();
-  const {data:loc} = await sb.from('stamp_locations').select('id,name,is_active').eq('location_code',code.toUpperCase()).maybeSingle();
-  if(!loc||!loc.is_active) return {ok:false,msg:'Nevažeći kod.'};
+  const {data:loc} = await sb.from('stamp_locations').select('id,name,is_active,partner_id').eq('location_code',code.toUpperCase()).maybeSingle();
+  // Lokacija ne postoji ili nije aktivna u stamp mapi
+  if(!loc) return {ok:false,notInMap:true,msg:'Nije u stamp mapi.'};
+  if(!loc.is_active) return {ok:false,notInMap:true,msg:'Lokacija nije aktivna.'};
   let guestId;
   const {data:eg} = await sb.from('guests').select('id').eq('token',token).maybeSingle();
   if(eg){ guestId=eg.id; }
@@ -334,10 +336,10 @@ async function processCode(code){
     if(ng) guestId=ng.id;
   }
   if(!guestId) return {ok:false,msg:'Greška. Pokušaj ponovo.'};
-  const {error} = await sb.from('stamps').insert({guest_id:guestId,location_id:loc.id});
+  const {error} = await sb.from('stamps').insert({guest_id:guestId,location_id:loc.id,partner_id:loc.partner_id||null});
   const isDup = error?.code==='23505';
-  if(error&&!isDup) return {ok:false,msg:'Greška. Pokušaj ponovo.'};
-  return {ok:true,isDup,name:loc.name};
+  if(error&&!isDup) return {ok:false,msg:'Greška pri čuvanju pečata.'};
+  return {ok:true,isDup,name:loc.name,partner_id:loc.partner_id};
 }
 
 function openScanner(){
@@ -395,8 +397,34 @@ async function submitReward(){
   document.getElementById('main-screen').innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;gap:16px"><div style="font-size:3.5rem">🎁</div><h2 style="font-size:1.4rem;font-weight:900;color:#fbbf24;margin:0">Zahtev poslat!</h2><p style="font-size:13px;color:rgba(255,255,255,0.6);font-weight:600;max-width:280px;line-height:1.6;margin:0">Kontaktiraćemo te uskoro.</p><a href="index.html" class="btn-gold" style="max-width:240px;display:block;text-align:center;text-decoration:none;padding:16px">← Nazad na vodič</a></div>`;
 }
 
+// Kada restoran nije u stamp mapi — učitaj partnera direktno po partner_code
+async function renderPublicViewByCode(partnerCode, isGuest, stampResult){
+  const screen = document.getElementById('main-screen');
+  screen.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh"><div style="width:36px;height:36px;border:3px solid rgba(255,255,255,0.08);border-top-color:#fbbf24;border-radius:50%;animation:spin 0.8s linear infinite"></div></div>`;
+
+  const {data:p} = await sb.from('partners')
+    .select('id,name,type,phone,whatsapp,google_review_url')
+    .eq('partner_code', partnerCode)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if(!p){
+    // Ni partner ne postoji — idi na vodič
+    window.location.href = 'index.html';
+    return;
+  }
+
+  const {data:pc} = await sb.from('partner_content')
+    .select('extra_offer,service_prices,current_offer,offer_expires_at,menu_url')
+    .eq('partner_id', p.id)
+    .maybeSingle();
+
+  // Koristi renderPublicViewWithPartner koji prihvata već učitan partner objekat
+  await renderPublicViewWithPartner(p, pc||{}, isGuest, stampResult);
+}
+
 // ── Public view — za oba tipa posetilaca ─────────────────────────
-async function renderPublicView(locationCode, isGuest = false, stampResult = null){
+async function renderPublicView(locationCode, isGuest, stampResult){
   const screen = document.getElementById('main-screen');
   screen.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh"><div style="width:36px;height:36px;border:3px solid rgba(255,255,255,0.08);border-top-color:#fbbf24;border-radius:50%;animation:spin 0.8s linear infinite"></div></div>`;
 
@@ -405,13 +433,9 @@ async function renderPublicView(locationCode, isGuest = false, stampResult = nul
     .eq('location_code', locationCode)
     .maybeSingle();
 
-  // Javna lokacija bez partnera — idi na loyalty
   if(!loc || !loc.partner_id){
     await renderMain();
-    if(stampResult){
-      if(stampResult.ok && !stampResult.isDup) showToast(`⭐ Novi pečat: ${stampResult.name}!`, true);
-      else if(stampResult.isDup) showToast('Već imaš pečat sa ove lokacije ✓', false);
-    }
+    if(stampResult?.ok && !stampResult?.isDup) showToast(`⭐ Novi pečat: ${stampResult.name}!`, true);
     return;
   }
 
@@ -428,7 +452,10 @@ async function renderPublicView(locationCode, isGuest = false, stampResult = nul
     .eq('partner_id', p.id)
     .maybeSingle();
 
-  const c = pc || {};
+  await renderPublicViewWithPartner(p, pc||{}, isGuest, stampResult);
+}
+
+async function renderPublicViewWithPartner(p, c, isGuest, stampResult){
   const ICONS = {hotel:'🏨',restaurant:'🍽️',attraction:'🎡',business:'🛍️',apartment:'🏠'};
   const LABELS = {hotel:'Hotel',restaurant:'Restoran',attraction:'Atrakcija',business:'Biznis',apartment:'Apartman'};
   const activeOffer = c.current_offer || c.extra_offer;
@@ -437,7 +464,7 @@ async function renderPublicView(locationCode, isGuest = false, stampResult = nul
 
   // Pečat obaveštenje za poznate goste
   if(isGuest && stampResult?.ok){
-    const stampMsg = stampResult.isDup
+    html += stampResult.isDup
       ? `<div style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);border-radius:14px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
            <span style="font-size:1.4rem">✓</span>
            <div style="font-size:12px;font-weight:800;color:#fcd34d">Već imaš pečat sa ove lokacije</div>
@@ -446,7 +473,6 @@ async function renderPublicView(locationCode, isGuest = false, stampResult = nul
            <span style="font-size:1.4rem">⭐</span>
            <div style="font-size:12px;font-weight:800;color:#6ee7b7">Novi pečat: ${esc(stampResult.name)}!</div>
          </div>`;
-    html += stampMsg;
   }
 
   // Header
@@ -459,7 +485,6 @@ async function renderPublicView(locationCode, isGuest = false, stampResult = nul
       </div>
     </div>`;
 
-  // Aktivna ponuda
   if(activeOffer){
     const offerLabel = {restaurant:'🔥 Aktuelna ponuda',business:'🎯 Posebna promocija',attraction:'✨ Posebna ponuda'}[p.type]||'🎯 Ponuda';
     html += `<div class="pub-offer">
@@ -469,7 +494,6 @@ async function renderPublicView(locationCode, isGuest = false, stampResult = nul
     </div>`;
   }
 
-  // Cenovnik / meni
   if(c.service_prices){
     const priceLabel = {restaurant:'🍽️ Meni i cene',business:'📋 Naše usluge',attraction:'🎟️ Cene ulaznica'}[p.type]||'📋 Cenovnik';
     html += `<div class="pub-card">
@@ -478,7 +502,6 @@ async function renderPublicView(locationCode, isGuest = false, stampResult = nul
     </div>`;
   }
 
-  // Link na meni
   if(c.menu_url){
     const menuLabel = {restaurant:'🍽️ Pogledaj meni',business:'📋 Pogledaj ponudu',attraction:'🎟️ Cene i informacije'}[p.type]||'🔗 Više informacija';
     html += `<a href="${c.menu_url}" target="_blank" rel="noopener" class="pub-link">
@@ -488,7 +511,6 @@ async function renderPublicView(locationCode, isGuest = false, stampResult = nul
     </a>`;
   }
 
-  // WhatsApp
   const phone = p.whatsapp || p.phone || '';
   if(phone){
     html += `<a href="https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent('Zdravo, vidim vas na StayVB!')}" class="pub-wa">
@@ -497,7 +519,6 @@ async function renderPublicView(locationCode, isGuest = false, stampResult = nul
     </a>`;
   }
 
-  // Google recenzija
   if(p.google_review_url){
     html += `<a href="${p.google_review_url}" target="_blank" rel="noopener"
       style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:1.4rem;background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.18);text-decoration:none;margin-bottom:12px">
@@ -512,7 +533,6 @@ async function renderPublicView(locationCode, isGuest = false, stampResult = nul
 
   html += `<div class="pub-divider"></div>`;
 
-  // Dno — različito za gosta i prolaznika
   if(isGuest){
     html += `<button class="btn-gold" onclick="renderMain()" style="margin-bottom:10px">⭐ Moji pečati →</button>
     <a href="index.html" class="btn-ghost" style="display:block;text-align:center;text-decoration:none;padding:14px">🗺️ Nazad na vodič</a>`;
@@ -528,7 +548,7 @@ async function renderPublicView(locationCode, isGuest = false, stampResult = nul
     </div>`;
   }
 
-  screen.innerHTML = html;
+  document.getElementById('main-screen').innerHTML = html;
 }
 
 function enterLoyalty(){
@@ -551,12 +571,33 @@ window.addEventListener('DOMContentLoaded', async () => {
     const isReturningGuest = !!(existingGuest?.id);
 
     if(isReturningGuest){
-      // Poznati gost — procesuiraj pečat, pa prikaži info o partneru
+      // Poznati gost — procesuiraj pečat
       const result = await processCode(LOCATION_CODE);
-      await renderPublicView(LOCATION_CODE, true, result);
+
+      if(result.notInMap){
+        // Lokacija nije u stamp mapi — prikaži info o partneru direktno po partner_code
+        await renderPublicViewByCode(LOCATION_CODE, true, null);
+      } else if(!result.ok){
+        // Prava greška (nije duplikat, nije notInMap)
+        await renderMain();
+        showToast(result.msg, false);
+      } else {
+        // Pečat uspešno ili duplikat — prikaži info o partneru + obaveštenje
+        await renderPublicView(LOCATION_CODE, true, result);
+      }
     } else {
-      // Novi/nepoznati gost — prikaži public view bez loyalty
-      await renderPublicView(LOCATION_CODE, false, null);
+      // Nepoznati gost — uvek public view
+      const {data:locCheck} = await sb.from('stamp_locations')
+        .select('id')
+        .eq('location_code', LOCATION_CODE)
+        .maybeSingle();
+
+      if(!locCheck){
+        // Nije u stamp mapi — učitaj po partner_code
+        await renderPublicViewByCode(LOCATION_CODE, false, null);
+      } else {
+        await renderPublicView(LOCATION_CODE, false, null);
+      }
     }
   } else {
     await renderMain();
