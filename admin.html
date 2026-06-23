@@ -2604,9 +2604,14 @@ function renderLeadsTable(list, filter){
     declined:  '<span class="badge b-overdue">✕ Odbijen</span>'
   }[s]||'<span class="badge b-off">—</span>');
 
-  const planBadge = p => p==='premium'
-    ? '<span class="badge" style="background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.25)">⭐ Premium</span>'
-    : '<span class="badge b-on">Besplatno</span>';
+  const planBadge = (p, note) => {
+    if(p !== 'premium') return '<span class="badge b-on">Besplatno</span>';
+    const n = note||'';
+    let dur = '';
+    if(n.includes('6 meseci') || n.includes('6-mesečni') || n.includes('3.500')) dur = ' · 6 mes';
+    else if(n.includes('Godišnji') || n.includes('godišnji') || n.includes('6.000')) dur = ' · Godišnji';
+    return `<span class="badge" style="background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.25)">⭐ Premium${dur}</span>`;
+  };
 
   const typeLabel = t => ({apartment:'🏠 Apartman',hotel:'🏨 Hotel',restaurant:'🍽 Restoran',attraction:'🎡 Atrakcija',business:'🛍 Biznis'}[t]||t);
 
@@ -2636,7 +2641,7 @@ function renderLeadsTable(list, filter){
             📱 ${esc(l.phone)}
           </a>
         </td>
-        <td>${planBadge(l.plan_interest)}</td>
+        <td>${planBadge(l.plan_interest, l.note)}</td>
         <td>${statusBadge(l.status)}</td>
         <td style="font-size:11px;color:var(--muted);white-space:nowrap">${fmtDate(l.submitted_at)}</td>
         <td>
