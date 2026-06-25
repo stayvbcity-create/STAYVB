@@ -367,7 +367,7 @@ async function init(){
 
   const { data:partners, error } = await sb
     .from('partners')
-    .select('id, name, type, hh_active, loyalty_enabled, has_booking, phone, whatsapp, lat, lng, partner_code, google_review_url, partner_content!partner_content_partner_id_fkey(short_desc, category, working_hours, address, is_active)')
+    .select('id, name, type, hh_active, loyalty_enabled, has_booking, phone, whatsapp, lat, lng, partner_code, google_review_url, partner_content!partner_id(short_desc, category, working_hours, address)')
     .eq('type', 'attraction')
     .eq('is_active', true)
     .order('name');
@@ -378,12 +378,8 @@ async function init(){
     return;
   }
 
-  // Filtriramo: zadržavamo atrakcije koje imaju bar jedan aktivan partner_content red,
-  // ili nemaju nijedan (prikazujemo i bez sadržaja, ali sa imenom)
   allAttr = (partners || []).map(p => {
-    // Uzimamo samo aktivan content red (is_active = true ili is_active IS NULL/undefined)
-    const activeContent = (p.partner_content || []).filter(pc => pc.is_active !== false);
-    return { ...p, partner_content: activeContent };
+    return { ...p, partner_content: p.partner_content || [] };
   });
 
   console.log(`Učitano ${allAttr.length} atrakcija`, allAttr);
