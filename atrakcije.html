@@ -367,7 +367,7 @@ async function init(){
 
   const { data:partners, error } = await sb
     .from('partners')
-    .select('id, name, type, hh_active, loyalty_enabled, has_booking, phone, whatsapp, lat, lng, partner_code, google_review_url, partner_content!left(short_desc, category, working_hours, address, is_active)')
+    .select('id, name, type, hh_active, loyalty_enabled, has_booking, phone, whatsapp, lat, lng, partner_code, google_review_url, partner_content!partner_content_partner_id_fkey(short_desc, category, working_hours, address, is_active)')
     .eq('type', 'attraction')
     .eq('is_active', true)
     .order('name');
