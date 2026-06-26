@@ -1975,9 +1975,18 @@ async function saveEdit(){
     is_premium:document.getElementById('edit-premium').checked,
     loyalty_enabled:document.getElementById('edit-premium').checked,
     has_booking:document.getElementById('edit-booking').checked,
-    referral_active:document.getElementById('edit-referral-active')?.checked||false,
-    referral_code:(document.getElementById('edit-referral-code')?.value||'').trim().toUpperCase()||null,
-    referral_discount:parseInt(document.getElementById('edit-referral-discount')?.value)||10,
+    ...(()=>{
+      const isPrem = document.getElementById('edit-premium').checked;
+      if(isPrem){
+        return {
+          referral_active: document.getElementById('edit-referral-active')?.checked||false,
+          referral_code: (document.getElementById('edit-referral-code')?.value||'').trim().toUpperCase()||null,
+          referral_discount: parseInt(document.getElementById('edit-referral-discount')?.value)||10,
+        };
+      }
+      // Nije premium — ugasi referral ali ne diraj kod (čuvaj za kad se vrati)
+      return { referral_active: false };
+    })(),
   };
   if(pin && pin.length===4) u.pin=pin;
   else if(pin && pin.length!==4){ const m=document.getElementById('edit-msg'); m.textContent='⚠️ PIN mora biti tačno 4 cifre.'; m.className='form-msg err'; return; }
