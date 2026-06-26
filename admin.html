@@ -791,7 +791,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
       <div id="edit-premium-wrap" style="display:none">
         <label style="display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;cursor:pointer;padding:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius)">
-          <label class="tog"><input type="checkbox" id="edit-premium"><span class="tog-s"></span></label>
+          <label class="tog"><input type="checkbox" id="edit-premium" onchange="onEditPremiumChange()"><span class="tog-s"></span></label>
           <div>
             <div style="font-weight:900">Premium partner</div>
             <div style="font-size:9px;color:var(--muted);margin-top:2px" id="edit-premium-desc">Loyalty + nagradna igra + VIP karta + posebne pogodnosti + Instagram kampanja</div>
@@ -1900,25 +1900,27 @@ function openEdit(id){
   document.getElementById('edit-booking').checked=!!p.has_booking;
   document.getElementById('edit-msg').textContent='';
 
-  // Referral - prikaži samo za premium apartment/hotel
+  // Referral - prikaži za apartment/hotel uvek, ali disable ako nije premium
   const refWrap = document.getElementById('edit-referral-wrap');
-  if((p.type==='apartment'||p.type==='hotel') && p.is_premium){
-    refWrap.style.display='block';
-    document.getElementById('edit-referral-active').checked=!!p.referral_active;
-    document.getElementById('edit-referral-code').value=p.referral_code||'';
-    document.getElementById('edit-referral-discount').value=p.referral_discount||10;
+  if(p.type==='apartment' || p.type==='hotel'){
+    refWrap.style.display = 'block';
+    document.getElementById('edit-referral-active').checked = !!p.referral_active;
+    document.getElementById('edit-referral-code').value = p.referral_code || '';
+    document.getElementById('edit-referral-discount').value = p.referral_discount || 10;
+    const isPrem = !!p.is_premium;
+    _setReferralEnabled(isPrem);
   } else {
-    refWrap.style.display='none';
+    refWrap.style.display = 'none';
   }
+  // Sačuvaj tip partnera na modalu za dinamičku promenu
+  document.getElementById('modal-edit').dataset.partnerType = p.type;
 
   // Prikaži Premium toggle samo za apartment i hotel
   const premWrap = document.getElementById('edit-premium-wrap');
   const premDesc = document.getElementById('edit-premium-desc');
   if(p.type==='apartment' || p.type==='hotel'){
     premWrap.style.display='block';
-    premDesc.textContent = p.type==='apartment'
-      ? 'Nagradna igra · VIP karta · Posebne pogodnosti · Room service · Instagram kampanja'
-      : 'Nagradna igra · VIP karta · Posebne pogodnosti · Room service · Instagram kampanja';
+    premDesc.textContent = 'Nagradna igra · VIP karta · Posebne pogodnosti · Room service · Instagram kampanja · Referral';
   } else {
     premWrap.style.display='none';
     // Za atrakcije i biznise - uvek isključi premium
@@ -1926,6 +1928,30 @@ function openEdit(id){
   }
 
   openModal('modal-edit');
+}
+
+// Pomoćna – enable/disable referral polja na osnovu premium statusa
+function _setReferralEnabled(enabled){
+  const refWrap = document.getElementById('edit-referral-wrap');
+  if(!refWrap) return;
+  ['edit-referral-active','edit-referral-code','edit-referral-discount'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.disabled = !enabled;
+  });
+  refWrap.style.opacity = enabled ? '1' : '0.4';
+  refWrap.title = enabled ? '' : 'Aktivirajte Premium da biste koristili Referral';
+}
+
+// Dinamički odgovor na promenu Premium checkboxa
+function onEditPremiumChange(){
+  const pType = document.getElementById('modal-edit')?.dataset?.partnerType || '';
+  if(pType !== 'apartment' && pType !== 'hotel') return;
+  const isChecked = document.getElementById('edit-premium').checked;
+  _setReferralEnabled(isChecked);
+  // Ako se Premium isključuje, resetuj referral
+  if(!isChecked){
+    document.getElementById('edit-referral-active').checked = false;
+  }
 }
 
 async function saveEdit(){
@@ -2604,14 +2630,9 @@ function renderLeadsTable(list, filter){
     declined:  '<span class="badge b-overdue">✕ Odbijen</span>'
   }[s]||'<span class="badge b-off">—</span>');
 
-  const planBadge = (p, note) => {
-    if(p !== 'premium') return '<span class="badge b-on">Besplatno</span>';
-    const n = note||'';
-    let dur = '';
-    if(n.includes('6 meseci') || n.includes('6-mesečni') || n.includes('3.500')) dur = ' · 6 mes';
-    else if(n.includes('Godišnji') || n.includes('godišnji') || n.includes('6.000')) dur = ' · Godišnji';
-    return `<span class="badge" style="background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.25)">⭐ Premium${dur}</span>`;
-  };
+  const planBadge = p => p==='premium'
+    ? '<span class="badge" style="background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.25)">⭐ Premium</span>'
+    : '<span class="badge b-on">Besplatno</span>';
 
   const typeLabel = t => ({apartment:'🏠 Apartman',hotel:'🏨 Hotel',restaurant:'🍽 Restoran',attraction:'🎡 Atrakcija',business:'🛍 Biznis'}[t]||t);
 
@@ -2641,7 +2662,7 @@ function renderLeadsTable(list, filter){
             📱 ${esc(l.phone)}
           </a>
         </td>
-        <td>${planBadge(l.plan_interest, l.note)}</td>
+        <td>${planBadge(l.plan_interest)}</td>
         <td>${statusBadge(l.status)}</td>
         <td style="font-size:11px;color:var(--muted);white-space:nowrap">${fmtDate(l.submitted_at)}</td>
         <td>
