@@ -1870,7 +1870,9 @@ async function delPartner(id){
 }
 
 function openEdit(id){
-  const p=allPartners.find(x=>x.id===id); if(!p) return;
+  const p=allPartners.find(x=>x.id===id);
+  console.log('[openEdit] id:', id, '| found:', !!p, '| type:', p?.type, '| is_premium:', p?.is_premium, typeof p?.is_premium, '| allPartners.length:', allPartners.length);
+  if(!p) return;
   document.getElementById('edit-id').value=p.id;
   document.getElementById('edit-title').textContent='✏️ '+p.name;
   document.getElementById('edit-name').value=p.name||'';
