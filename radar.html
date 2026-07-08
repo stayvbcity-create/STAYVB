@@ -392,6 +392,25 @@ async function init(){
   const todayStr = now.toISOString().split('T')[0];
   const nowMins = now.getHours()*60 + now.getMinutes();
 
+  // Competitor Blackout — proveri da li domaćin ima blackout aktivan
+  let blackoutActive = false;
+  let hostType = null;
+  let hostPartnerId = null;
+  const unitId = localStorage.getItem('stayvb_unit_id');
+  if(unitId){
+    const { data: hostData } = await sb
+      .from('partners')
+      .select('id, type, hide_competitors, is_premium')
+      .eq('partner_code', unitId)
+      .eq('is_active', true)
+      .maybeSingle();
+    if(hostData && hostData.is_premium && hostData.hide_competitors){
+      blackoutActive = true;
+      hostType = hostData.type;
+      hostPartnerId = hostData.id;
+    }
+  }
+
   // Učitaj partnere - restorani, atrakcije, mali biznisi + hoteli/restorani koji imaju aktivan HH
   const { data:partners } = await sb
     .from('partners_public')
@@ -402,6 +421,10 @@ async function init(){
 
   (partners||[]).forEach(p => {
     if(!p.lat || !p.lng) return;
+
+    // Competitor Blackout filter — sakrij isti tip kao domaćin, ali ne i samog domaćina
+    // Pečati (stampLocs) se učitavaju posebno i nisu zahvaćeni ovim filterom
+    if(blackoutActive && p.type === hostType && p.id !== hostPartnerId) return;
     const isHHNow = p.hh_active && p.hh_date === todayStr && (() => {
       const s = toMins(p.hh_start), e = toMins(p.hh_end);
       return s < e ? nowMins >= s && nowMins <= e : nowMins >= s || nowMins <= e;
