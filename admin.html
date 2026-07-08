@@ -823,6 +823,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       </div>
     </div>
 
+    <!-- Competitor Blackout - samo za premium hotel/apartment -->
+    <div id="edit-blackout-wrap" style="display:none;margin-bottom:14px">
+      <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.14em;color:var(--muted);margin-bottom:10px">🚫 Competitor Blackout</div>
+      <label style="display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;cursor:pointer;padding:12px;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.18);border-radius:var(--radius)">
+        <label class="tog"><input type="checkbox" id="edit-hide-competitors"><span class="tog-s"></span></label>
+        <div>
+          <div style="font-weight:900;color:#fca5a5">Sakrij konkurente na radar mapi</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:2px">Gosti ovog objekta neće videti druge hotele/apartmane na radaru. Pečati ostaju vidljivi.</div>
+        </div>
+      </label>
+    </div>
+
     <button class="btn btn-gold" style="width:100%;padding:13px;font-size:12px;justify-content:center" onclick="saveEdit()">Sačuvaj izmene</button>
     <div class="form-msg" id="edit-msg"></div>
   </div>
@@ -1917,6 +1929,16 @@ function openEdit(id){
   // Sačuvaj tip partnera na modalu za dinamičku promenu
   document.getElementById('modal-edit').dataset.partnerType = p.type;
 
+  // Competitor Blackout - prikaži samo za premium hotel/apartment
+  const blackoutWrap = document.getElementById('edit-blackout-wrap');
+  if((p.type==='apartment' || p.type==='hotel') && !!p.is_premium){
+    blackoutWrap.style.display = 'block';
+    document.getElementById('edit-hide-competitors').checked = !!p.hide_competitors;
+  } else {
+    blackoutWrap.style.display = 'none';
+    document.getElementById('edit-hide-competitors').checked = false;
+  }
+
   // Prikaži Premium toggle samo za apartment i hotel
   const premWrap = document.getElementById('edit-premium-wrap');
   const premDesc = document.getElementById('edit-premium-desc');
@@ -1950,10 +1972,14 @@ function onEditPremiumChange(){
   if(pType !== 'apartment' && pType !== 'hotel') return;
   const isChecked = document.getElementById('edit-premium').checked;
   _setReferralEnabled(isChecked);
-  // Ako se Premium isključuje, resetuj referral
+  // Ako se Premium isključuje, resetuj referral i blackout
   if(!isChecked){
     document.getElementById('edit-referral-active').checked = false;
+    document.getElementById('edit-hide-competitors').checked = false;
   }
+  // Prikaži/sakrij blackout wrap
+  const blackoutWrap = document.getElementById('edit-blackout-wrap');
+  if(blackoutWrap) blackoutWrap.style.display = isChecked ? 'block' : 'none';
 }
 
 async function saveEdit(){
@@ -1982,10 +2008,11 @@ async function saveEdit(){
           referral_active: document.getElementById('edit-referral-active')?.checked||false,
           referral_code: (document.getElementById('edit-referral-code')?.value||'').trim().toUpperCase()||null,
           referral_discount: parseInt(document.getElementById('edit-referral-discount')?.value)||10,
+          hide_competitors: document.getElementById('edit-hide-competitors')?.checked||false,
         };
       }
-      // Nije premium — ugasi referral ali ne diraj kod (čuvaj za kad se vrati)
-      return { referral_active: false };
+      // Nije premium — ugasi referral i blackout, ali ne diraj kod
+      return { referral_active: false, hide_competitors: false };
     })(),
   };
   if(pin && pin.length===4) u.pin=pin;
