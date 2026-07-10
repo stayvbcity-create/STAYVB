@@ -64,21 +64,21 @@ window.STAYVB_CONFIG = (function () {
         if (!data || data.length === 0) return { ok: false, error: 'Nevažeći link ili PIN.' };
         const result = data[0];
         if (!result.login_ok) return { ok: false, error: result.error_msg || 'Pogrešan PIN.' };
-        sessionStorage.setItem('stayvb_partner', JSON.stringify({ id: result.id, name: result.name, type: result.type, token: token, ts: Date.now() }));
+        localStorage.setItem('stayvb_partner', JSON.stringify({ id: result.id, name: result.name, type: result.type, token: token, ts: Date.now() }));
         return { ok: true, partner: result };
     }
 
     function getPartnerSession() {
         try {
-            const raw = sessionStorage.getItem('stayvb_partner');
+            const raw = localStorage.getItem('stayvb_partner');
             if (!raw) return null;
             const s = JSON.parse(raw);
-            if (Date.now() - (s.ts || 0) > 8 * 60 * 60 * 1000) { sessionStorage.removeItem('stayvb_partner'); return null; }
+            if (Date.now() - (s.ts || 0) > 8 * 60 * 60 * 1000) { localStorage.removeItem('stayvb_partner'); return null; }
             return s;
         } catch { return null; }
     }
 
-    function clearPartnerSession() { sessionStorage.removeItem('stayvb_partner'); }
+    function clearPartnerSession() { localStorage.removeItem('stayvb_partner'); }
 
     function getOrCreateGuestToken() {
         let token = localStorage.getItem('stayvb_guest_token');
