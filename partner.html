@@ -300,14 +300,6 @@ function renderStay(){
       <div class="field-group"><label class="field-label">Naziv mreže</label><input class="field-input" id="s-wifi-name" value="${esc(pc.wifi_name||'')}"></div>
       <div class="field-group"><label class="field-label">Lozinka</label><input class="field-input" id="s-wifi-pass" value="${esc(pc.wifi_pass||'')}"></div>
     </div>
-    <div class="panel-card">
-      <p class="panel-card-title">🍽 Meni / Ponuda</p>
-      <div class="field-group">
-        <label class="field-label">Link na meni ili ponudu</label>
-        <input class="field-input" id="s-menu-url" value="${esc(pc.menu_url||'')}" placeholder="https://... (sajt, Glovo, PDF, Instagram...)">
-        <p style="font-size:10px;color:rgba(255,255,255,0.35);font-weight:600;margin-top:6px">Gosti će videti dugme 'Pogledaj meni →' na vašoj landing stranici</p>
-      </div>
-    </div>
     ${isPremium ? `
     <div class="panel-card">
       <p class="panel-card-title">Posebna ponuda gostima</p>
@@ -357,7 +349,6 @@ async function saveStay(){
   const updates = {
     wifi_name: document.getElementById('s-wifi-name')?.value || '',
     wifi_pass: document.getElementById('s-wifi-pass')?.value || '',
-    menu_url:  (document.getElementById('s-menu-url')?.value || '').trim(),
   };
   if(partner.is_premium){
     updates.extra_offer = document.getElementById('s-extra-offer')?.value || '';
@@ -1083,7 +1074,7 @@ async function shareStatsScreenshot(){
 function esc(s){ return C.escapeHtml(s); }
 
 // ── Boot ──────────────────────────────────────────────────────────
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
   const guard = StayVBGuard.requirePartner();
   if(!guard) return;
 
@@ -1094,7 +1085,23 @@ window.addEventListener("DOMContentLoaded", () => {
   // Ako postoji validna sesija — auto-login
   const saved = C.getPartnerSession();
   if(saved && saved.token === guard && saved.name){
-    partner = saved;
+    // Sesija čuva samo osnovna polja (id/name/type) — dovuci svež kompletan red
+    // (is_active, is_premium, plan, hh_active...) da UI ne bi prikazivao pogrešno stanje
+    let fresh = null;
+    try {
+      const { data } = await sb.from('partners').select('*').eq('id', saved.id).maybeSingle();
+      fresh = data;
+    } catch(e){ console.log('auto-login fresh fetch skip:', e.message); }
+
+    partner = fresh ? { ...saved, ...fresh } : saved;
+
+    if(!partner.is_active){
+      document.getElementById('pin-screen').classList.add('hidden');
+      document.getElementById('main-app').classList.add('hidden');
+      document.getElementById('suspended-screen')?.classList.remove('hidden');
+      return;
+    }
+
     document.getElementById('pin-screen').classList.add('hidden');
     document.getElementById('main-app').classList.remove('hidden');
     initApp();
