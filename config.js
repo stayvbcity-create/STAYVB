@@ -8,7 +8,7 @@ window.STAYVB_CONFIG = (function () {
     const STAMP_URL = APP_URL + '/stamp.html';
     const LOYALTY_GOAL = 10;
     const GUEST_EXPIRY_DAYS = 14;
-    const ADMIN_HASH = 'd923beddc6b3a0112d357d097d9f873f95ea0464acd09020829b3a3c2bd6fa7e';
+    const ADMIN_HASH = '645b64a33dadf118d4f3efc4e61e2bc03ba8443ad4c9da4a143b2c9f29988274';
     const SAFE_PARTNER_COLUMNS = `id, name, type, is_premium, is_active, loyalty_enabled, has_booking, hh_active, hh_date, hh_start, hh_end, partner_code, lat, lng, phone, whatsapp, created_at`;
 
     let _sb = null;
