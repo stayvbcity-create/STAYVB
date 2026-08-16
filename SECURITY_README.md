@@ -26,13 +26,16 @@ Otvori `config.js` i zameni:
 const SUPABASE_URL = 'https://TVOJ_PROJEKAT.supabase.co';
 const SUPABASE_ANON_KEY = 'TVOJ_ANON_KLJUC';
 const APP_URL = 'https://TVOJ_DOMEN.com';
+const ADMIN_EMAIL = 'tvoj-admin@email.com';
 ```
 
-**Promena admin lozinke:**
-1. Otvori bilo koji HTML fajl sistema u browseru
-2. Otvori DevTools konzolu (F12)
-3. Ukucaj: `C.hashPassword('novaLozinka').then(h => console.log(h))`
-4. Kopiraj hash i zalepi u `ADMIN_HASH` u config.js
+**Admin nalog (od v2.2 — pravi Supabase Auth, ne lokalni hash):**
+1. Supabase Dashboard → Authentication → Users → Add User
+2. Unesi email (mora se poklapati sa `ADMIN_EMAIL` u config.js) i lozinku, čekiraj "Auto Confirm User"
+3. Pokreni `security_hardening_v2.sql` (ako već nije pokrenut) — on dodaje taj email u `admin_users` tabelu preko koje RLS politike prepoznaju admina
+4. Dashboard → Authentication → Sign In / Providers → Email → isključi "Allow new users to sign up" (da niko ne može sam da napravi authenticated nalog)
+
+**Promena admin lozinke:** Dashboard → Authentication → Users → izaberi nalog → Reset Password (ili obriši i napravi novi sa istim emailom).
 
 ---
 
@@ -113,10 +116,11 @@ const { data } = await C.db().rpc('regenerate_partner_token', {
 | Neko vidi anon ključ u DevTools | RLS politike na svim tabelama — bez prava nema pristupa |
 | Brute force PIN-a | `partner_login()` blokira posle 5 pokušaja, `pg_sleep` usporava |
 | Pristup tuđem partner panelu | Token u URL-u je jedinstven + PIN potvrda |
-| Čitanje PIN-ova iz baze | `SECURITY DEFINER` funkcija nikad ne vraća pin kolonu |
+| Čitanje PIN-ova/tokena iz baze | `pin`/`access_token` kolone nisu čitljive za anon ulogu (column-level GRANT), samo `partner_login()` (SECURITY DEFINER) ih koristi interno |
 | XSS napad | `C.escapeHtml()` na svim korisničkim podacima pre prikaza |
-| Admin bez lozinke | SHA-256 hash u config.js, sessionStorage sesija (važi 4h) |
+| Admin bez lozinke | Pravi Supabase Auth login (email+lozinka), sessionStorage sesija (važi 4h) |
 | Admin sesija ostaje otvorena | Auto-expire posle 4h neaktivnosti |
+| Poziv admin funkcija (kreiranje partnera, promena tokena, naplata) bez logina | Svaka admin RPC funkcija proverava `is_admin()` unutar baze pre izvršavanja, nezavisno od front-end provere |
 
 ---
 

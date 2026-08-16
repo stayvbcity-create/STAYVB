@@ -202,7 +202,7 @@ async function doLogin(){
   // Sigurnosna mera: RPC ponekad ne vraća sve kolone (npr. nove kolone dodate posle RPC definicije)
   // Dovuci svez red direktno iz partners tabele da budemo sigurni da imamo najnovije podatke
   try {
-    const { data: freshPartner } = await sb.from('partners').select('*').eq('id', partner.id).maybeSingle();
+    const { data: freshPartner } = await sb.from('partners').select('id, name, type, partner_code, is_active, is_premium, loyalty_enabled, has_booking, hh_active, hh_date, hh_start, hh_end, lat, lng, phone, whatsapp, created_at, updated_at, plan, city_category_id, show_in_city_info, referral_active, referral_discount, referral_code, hh_visibility, google_review_url, hide_competitors').eq('id', partner.id).maybeSingle();
     if(freshPartner) partner = { ...partner, ...freshPartner };
   } catch(e){ console.log('fresh partner fetch skip:', e.message); }
 

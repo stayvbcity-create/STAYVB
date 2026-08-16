@@ -8,7 +8,7 @@ window.STAYVB_CONFIG = (function () {
     const STAMP_URL = APP_URL + '/stamp.html';
     const LOYALTY_GOAL = 10;
     const GUEST_EXPIRY_DAYS = 14;
-    const ADMIN_HASH = '645b64a33dadf118d4f3efc4e61e2bc03ba8443ad4c9da4a143b2c9f29988274';
+    const ADMIN_EMAIL = 'marko.predolac85@gmail.com';
     const SAFE_PARTNER_COLUMNS = `id, name, type, is_premium, is_active, loyalty_enabled, has_booking, hh_active, hh_date, hh_start, hh_end, partner_code, lat, lng, phone, whatsapp, created_at`;
 
     let _sb = null;
@@ -20,16 +20,11 @@ window.STAYVB_CONFIG = (function () {
         return _sb;
     }
 
-    async function hashPassword(password) {
-        const msgBuffer = new TextEncoder().encode(password);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-
     async function verifyAdmin(password) {
-        const hash = await hashPassword(password);
-        return hash === ADMIN_HASH;
+        const sb = getClient();
+        if (!sb) return false;
+        const { error } = await sb.auth.signInWithPassword({ email: ADMIN_EMAIL, password });
+        return !error;
     }
 
     function setAdminSession() {
@@ -48,6 +43,7 @@ window.STAYVB_CONFIG = (function () {
     function clearAdminSession() {
         sessionStorage.removeItem('stayvb_admin');
         sessionStorage.removeItem('stayvb_admin_ts');
+        try { getClient()?.auth.signOut(); } catch (e) { /* noop */ }
     }
 
     function getPartnerToken() {
@@ -107,7 +103,7 @@ window.STAYVB_CONFIG = (function () {
     return {
         db: getClient,
         APP_URL, LOYALTY_GOAL, GUEST_EXPIRY_DAYS, SAFE_PARTNER_COLUMNS,
-        verifyAdmin, hashPassword,
+        verifyAdmin,
         setAdminSession, checkAdminSession, clearAdminSession,
         getPartnerToken, partnerLogin, getPartnerSession, clearPartnerSession,
         getOrCreateGuestToken,
