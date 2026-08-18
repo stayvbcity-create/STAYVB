@@ -992,6 +992,13 @@ function showCityMode(){
     if(zoneNameEl) zoneNameEl.innerText = 'Vrnjačka Banja';
     document.querySelector('.stay-zone')?.classList.add('hidden');
     document.querySelector('.top-panel')?.classList.add('hidden');
+    // Sadrzaj vezan za to da si fizicki u gradu sada (happy hour, radar u okolini,
+    // hitni brojevi/lokalni biznisi) - sakrij ga posle isteka boravka. Ostaje sve
+    // sto ima smisla planirati/preporuciti i posle odlaska (dogadjaji, atrakcije,
+    // smestaj, nekretnine).
+    document.querySelector('.hh-card')?.classList.add('hidden');
+    document.querySelector('.radar-card')?.classList.add('hidden');
+    document.querySelector('.service-panel')?.classList.add('hidden');
 }
 
 async function loadPartnerData(){
