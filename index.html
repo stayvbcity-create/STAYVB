@@ -1162,12 +1162,12 @@ function showInstallBanner(mode){
         promptEl.style.display = 'block';
         return;
     }
-    if(mode === 'android-install' && deferredPrompt){
-        instruction.innerText = 'Dodaj StayVB na ekran telefona.';
+    if(mode === 'android-install'){
+        instruction.innerText = 'Preuzmi i instaliraj StayVB aplikaciju.';
         btn.innerText = 'Instaliraj';
-        btn.onclick = async () => {
-            try{ await deferredPrompt.prompt(); await deferredPrompt.userChoice; }catch(e){}
-            deferredPrompt = null; promptEl.style.display = 'none';
+        btn.onclick = () => {
+            window.location.href = 'stayvb.apk';
+            promptEl.style.display = 'none';
         };
         promptEl.style.display = 'block';
     }
