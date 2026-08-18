@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="sr-Latn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>StayVB — Smeštaj</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#faf7f2">
+<link rel="apple-touch-icon" href="icon192.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="lang-init.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap');
+*{box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#faf7f2;color:#1a1f2b;min-height:100vh;margin:0}
+#google_translate_element{display:none!important}
+.goog-te-banner-frame,.skiptranslate{display:none!important}
+body{top:0!important}
+a{color:#b45309;text-decoration:none}
+::placeholder{color:rgba(26,31,43,0.32)}
+input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(0.35);cursor:pointer}
+
+.wrap{max-width:1180px;margin:0 auto}
+.header{display:flex;align-items:center;justify-content:space-between;padding:20px 20px;border-bottom:1px solid rgba(26,31,43,0.08);background:#fff;flex-wrap:wrap;gap:10px}
+.wordmark{font-size:1.15rem;font-weight:900;letter-spacing:-0.02em}
+.pgname{font-size:0.9rem;font-weight:700;color:rgba(26,31,43,0.55)}
+.premium-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:999px;background:#fdf6e8;border:1px solid #eeddb0;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;color:#92400e}
+
+.hero{padding:40px 20px 24px;max-width:720px}
+.hero-eyebrow{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.18em;color:#b45309;margin-bottom:12px}
+.hero h1{font-family:'Instrument Serif',serif;font-weight:400;font-size:clamp(1.9rem,5vw,2.7rem);line-height:1.1;letter-spacing:-0.01em;margin:0 0 12px}
+.hero h1 em{font-style:italic;color:#b45309}
+.hero p{font-size:14px;font-weight:500;color:rgba(26,31,43,0.55);line-height:1.6;margin:0}
+
+.panel{margin:0 20px 28px;padding:18px 18px;border-radius:1.4rem;background:#fff;border:1px solid rgba(26,31,43,0.07);box-shadow:0 14px 40px rgba(26,31,43,0.06)}
+.filter-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
+.field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:130px}
+.field label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.10em;color:rgba(26,31,43,0.45)}
+.field input[type="date"],.field input[type="text"]{padding:10px 12px;background:#faf7f2;border:1px solid rgba(26,31,43,0.12);border-radius:0.7rem;color:#1a1f2b;font-size:13px;font-weight:600;font-family:inherit;outline:none;width:100%}
+.stepper{display:flex;align-items:center;justify-content:space-between;padding:6px 8px 6px 14px;background:#faf7f2;border:1px solid rgba(26,31,43,0.12);border-radius:0.7rem}
+.stepper button{width:26px;height:26px;border-radius:50%;border:none;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+.stepper .minus{background:rgba(26,31,43,0.06);color:rgba(26,31,43,0.65)}
+.stepper .plus{background:#fdf6e8;color:#b45309}
+input[type="range"]{width:100%;accent-color:#d97706;margin-top:8px}
+.chip-row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:7px 14px;border-radius:999px;font-size:11px;font-weight:800;font-family:inherit;cursor:pointer;background:#faf7f2;border:1px solid rgba(26,31,43,0.10);color:rgba(26,31,43,0.55)}
+.chip.active{background:#fdf6e8;border-color:#eeddb0;color:#92400e}
+
+.grid{padding:0 20px 60px;display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
+.card{border-radius:1.3rem;background:#fff;border:1px solid rgba(26,31,43,0.07);box-shadow:0 10px 26px rgba(26,31,43,0.06);overflow:hidden;cursor:pointer}
+.card-photo{position:relative;height:170px}
+.badge-premium{position:absolute;top:10px;left:10px;display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,0.92);border:1px solid rgba(180,83,9,0.25);font-size:8.5px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;color:#92400e}
+.card-body{padding:16px 17px 18px}
+.card-loc{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:rgba(26,31,43,0.40);margin-bottom:5px}
+.card-name{font-size:14.5px;font-weight:800;margin-bottom:5px;letter-spacing:-0.01em}
+.card-hl{font-size:11.5px;font-weight:600;color:rgba(26,31,43,0.50);line-height:1.5;margin-bottom:12px;min-height:17px}
+.card-meta{display:flex;gap:12px;margin-bottom:14px;font-size:10.5px;font-weight:700;color:rgba(26,31,43,0.55)}
+.card-foot{display:flex;align-items:flex-end;justify-content:space-between;padding-top:12px;border-top:1px solid rgba(26,31,43,0.08)}
+.card-price{font-size:16px;font-weight:900;color:#b45309}
+.card-price small{font-size:10.5px;font-weight:700;color:rgba(26,31,43,0.40)}
+
+.empty{padding:60px 20px;text-align:center;color:rgba(26,31,43,0.45);font-weight:600;font-size:13px}
+
+/* ── Detail ── */
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;padding:20px 20px 0}
+.detail-title{padding:14px 20px 0}
+.gallery{padding:18px 20px 0;display:grid;grid-template-columns:1fr;gap:10px}
+.gallery-main{height:260px;border-radius:1.2rem;position:relative;overflow:hidden}
+.gallery-count{position:absolute;bottom:12px;right:12px;padding:4px 11px;border-radius:999px;background:rgba(255,255,255,0.90);font-size:10px;font-weight:800}
+.gallery-thumbs{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.gallery-thumbs > div{flex:0 0 74px;height:60px;border-radius:0.7rem;cursor:pointer;box-sizing:border-box}
+.detail-body{padding:26px 20px 0}
+.detail-meta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+.detail-meta span{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:rgba(26,31,43,0.65)}
+.detail-desc{font-size:13.5px;font-weight:500;line-height:1.7;color:rgba(26,31,43,0.62);padding-bottom:24px;border-bottom:1px solid rgba(26,31,43,0.08);margin-bottom:24px}
+.amenities{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px;margin-bottom:24px}
+.amenity{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:rgba(26,31,43,0.72)}
+.amenity-ic{width:30px;height:30px;border-radius:0.6rem;background:#faf7f2;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.booking-panel{margin:0 20px 32px;padding:20px;border-radius:1.4rem;background:#fff;border:1px solid #eeddb0;box-shadow:0 16px 40px rgba(26,31,43,0.08)}
+.bp-price{font-size:1.45rem;font-weight:900;color:#b45309}
+.bp-cta{width:100%;margin-top:16px;padding:15px;background:linear-gradient(135deg,#d97706,#f59e0b);color:#1a1005;border:none;border-radius:1rem;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:0.10em;cursor:pointer;font-family:inherit;box-shadow:0 10px 24px rgba(217,119,6,0.25)}
+.bp-note{font-size:10.5px;font-weight:600;color:rgba(26,31,43,0.40);line-height:1.6;text-align:center;margin:12px 0 0}
+
+/* ── Inquiry modal ── */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:999;background:rgba(26,31,43,0.45);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{width:100%;max-width:460px;max-height:92vh;overflow-y:auto;border-radius:1.6rem 1.6rem 0 0;background:#fff;position:relative}
+@media (min-width:600px){.modal-overlay{align-items:center;padding:20px}.modal-box{border-radius:1.6rem}}
+.modal-close{position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;background:rgba(26,31,43,0.05);border:none;color:rgba(26,31,43,0.55);font-size:14px;cursor:pointer}
+.field-lbl{display:block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.10em;color:rgba(26,31,43,0.45);margin-bottom:6px}
+.form-input{width:100%;padding:11px 13px;background:#faf7f2;border:1px solid rgba(26,31,43,0.12);border-radius:0.8rem;color:#1a1f2b;font-size:13px;font-weight:600;font-family:inherit;outline:none}
+textarea.form-input{resize:vertical;min-height:64px}
+.reassure{display:flex;align-items:flex-start;gap:8px;margin-top:14px;padding:12px 13px;border-radius:0.9rem;background:#f0f9f4;border:1px solid #c9ead4}
+.reassure p{font-size:11px;font-weight:600;color:rgba(26,31,43,0.60);line-height:1.5;margin:0}
+
+@media (max-width:720px){
+  .header,.hero,.panel,.grid,.back-link,.detail-title,.gallery,.detail-body,.booking-panel{padding-left:18px!important;padding-right:18px!important}
+  .filter-row{flex-direction:column;align-items:stretch}
+  .field{min-width:0}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="header">
+    <div style="display:flex;align-items:baseline;gap:12px">
+      <span class="wordmark">StayVB</span>
+      <span style="width:1px;height:15px;background:rgba(26,31,43,0.15)"></span>
+      <span class="pgname">Smeštaj</span>
+    </div>
+    <div class="premium-pill">
+      <svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M10 2l2.4 5.6 6 .6-4.5 4 1.3 5.9L10 15l-5.2 3.1 1.3-5.9-4.5-4 6-.6L10 2z" fill="#b45309"/></svg>
+      Premium ponuda
+    </div>
+  </div>
+
+  <div id="view-grid">
+    <div class="hero">
+      <div class="hero-eyebrow">Vrnjačka Banja</div>
+      <h1>Pronađite <em>savršen</em> smeštaj za vaš boravak</h1>
+      <p>Provereni apartmani i vile naših premium partnera. Pošaljite upit, a domaćin vam lično potvrđuje termin.</p>
+    </div>
+
+    <div class="panel">
+      <div class="filter-row">
+        <div class="field">
+          <label>Dolazak</label>
+          <input type="date" id="f-checkin">
+        </div>
+        <div class="field">
+          <label>Odlazak</label>
+          <input type="date" id="f-checkout">
+        </div>
+        <div class="field" style="min-width:110px;flex:0 0 auto">
+          <label>Gostiju</label>
+          <div class="stepper">
+            <span id="f-guests-label" style="font-size:13px;font-weight:700">1</span>
+            <div style="display:flex;gap:4px">
+              <button class="minus" onclick="stepGuests(-1)">−</button>
+              <button class="plus" onclick="stepGuests(1)">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="field" style="min-width:180px">
+          <label id="f-price-label">Cena po noći do 20.000 RSD</label>
+          <input type="range" id="f-price" min="4000" max="20000" step="500" value="20000" oninput="onPriceInput()">
+        </div>
+      </div>
+      <div class="chip-row" id="amenity-chips"></div>
+    </div>
+
+    <div id="grid" class="grid"></div>
+  </div>
+
+  <div id="view-detail" style="display:none"></div>
+</div>
+
+<!-- ── Inquiry modal ── -->
+<div class="modal-overlay" id="inquiry-overlay">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeInquiry()">✕</button>
+    <div style="padding:24px 24px 0">
+      <div style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:#b45309;margin-bottom:8px">Zahtev za rezervaciju</div>
+      <h2 style="font-size:1.25rem;font-weight:900;letter-spacing:-0.02em;margin:0 0 18px">Pošaljite upit domaćinu</h2>
+    </div>
+    <div id="inquiry-summary" style="margin:0 24px 18px;padding:12px 13px;border-radius:1rem;background:#faf7f2;border:1px solid rgba(26,31,43,0.07);display:flex;align-items:center;gap:12px"></div>
+    <div style="padding:0 24px" id="inquiry-form-fields">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div><label class="field-lbl">Dolazak</label><input type="date" id="i-checkin" class="form-input"></div>
+        <div><label class="field-lbl">Odlazak</label><input type="date" id="i-checkout" class="form-input"></div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label class="field-lbl">Broj gostiju</label>
+        <div class="stepper">
+          <span id="i-guests-label" style="font-size:13px;font-weight:700">2 gosta</span>
+          <div style="display:flex;gap:4px">
+            <button class="minus" onclick="stepInquiryGuests(-1)">−</button>
+            <button class="plus" onclick="stepInquiryGuests(1)">+</button>
+          </div>
+        </div>
+      </div>
+      <div style="margin-bottom:12px"><label class="field-lbl">Ime i prezime</label><input type="text" id="i-name" class="form-input" placeholder="Unesite ime i prezime"></div>
+      <div style="margin-bottom:12px"><label class="field-lbl">Broj telefona</label><input type="text" id="i-phone" class="form-input" placeholder="+381 6..."></div>
+      <div style="margin-bottom:18px"><label class="field-lbl">Napomena <span style="color:rgba(26,31,43,0.30);text-transform:none;letter-spacing:0">(opciono)</span></label><textarea id="i-msg" class="form-input" placeholder="Posebni zahtevi, vreme dolaska, pitanja..."></textarea></div>
+      <p id="inquiry-error" style="font-size:11px;font-weight:800;color:#dc2626;min-height:14px;margin:0 0 8px"></p>
+    </div>
+    <div style="padding:0 24px 24px">
+      <button class="bp-cta" id="inquiry-submit-btn" onclick="submitInquiry()">Pošalji upit →</button>
+      <div class="reassure">
+        <svg width="15" height="15" viewBox="0 0 20 20" fill="none" style="flex-shrink:0;margin-top:1px"><circle cx="10" cy="10" r="7.5" stroke="#15803d" stroke-width="1.5"/><path d="M10 6.5v4M10 13.2h.01" stroke="#15803d" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <p>Ovo je zahtev, ne konačna potvrda. Domaćin proverava dostupnost i javlja vam se lično.</p>
+      </div>
+    </div>
+    <div id="inquiry-success" style="display:none;padding:50px 24px;text-align:center">
+      <div style="font-size:2.6rem;margin-bottom:14px">✓</div>
+      <div style="font-size:1.05rem;font-weight:900;margin-bottom:8px">Zahtev je poslat!</div>
+      <p style="font-size:12.5px;font-weight:600;color:rgba(26,31,43,0.55);line-height:1.6">Domaćin će vas kontaktirati uskoro na broj koji ste ostavili.</p>
+      <button class="bp-cta" style="margin-top:20px" onclick="closeInquiry()">Zatvori</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const sb = C.db();
+const PHOTO_GRADIENTS = [
+  'linear-gradient(135deg,#e8dcc4 0%,#c9a86a 45%,#a67c3d 100%)',
+  'linear-gradient(135deg,#dfe6ee 0%,#a9bacb 45%,#6f89a3 100%)',
+  'linear-gradient(135deg,#eee3cd 0%,#cbaf7c 45%,#a4854e 100%)',
+  'linear-gradient(135deg,#dce8dd 0%,#a3c4a8 45%,#6f9977 100%)',
+  'linear-gradient(135deg,#e6dcee 0%,#bda2cf 45%,#93709f 100%)',
+  'linear-gradient(135deg,#dde7ec 0%,#a6c0cd 45%,#71919f 100%)',
+];
+function gradFor(id){ let h=0; for(const c of (id||'')) h=(h*31+c.charCodeAt(0))>>>0; return PHOTO_GRADIENTS[h % PHOTO_GRADIENTS.length]; }
+
+const AMENITY_LABELS = {wifi:'WiFi', parking:'Parking', klima:'Klima', balkon:'Balkon/terasa', rostilj:'Roštilj', ljubimci:'Ljubimci dozvoljeni', tv:'Smart TV', kuhinja:'Oprema za kuvanje'};
+const AMENITY_ICONS = {
+  wifi:'<path d="M3 8c3.8-3.8 10.2-3.8 14 0M6 11.2c2.2-2.2 5.8-2.2 8 0M9 14.3c0.6-0.6 1.4-0.6 2 0" stroke="#57493a" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="16.5" r="0.9" fill="#57493a"/>',
+  parking:'<path d="M4 12l1.4-5.6A2 2 0 017.3 5h5.4a2 2 0 011.9 1.4L16 12" stroke="#57493a" stroke-width="1.6" stroke-linejoin="round"/><rect x="3" y="12" width="14" height="4" rx="1" stroke="#57493a" stroke-width="1.6"/>',
+  klima:'<rect x="3" y="5" width="14" height="6" rx="1.5" stroke="#57493a" stroke-width="1.6"/><path d="M6 14v2M10 14v2M14 14v2" stroke="#57493a" stroke-width="1.6" stroke-linecap="round"/>',
+  balkon:'<path d="M3 17V9l7-5 7 5v8" stroke="#57493a" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 17v-5h4v5" stroke="#57493a" stroke-width="1.6"/>',
+  rostilj:'<ellipse cx="10" cy="12" rx="7" ry="2.6" stroke="#57493a" stroke-width="1.6"/><path d="M6 12v3M14 12v3M4 15h12" stroke="#57493a" stroke-width="1.6" stroke-linecap="round"/>',
+  ljubimci:'<circle cx="7" cy="6" r="1.4" fill="#57493a"/><circle cx="13" cy="6" r="1.4" fill="#57493a"/><ellipse cx="10" cy="13.5" rx="4" ry="3" fill="#57493a"/>',
+  tv:'<rect x="3" y="4" width="14" height="9" rx="1.3" stroke="#57493a" stroke-width="1.6"/><path d="M8 16h4" stroke="#57493a" stroke-width="1.6" stroke-linecap="round"/>',
+  kuhinja:'<path d="M5 4v6a3 3 0 003 3v4M8 4v6M11 4v6" stroke="#57493a" stroke-width="1.6" stroke-linecap="round"/>',
+};
+
+let allListings = [];
+let selectedAmenities = new Set();
+let filterGuests = 1;
+let currentListing = null;
+let galleryIndex = 0;
+let inquiryGuests = 2;
+
+async function loadListings(){
+  const { data, error } = await sb.from('accommodation_listings')
+    .select('id,partner_id,title,location_label,highlight,guests,bedrooms,bathrooms,price_per_night,amenities,photo_urls,partners(name,type)')
+    .eq('is_active', true)
+    .order('created_at', {ascending:false});
+  if(error){ console.error('loadListings', error); allListings = []; }
+  else allListings = data || [];
+  renderAmenityChips();
+  renderGrid();
+}
+
+function renderAmenityChips(){
+  const el = document.getElementById('amenity-chips');
+  el.innerHTML = Object.keys(AMENITY_LABELS).map(key => {
+    const active = selectedAmenities.has(key);
+    return `<button class="chip${active?' active':''}" onclick="toggleAmenity('${key}')">${AMENITY_LABELS[key]}</button>`;
+  }).join('');
+}
+function toggleAmenity(key){
+  if(selectedAmenities.has(key)) selectedAmenities.delete(key); else selectedAmenities.add(key);
+  renderAmenityChips();
+  renderGrid();
+}
+function stepGuests(d){ filterGuests = Math.max(1, filterGuests + d); document.getElementById('f-guests-label').textContent = filterGuests; renderGrid(); }
+function onPriceInput(){
+  const v = document.getElementById('f-price').value;
+  document.getElementById('f-price-label').textContent = 'Cena po noći do ' + Number(v).toLocaleString('sr-RS') + ' RSD';
+  renderGrid();
+}
+
+function renderGrid(){
+  const priceMax = Number(document.getElementById('f-price').value);
+  const filtered = allListings.filter(l =>
+    (l.guests||0) >= filterGuests &&
+    (l.price_per_night||0) <= priceMax &&
+    [...selectedAmenities].every(a => (l.amenities||[]).includes(a))
+  );
+
+  const grid = document.getElementById('grid');
+  if(!filtered.length){
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1">Nema smeštaja koji odgovara izabranim filterima.</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(l => {
+    const photo = (l.photo_urls&&l.photo_urls[0]) ? `background-image:url('${l.photo_urls[0]}');background-size:cover;background-position:center` : `background:${gradFor(l.id)}`;
+    const name = C.escapeHtml(l.title || (l.partners&&l.partners.name) || 'Smeštaj');
+    const loc = C.escapeHtml(l.location_label || 'Vrnjačka Banja');
+    const hl = C.escapeHtml(l.highlight || '');
+    return `<div class="card" onclick="openDetail('${l.id}')">
+      <div class="card-photo" style="${photo}"><div class="badge-premium">
+        <svg width="10" height="10" viewBox="0 0 20 20" fill="none"><path d="M10 2l2.4 5.6 6 .6-4.5 4 1.3 5.9L10 15l-5.2 3.1 1.3-5.9-4.5-4 6-.6L10 2z" fill="#b45309"/></svg>
+        Premium</div></div>
+      <div class="card-body">
+        <div class="card-loc">${loc}</div>
+        <div class="card-name">${name}</div>
+        <div class="card-hl">${hl}</div>
+        <div class="card-meta">
+          <span>${l.guests||1} gosta</span><span>·</span><span>${l.bedrooms||1} sobe</span>
+        </div>
+        <div class="card-foot">
+          <div class="card-price">${Number(l.price_per_night||0).toLocaleString('sr-RS')} <small>RSD / noć</small></div>
+          <span style="font-size:11px;font-weight:800">Detalji →</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function openDetail(id){
+  const { data, error } = await sb.from('accommodation_listings')
+    .select('id,partner_id,title,location_label,description,highlight,guests,bedrooms,bathrooms,price_per_night,amenities,photo_urls,partners(name,created_at)')
+    .eq('id', id).maybeSingle();
+  if(error || !data){ alert('Smeštaj nije pronađen.'); return; }
+  currentListing = data;
+  galleryIndex = 0;
+  history.pushState({}, '', '?id=' + id);
+  document.getElementById('view-grid').style.display = 'none';
+  document.getElementById('view-detail').style.display = 'block';
+  renderDetail();
+  window.scrollTo(0,0);
+  C.trackAction && C.trackAction(data.partner_id, null, 'accommodation_view');
+}
+
+function backToGrid(){
+  history.pushState({}, '', location.pathname);
+  document.getElementById('view-detail').style.display = 'none';
+  document.getElementById('view-grid').style.display = 'block';
+}
+
+function renderDetail(){
+  const l = currentListing;
+  const photos = (l.photo_urls && l.photo_urls.length) ? l.photo_urls : [null,null,null,null];
+  const name = C.escapeHtml(l.title || (l.partners&&l.partners.name) || 'Smeštaj');
+  const loc = C.escapeHtml(l.location_label || 'Vrnjačka Banja');
+  const desc = C.escapeHtml(l.description || '');
+  const amenities = (l.amenities||[]).filter(a => AMENITY_LABELS[a]);
+
+  const el = document.getElementById('view-detail');
+  el.innerHTML = `
+    <a href="#" class="back-link" onclick="backToGrid();return false">
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M12 4L6 10l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Nazad na sve ponude
+    </a>
+    <div class="detail-title">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <div class="premium-pill" style="padding:5px 12px"><svg width="11" height="11" viewBox="0 0 20 20" fill="none"><path d="M10 2l2.4 5.6 6 .6-4.5 4 1.3 5.9L10 15l-5.2 3.1 1.3-5.9-4.5-4 6-.6L10 2z" fill="#b45309"/></svg>Premium partner</div>
+        <span style="font-size:11px;font-weight:700;color:rgba(26,31,43,0.45)">${loc}</span>
+      </div>
+      <h1 style="font-family:'Instrument Serif',serif;font-weight:400;font-size:clamp(1.6rem,4vw,2.2rem);letter-spacing:-0.01em;margin:0">${name}</h1>
+    </div>
+    <div class="gallery">
+      <div class="gallery-main" id="gallery-main"></div>
+      <div class="gallery-thumbs" id="gallery-thumbs"></div>
+    </div>
+    <div class="detail-body">
+      <div class="detail-meta">
+        <span>👥 ${l.guests||1} gostiju</span>
+        <span>🛏 ${l.bedrooms||1} spavaće sobe</span>
+        <span>🛁 ${l.bathrooms||1} kupatila</span>
+      </div>
+      ${desc ? `<p class="detail-desc">${desc}</p>` : ''}
+      ${amenities.length ? `<div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(26,31,43,0.45);margin-bottom:16px">Sadržaji</div>
+      <div class="amenities">${amenities.map(a=>`<div class="amenity"><span class="amenity-ic"><svg width="16" height="16" viewBox="0 0 20 20" fill="none">${AMENITY_ICONS[a]||''}</svg></span>${AMENITY_LABELS[a]}</div>`).join('')}</div>` : ''}
+    </div>
+    <div class="booking-panel">
+      <div class="bp-price">${Number(l.price_per_night||0).toLocaleString('sr-RS')} <span style="font-size:12px;font-weight:700;color:rgba(26,31,43,0.45)">RSD / noć</span></div>
+      <div style="font-size:11px;font-weight:600;color:rgba(26,31,43,0.40);margin:4px 0 4px">Cena zavisi od broja noćenja i sezone</div>
+      <button class="bp-cta" onclick="openInquiry()">Pošalji upit →</button>
+      <p class="bp-note">Ovo je zahtev za rezervaciju. Domaćin lično potvrđuje dostupnost.</p>
+    </div>
+  `;
+  renderGallery(photos);
+}
+
+function renderGallery(photos){
+  const main = document.getElementById('gallery-main');
+  const thumbs = document.getElementById('gallery-thumbs');
+  const setMain = (i) => {
+    galleryIndex = i;
+    const url = photos[i];
+    main.style.cssText = 'height:260px;border-radius:1.2rem;position:relative;overflow:hidden;' + (url ? `background-image:url('${url}');background-size:cover;background-position:center` : `background:${gradFor(currentListing.id+i)}`);
+    main.innerHTML = `<div class="gallery-count">${i+1} / ${photos.length}</div>`;
+    thumbs.querySelectorAll('[data-i]').forEach(t => t.style.boxShadow = (Number(t.dataset.i)===i ? '0 0 0 2px #d97706' : 'none'));
+  };
+  thumbs.innerHTML = photos.map((url,i) => `<div data-i="${i}" onclick="renderGallerySelect(${i})" style="${url?`background-image:url('${url}');background-size:cover;background-position:center`:`background:${gradFor(currentListing.id+i)}`}"></div>`).join('');
+  window.renderGallerySelect = setMain;
+  setMain(0);
+}
+
+function openInquiry(){
+  const l = currentListing;
+  const photo0 = (l.photo_urls&&l.photo_urls[0]) ? `background-image:url('${l.photo_urls[0]}');background-size:cover;background-position:center` : `background:${gradFor(l.id)}`;
+  document.getElementById('inquiry-summary').innerHTML = `
+    <div style="width:46px;height:46px;border-radius:0.8rem;flex-shrink:0;${photo0}"></div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:800">${C.escapeHtml(l.title || (l.partners&&l.partners.name) || 'Smeštaj')}</div>
+      <div style="font-size:11px;font-weight:600;color:rgba(26,31,43,0.45)">${C.escapeHtml(l.location_label||'Vrnjačka Banja')}</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:13px;font-weight:900;color:#b45309">${Number(l.price_per_night||0).toLocaleString('sr-RS')}</div>
+      <div style="font-size:9px;font-weight:700;color:rgba(26,31,43,0.40)">RSD / noć</div>
+    </div>`;
+  inquiryGuests = 2;
+  document.getElementById('i-guests-label').textContent = inquiryGuests + ' gosta';
+  document.getElementById('i-name').value = '';
+  document.getElementById('i-phone').value = '';
+  document.getElementById('i-msg').value = '';
+  document.getElementById('inquiry-error').textContent = '';
+  document.getElementById('inquiry-form-fields').style.display = 'block';
+  document.getElementById('inquiry-submit-btn').style.display = 'block';
+  document.getElementById('inquiry-success').style.display = 'none';
+  document.getElementById('inquiry-overlay').classList.add('open');
+}
+function closeInquiry(){ document.getElementById('inquiry-overlay').classList.remove('open'); }
+function stepInquiryGuests(d){ inquiryGuests = Math.max(1, inquiryGuests+d); document.getElementById('i-guests-label').textContent = inquiryGuests + ' gosta'; }
+
+async function submitInquiry(){
+  const name = document.getElementById('i-name').value.trim();
+  const phone = document.getElementById('i-phone').value.trim();
+  const errEl = document.getElementById('inquiry-error');
+  if(!name || !phone){ errEl.textContent = 'Unesite ime i broj telefona.'; return; }
+
+  const btn = document.getElementById('inquiry-submit-btn');
+  btn.disabled = true; btn.textContent = 'Slanje...';
+
+  const { error } = await sb.from('accommodation_inquiries').insert({
+    listing_id: currentListing.id,
+    partner_id: currentListing.partner_id,
+    checkin_date: document.getElementById('i-checkin').value || null,
+    checkout_date: document.getElementById('i-checkout').value || null,
+    guest_count: inquiryGuests,
+    guest_name: name,
+    guest_phone: phone,
+    message: document.getElementById('i-msg').value.trim() || null,
+  });
+
+  btn.disabled = false; btn.textContent = 'Pošalji upit →';
+
+  if(error){ errEl.textContent = 'Greška pri slanju. Pokušajte ponovo.'; console.error(error); return; }
+
+  document.getElementById('inquiry-form-fields').style.display = 'none';
+  btn.style.display = 'none';
+  document.getElementById('inquiry-success').style.display = 'block';
+}
+
+// ── Boot ──
+(function boot(){
+  const params = new URLSearchParams(location.search);
+  loadListings().then(() => {
+    const id = params.get('id');
+    if(id) openDetail(id);
+  });
+})();
+</script>
+</body>
+</html>

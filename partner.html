@@ -259,6 +259,7 @@ function buildTabs(){
 
   // Apartman/Hotel - Smeštaj
   if(type === 'apartment' || type === 'hotel') tabs.push({id:'stay',     icon:'🏠', label:'Smeštaj',    render: renderStay});
+  if((type === 'apartment' || type === 'hotel') && partner.is_premium) tabs.push({id:'accommodation', icon:'🛎️', label:'Rezervacije', render: renderAccommodation});
   if(type === 'hotel' || type === 'restaurant' || type === 'attraction') tabs.push({id:'hh', icon:'🍹', label:'Happy Hour', render: renderHH});
   if(type === 'business') tabs.push({id:'promo',    icon:'📢', label:'Promocije',  render: renderPromo});
   if(type === 'hotel' || type === 'attraction') tabs.push({id:'info', icon:'ℹ️',  label:'Info',        render: renderInfo});
@@ -368,6 +369,199 @@ async function saveStay(){
   await sb.from('partner_content').upsert({partner_id: partner.id, ...updates}, {onConflict:'partner_id'});
   document.getElementById('stay-msg').textContent = '✓ Sačuvano!';
   setTimeout(() => document.getElementById('stay-msg').textContent = '', 2500);
+}
+
+// ── Rezervacije Tab (premium apartman/hotel) ─────────────────────
+const ACCOM_AMENITIES = {wifi:'WiFi', parking:'Parking', klima:'Klima', balkon:'Balkon/terasa', rostilj:'Roštilj', ljubimci:'Ljubimci dozvoljeni', tv:'Smart TV', kuhinja:'Oprema za kuvanje'};
+let currentListing = null;
+let currentInquiries = [];
+
+async function renderAccommodation(){
+  const el = document.getElementById('tab-accommodation');
+  el.innerHTML = '<p style="text-align:center;color:rgba(255,255,255,0.4);font-size:12px;padding:20px 0">Učitavanje...</p>';
+
+  const { data: listing } = await sb.from('accommodation_listings').select('*').eq('partner_id', partner.id).maybeSingle();
+  currentListing = listing || { partner_id: partner.id, title:'', location_label:'', description:'', highlight:'', guests:2, bedrooms:1, bathrooms:1, price_per_night:0, amenities:[], photo_urls:[], is_active:true };
+
+  const { data: inquiries } = await sb.from('accommodation_inquiries').select('*').eq('partner_id', partner.id).order('created_at', {ascending:false}).limit(30);
+  currentInquiries = inquiries || [];
+
+  drawAccommodationForm();
+}
+
+function drawAccommodationForm(){
+  const el = document.getElementById('tab-accommodation');
+  const l = currentListing;
+  const photos = [0,1,2,3].map(i => l.photo_urls && l.photo_urls[i] ? l.photo_urls[i] : null);
+
+  el.innerHTML = `
+    <div class="panel-card">
+      <div class="toggle-wrap">
+        <div><div class="toggle-label">Oglas aktivan</div><div class="toggle-sub">Vidljiv na javnoj stranici Smeštaj</div></div>
+        <label class="toggle"><input type="checkbox" id="a-active" ${l.is_active?'checked':''}><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <div class="panel-card">
+      <p class="panel-card-title">Fotografije (do 4)</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        ${[0,1,2,3].map(i => `
+          <div style="position:relative">
+            <div id="a-photo-${i}" style="height:90px;border-radius:1rem;background:${photos[i]?`url('${photos[i]}') center/cover`:'rgba(255,255,255,0.05)'};border:1px dashed rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden" onclick="document.getElementById('a-file-${i}').click()">
+              ${photos[i]?'':'<span style="font-size:22px;color:rgba(255,255,255,0.25)">+</span>'}
+            </div>
+            <input type="file" accept="image/*" id="a-file-${i}" style="display:none" onchange="uploadListingPhoto(${i}, this)">
+            ${photos[i]?`<button onclick="removeListingPhoto(${i})" style="position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(15,23,42,0.75);border:none;color:white;font-size:11px;cursor:pointer">✕</button>`:''}
+          </div>
+        `).join('')}
+      </div>
+      <p id="a-photo-status" style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);margin:10px 0 0;min-height:14px"></p>
+    </div>
+
+    <div class="panel-card">
+      <p class="panel-card-title">Osnovni podaci</p>
+      <div class="field-group"><label class="field-label">Naziv smeštaja</label><input class="field-input" id="a-title" value="${esc(l.title||'')}" placeholder="npr. Vila Argus"></div>
+      <div class="field-group"><label class="field-label">Lokacija (kratko)</label><input class="field-input" id="a-loc" value="${esc(l.location_label||'')}" placeholder="npr. Centar · Vrnjačka Banja"></div>
+      <div class="field-group"><label class="field-label">Isticanje (jedna rečenica)</label><input class="field-input" id="a-highlight" value="${esc(l.highlight||'')}" placeholder="npr. Dvorište sa terasom, 3 min od Trga"></div>
+      <div class="field-group"><label class="field-label">Opis</label><textarea class="field-input" id="a-desc" placeholder="Detaljan opis smeštaja...">${esc(l.description||'')}</textarea></div>
+    </div>
+
+    <div class="panel-card">
+      <p class="panel-card-title">Kapacitet i cena</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field-group"><label class="field-label">Gostiju</label><input class="field-input" type="number" min="1" id="a-guests" value="${l.guests||1}"></div>
+        <div class="field-group"><label class="field-label">Spavaće sobe</label><input class="field-input" type="number" min="1" id="a-bedrooms" value="${l.bedrooms||1}"></div>
+        <div class="field-group"><label class="field-label">Kupatila</label><input class="field-input" type="number" min="1" id="a-bathrooms" value="${l.bathrooms||1}"></div>
+        <div class="field-group"><label class="field-label">Cena po noći (RSD)</label><input class="field-input" type="number" min="0" step="500" id="a-price" value="${l.price_per_night||0}"></div>
+      </div>
+    </div>
+
+    <div class="panel-card">
+      <p class="panel-card-title">Sadržaji</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        ${Object.keys(ACCOM_AMENITIES).map(key => `
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.75);cursor:pointer">
+            <input type="checkbox" class="a-amenity" value="${key}" ${(l.amenities||[]).includes(key)?'checked':''}> ${ACCOM_AMENITIES[key]}
+          </label>
+        `).join('')}
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="saveListing()">Sačuvaj oglas</button>
+    <p id="a-msg" style="text-align:center;font-size:11px;font-weight:700;min-height:16px;margin-top:8px"></p>
+
+    <p class="panel-card-title" style="margin-top:24px">Upiti gostiju (${currentInquiries.length})</p>
+    ${currentInquiries.length ? currentInquiries.map(inqRow).join('') : '<p style="font-size:12px;color:rgba(255,255,255,0.4);font-weight:600;padding:8px 0">Još uvek nema upita.</p>'}
+  `;
+}
+
+function inqRow(q){
+  const statusLabel = {new:'Nov', contacted:'Kontaktiran', confirmed:'Potvrđen', declined:'Odbijen'}[q.status] || q.status;
+  const statusColor = {new:'#fbbf24', contacted:'#93c5fd', confirmed:'#6ee7b7', declined:'#fca5a5'}[q.status] || '#94a3b8';
+  const dates = (q.checkin_date && q.checkout_date) ? `${q.checkin_date} → ${q.checkout_date}` : 'Datumi nisu navedeni';
+  return `<div class="panel-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span style="font-size:13px;font-weight:800">${esc(q.guest_name)}</span>
+      <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;padding:3px 9px;border-radius:999px;background:${statusColor}22;color:${statusColor}">${statusLabel}</span>
+    </div>
+    <div style="font-size:11.5px;font-weight:600;color:rgba(255,255,255,0.55);line-height:1.6">
+      📅 ${dates}<br>👥 ${q.guest_count} gostiju &nbsp;·&nbsp; 📞 <a href="tel:${esc(q.guest_phone)}" style="color:#fbbf24">${esc(q.guest_phone)}</a>
+      ${q.message ? `<br>💬 ${esc(q.message)}` : ''}
+    </div>
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <button onclick="updateInquiryStatus('${q.id}','contacted')" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(147,197,253,0.3);background:rgba(147,197,253,0.10);color:#93c5fd;font-size:10px;font-weight:800;cursor:pointer;font-family:inherit">Kontaktiran</button>
+      <button onclick="updateInquiryStatus('${q.id}','confirmed')" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(110,231,183,0.3);background:rgba(110,231,183,0.10);color:#6ee7b7;font-size:10px;font-weight:800;cursor:pointer;font-family:inherit">Potvrdi</button>
+      <button onclick="updateInquiryStatus('${q.id}','declined')" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(252,165,165,0.3);background:rgba(252,165,165,0.10);color:#fca5a5;font-size:10px;font-weight:800;cursor:pointer;font-family:inherit">Odbij</button>
+    </div>
+  </div>`;
+}
+
+async function updateInquiryStatus(id, status){
+  await sb.from('accommodation_inquiries').update({status}).eq('id', id);
+  const row = currentInquiries.find(q => q.id === id);
+  if(row) row.status = status;
+  drawAccommodationForm();
+}
+
+function compressImageFile(file, maxDim, quality){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if(w > h && w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; }
+        else if(h >= w && h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('compress failed')), 'image/jpeg', quality);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadListingPhoto(slot, inputEl){
+  const file = inputEl.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById('a-photo-status');
+  statusEl.textContent = 'Otpremanje slike...';
+  try{
+    const blob = await compressImageFile(file, 1600, 0.80);
+    const path = partner.id + '/' + slot + '-' + Date.now() + '.jpg';
+    const { error: upErr } = await sb.storage.from('accommodation-photos').upload(path, blob, {contentType:'image/jpeg', upsert:true});
+    if(upErr) throw upErr;
+    const { data: pub } = sb.storage.from('accommodation-photos').getPublicUrl(path);
+    currentListing.photo_urls = currentListing.photo_urls || [];
+    currentListing.photo_urls[slot] = pub.publicUrl;
+    statusEl.textContent = '';
+    drawAccommodationForm();
+  } catch(e){
+    console.error('uploadListingPhoto', e);
+    statusEl.textContent = 'Greška pri otpremanju slike.';
+  }
+}
+
+function removeListingPhoto(slot){
+  if(currentListing.photo_urls) currentListing.photo_urls[slot] = null;
+  drawAccommodationForm();
+}
+
+async function saveListing(){
+  const msgEl = document.getElementById('a-msg');
+  const amenities = Array.from(document.querySelectorAll('.a-amenity:checked')).map(c => c.value);
+  const photoUrls = (currentListing.photo_urls || []).filter(Boolean);
+
+  const payload = {
+    partner_id: partner.id,
+    title: document.getElementById('a-title').value.trim(),
+    location_label: document.getElementById('a-loc').value.trim(),
+    highlight: document.getElementById('a-highlight').value.trim(),
+    description: document.getElementById('a-desc').value.trim(),
+    guests: parseInt(document.getElementById('a-guests').value) || 1,
+    bedrooms: parseInt(document.getElementById('a-bedrooms').value) || 1,
+    bathrooms: parseInt(document.getElementById('a-bathrooms').value) || 1,
+    price_per_night: parseInt(document.getElementById('a-price').value) || 0,
+    amenities,
+    photo_urls: photoUrls,
+    is_active: document.getElementById('a-active').checked,
+  };
+
+  const { data, error } = await sb.from('accommodation_listings').upsert(payload, {onConflict:'partner_id'}).select().maybeSingle();
+  if(error){
+    console.error('saveListing', error);
+    msgEl.style.color = '#f87171';
+    msgEl.textContent = 'Greška pri čuvanju.';
+    return;
+  }
+  if(data) currentListing = data;
+  msgEl.style.color = '#6ee7b7';
+  msgEl.textContent = '✓ Sačuvano!';
+  setTimeout(() => { if(msgEl) msgEl.textContent = ''; }, 2500);
 }
 
 // ── Happy Hour Tab ────────────────────────────────────────────────
