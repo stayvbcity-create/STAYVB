@@ -1283,7 +1283,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     // (is_active, is_premium, plan, hh_active...) da UI ne bi prikazivao pogrešno stanje
     let fresh = null;
     try {
-      const { data } = await sb.from('partners').select('*').eq('id', saved.id).maybeSingle();
+      const { data } = await sb.from('partners').select('id, name, type, partner_code, is_active, is_premium, loyalty_enabled, has_booking, hh_active, hh_date, hh_start, hh_end, lat, lng, phone, whatsapp, created_at, updated_at, plan, city_category_id, show_in_city_info, referral_active, referral_discount, referral_code, hh_visibility, google_review_url, hide_competitors').eq('id', saved.id).maybeSingle();
       fresh = data;
     } catch(e){ console.log('auto-login fresh fetch skip:', e.message); }
 
