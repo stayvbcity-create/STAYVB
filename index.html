@@ -573,6 +573,19 @@
                     <div id="city-categories-grid" class="grid grid-cols-3 gap-3"></div>
                 </div>
 
+                <!-- Smeštaj - premium apartmani i vile -->
+                <div onclick="location.href='smestaj.html'" class="feature-card action-card delay-4 fade-in" style="background:linear-gradient(150deg,#fffbeb 0%,#fef3c7 100%);border:1px solid #fde68a">
+                    <div class="action-open-badge">Otvori</div>
+                    <div class="feature-head">
+                        <div class="text-left">
+                            <h2 class="feature-title" style="color:#92400e">Smeštaj</h2>
+                            <p class="feature-sub" style="color:#b45309">Premium apartmani i vile za rezervaciju</p>
+                        </div>
+                        <div class="icon-bubble" style="background:#d97706;color:white">🏡</div>
+                    </div>
+                    <p class="feature-hint" style="color:#b45309">Pregledaj ponudu i pošalji upit</p>
+                </div>
+
                 <!-- Nekretnine - Vaš dom u Banji -->
                 <a href="nekretnine.html" class="property-cta fade-in">
                     <div class="property-cta-shine"></div>
@@ -676,6 +689,13 @@
                         </div>
                         <button onclick="confirmCheckout()" class="cta-btn cta-checkout">🗝️ Check-out</button>
                     </div>
+                </section>
+
+                <!-- Istorija poseta + deljenje -->
+                <section id="history-section" class="soft-card fade-in" style="padding:18px;display:none">
+                    <p class="section-label text-center">Gde ste bili</p>
+                    <div id="history-list" style="display:flex;flex-direction:column;gap:8px;margin:12px 0"></div>
+                    <button onclick="shareApp()" class="cta-btn cta-green" style="margin-top:4px">🔗 Podeli sa prijateljem</button>
                 </section>
 
                 <div class="footer-note">StayVB Digital System</div>
@@ -905,6 +925,75 @@ async function trackVisit(){
     } catch(e){ console.log('trackVisit skip:', e.message); }
 }
 
+// ── Istorija poseta (samo lokalno u browseru, bez naloga) ─────────
+function recordVisitHistory(partner){
+    if(!partner || !partner.id || !currentUnitId) return;
+    try{
+        let hist = JSON.parse(localStorage.getItem('stayvb_history') || '[]');
+        hist = hist.filter(h => h.code !== currentUnitId);
+        hist.unshift({ code: currentUnitId, name: partner.name, type: partner.type, date: new Date().toISOString() });
+        localStorage.setItem('stayvb_history', JSON.stringify(hist.slice(0, 8)));
+    }catch(e){ /* localStorage nedostupan - preskoci tiho */ }
+}
+
+function renderHistory(){
+    let hist = [];
+    try{ hist = JSON.parse(localStorage.getItem('stayvb_history') || '[]'); }catch(e){}
+    const section = document.getElementById('history-section');
+    const list = document.getElementById('history-list');
+    if(!section || !list) return;
+    if(!hist.length){ section.style.display = 'none'; return; }
+
+    const typeLabel = {apartment:'Apartman', hotel:'Hotel', restaurant:'Restoran', attraction:'Atrakcija', business:'Biznis'};
+    list.innerHTML = hist.map(h => {
+        const d = new Date(h.date);
+        const dateStr = isNaN(d) ? '' : d.toLocaleDateString('sr-RS', {day:'2-digit', month:'2-digit', year:'numeric'});
+        return `<a href="index.html?id=${encodeURIComponent(h.code)}" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#f8fafc;border:1px solid #eef2f7;border-radius:1rem;text-decoration:none;color:inherit">
+            <span style="font-size:12.5px;font-weight:800;color:#0f172a">${esc(h.name)}</span>
+            <span style="font-size:10px;font-weight:700;color:#94a3b8">${esc(typeLabel[h.type]||'')} · ${esc(dateStr)}</span>
+        </a>`;
+    }).join('');
+    section.style.display = 'block';
+}
+
+async function shareApp(){
+    const url = location.origin + location.pathname + (currentUnitId ? ('?id=' + encodeURIComponent(currentUnitId)) : '');
+    const text = 'Otkrij Vrnjačku Banju uz StayVB — smeštaj, popusti, događaji i još mnogo toga na jednom mestu.';
+    try{
+        if(navigator.share){
+            await navigator.share({ title: 'StayVB', text, url });
+        } else {
+            await navigator.clipboard.writeText(url);
+            alert('Link je kopiran! Pošaljite ga prijatelju.');
+        }
+    }catch(e){ /* korisnik otkazao deljenje - ignorisi */ }
+}
+
+// ── Prelazak u "gradski" režim posle isteka boravka ───────────────
+// Gost se i dalje vraca na svoj stari link (localStorage stayvb_unit_id),
+// ali ako je proslo 10+ dana od checkin-a, aplikacija vise ne prikazuje
+// taj konkretan smestaj (WiFi, room service...) vec opsti gradski sadrzaj.
+const STAY_EXPIRY_DAYS = 10;
+
+async function checkStayExpiry(){
+    try{
+        const token = C.getOrCreateGuestToken();
+        const { data: g } = await sb.from('guests').select('checkin_date').eq('token', token).maybeSingle();
+        if(!g || !g.checkin_date) return false;
+        const days = Math.floor((Date.now() - new Date(g.checkin_date).getTime()) / 86400000);
+        return days >= STAY_EXPIRY_DAYS;
+    }catch(e){ return false; }
+}
+
+function showCityMode(){
+    const nameEl = document.getElementById('unit-name');
+    const zoneNameEl = document.getElementById('stay-zone-unit-name');
+    if(nameEl) nameEl.innerText = 'Vrnjačka Banja';
+    if(zoneNameEl) zoneNameEl.innerText = 'Vrnjačka Banja';
+    document.querySelector('.stay-zone')?.classList.add('hidden');
+    document.querySelector('.top-panel')?.classList.add('hidden');
+}
+
 async function loadPartnerData(){
     if(!currentUnitId) return;
 
@@ -924,6 +1013,8 @@ async function loadPartnerData(){
         document.getElementById('wifi-pass').innerText = '';
         return;
     }
+
+    recordVisitHistory(partner);
 
     const { data: pcData } = await sb
         .from('partner_content')
@@ -1351,6 +1442,15 @@ async function startApp(lang){
         try{ currentUnitId = localStorage.getItem('stayvb_unit_id') || ''; }catch(e){ currentUnitId = ''; }
     }
 
+    // Ako se gost vraca preko sacuvanog linka (ne svezeg QR skena), a boravak
+    // je istekao (10+ dana od checkin-a) - ne prikazuj vise taj konkretan
+    // smestaj, vec opsti gradski sadrzaj.
+    let isExpiredStay = false;
+    if(!urlUnitId && currentUnitId){
+        isExpiredStay = await checkStayExpiry();
+        if(isExpiredStay) showCityMode();
+    }
+
     updateLangPills(lang || '');
 
     const ls = document.getElementById('lang-screen');
@@ -1369,7 +1469,7 @@ async function startApp(lang){
         const timeout = new Promise(resolve => setTimeout(resolve, 8000));
         await Promise.race([
             Promise.all([
-                loadPartnerData(),
+                isExpiredStay ? Promise.resolve() : loadPartnerData(),
                 loadHH(),
                 loadEvents(),
                 loadCityInfo()
@@ -1377,6 +1477,8 @@ async function startApp(lang){
             timeout
         ]);
     } catch(e){ console.error('Load error:', e); }
+
+    renderHistory();
 
     document.getElementById('loader').style.display = 'none';
     document.getElementById('content').style.display = 'block';
