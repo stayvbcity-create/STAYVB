@@ -40,8 +40,8 @@ window.StayVBGuard = (function () {
     // ── Admin zaštita ──────────────────────────────────────────────
     // Poziva se na admin.html pri učitavanju
     // Ako nema sesije — prikazuje login formu
-    function requireAdmin(onSuccess) {
-        if (C.checkAdminSession()) {
+    async function requireAdmin(onSuccess) {
+        if (await C.checkAdminSession()) {
             if (onSuccess) onSuccess();
             return true;
         }

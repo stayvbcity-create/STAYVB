@@ -32,12 +32,20 @@ window.STAYVB_CONFIG = (function () {
         sessionStorage.setItem('stayvb_admin_ts', Date.now().toString());
     }
 
-    function checkAdminSession() {
+    async function checkAdminSession() {
         const ts = parseInt(sessionStorage.getItem('stayvb_admin_ts') || '0');
         const age = Date.now() - ts;
-        if (sessionStorage.getItem('stayvb_admin') === '1' && age < 4 * 60 * 60 * 1000) return true;
-        clearAdminSession();
-        return false;
+        if (sessionStorage.getItem('stayvb_admin') !== '1' || age >= 4 * 60 * 60 * 1000) {
+            clearAdminSession();
+            return false;
+        }
+        // Lokalna zastavica nije dovoljna — proveri da li je Supabase Auth
+        // sesija stvarno jos ziva (JWT moze isteci nezavisno od ove zastavice).
+        const sb = getClient();
+        if (!sb) { clearAdminSession(); return false; }
+        const { data, error } = await sb.auth.getSession();
+        if (error || !data || !data.session) { clearAdminSession(); return false; }
+        return true;
     }
 
     function clearAdminSession() {
