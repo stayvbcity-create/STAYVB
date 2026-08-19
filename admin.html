@@ -202,6 +202,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="nav-section">Marketing</div>
     <div class="nav-item" onclick="nav('leads',this)"><span class="nav-icon">🎯</span>Prijave<span class="nav-badge" id="nb-leads" style="display:none">0</span></div>
     <div class="nav-item" onclick="nav('landingviews',this)"><span class="nav-icon">👁️</span>Landing posete</div>
+    <div class="nav-item" onclick="nav('notifications',this)"><span class="nav-icon">🔔</span>Notifikacije</div>
   </div>
   <div class="sidebar-bottom">
     <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" onclick="StayVBGuard.logoutAdmin()">🚪 Odjavi se</button>
@@ -680,6 +681,50 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       </div>
     </div>
 
+    <!-- ═══ NOTIFIKACIJE ═══ -->
+    <div id="page-notifications" class="page">
+      <div class="sec-header">
+        <div><div class="sec-title">Push notifikacije</div><div class="sec-sub">Šalje se ručno — koristi retko, za stvari koje stvarno vrede prekida</div></div>
+      </div>
+
+      <div class="stats-row" style="margin-bottom:20px">
+        <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,#3b82f6,#60a5fa)"></div><div class="stat-num" id="notif-sub-count" style="color:#93c5fd">—</div><div class="stat-label">Aktivnih pretplatnika</div></div>
+      </div>
+
+      <div class="tbl-card" style="padding:20px;max-width:560px;margin-bottom:20px">
+        <div class="field">
+          <label>Kome (opciono)</label>
+          <select class="field-input" id="notif-target">
+            <option value="">Svi pretplatnici</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Naslov</label>
+          <input class="field-input" id="notif-title" placeholder="npr. Nova vila u ponudi!" maxlength="60">
+        </div>
+        <div class="field">
+          <label>Poruka</label>
+          <textarea class="field-input" id="notif-body" placeholder="npr. Vila Argus je upravo dodata — pogledaj i pošalji upit." maxlength="160"></textarea>
+        </div>
+        <div class="field">
+          <label>Link pri kliku (opciono)</label>
+          <input class="field-input" id="notif-url" placeholder="npr. smestaj.html">
+        </div>
+        <button class="btn btn-gold" style="width:100%;justify-content:center" onclick="sendPushNotification()">🔔 Pošalji notifikaciju</button>
+        <p id="notif-msg" style="text-align:center;font-size:11px;font-weight:700;min-height:16px;margin-top:10px"></p>
+      </div>
+
+      <div class="tbl-card">
+        <div class="tbl-header"><div class="tbl-title">Istorija slanja</div></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>Kada</th><th>Naslov</th><th>Poruka</th><th style="text-align:right">Poslato</th></tr></thead>
+            <tbody id="notif-log-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══ QR ═══ -->
     <div id="page-qr" class="page">
       <div class="sec-header"><div><div class="sec-title">QR Generator</div><div class="sec-sub">QR kodovi i partner URL-ovi</div></div></div>
@@ -978,13 +1023,15 @@ const PAGE_META = {
   leads:['Prijave partnera','Zainteresovani vlasnici objekata'],
   landingviews:['Landing posete','Posete join.html po danima'],
   cityinfo:['City Info','Kategorije i mali biznisi'],
-  properties:['Nekretnine','Vaš dom u Banji — direktna prodaja']
+  properties:['Nekretnine','Vaš dom u Banji — direktna prodaja'],
+  notifications:['Notifikacije','Pošalji push obaveštenje gostima']
 };
 
 const LOADERS = {
   dashboard:loadDashboard, stats:loadStats, partners:loadPartners,
   stamps:loadStamps, loyalty:loadLoyalty, events:loadEvents,
-  billing:loadBilling, revenue:loadRevenue, qr:loadQR, properties:loadProperties, leads:loadLeads, landingviews:loadLandingViews
+  billing:loadBilling, revenue:loadRevenue, qr:loadQR, properties:loadProperties, leads:loadLeads, landingviews:loadLandingViews,
+  notifications:loadNotifications
 };
 
 function nav(id, el){
@@ -2870,6 +2917,66 @@ function renderLVTable(byDate){
   }).join('')||'<tr><td colspan="3" style="color:rgba(255,255,255,0.3);padding:16px;text-align:center">Nema podataka za izabrani period</td></tr>';
   const lv_note=document.getElementById('lv-note');
   if(lv_note) lv_note.textContent=`${sorted.length} dana · ${sorted.reduce((s,[,v])=>s+v,0)} ukupno`;
+}
+
+// ── Notifikacije ──────────────────────────────────────────────────
+async function loadNotifications(){
+  const { count } = await sb.from('push_subscriptions').select('id', {count:'exact', head:true});
+  const countEl = document.getElementById('notif-sub-count');
+  if(countEl) countEl.textContent = count ?? '0';
+
+  const { data: partners } = await sb.from('partners').select('partner_code,name').eq('is_active',true).order('name');
+  const sel = document.getElementById('notif-target');
+  if(sel){
+    sel.innerHTML = '<option value="">Svi pretplatnici</option>' +
+      (partners||[]).map(p => `<option value="${esc(p.partner_code)}">Gosti partnera: ${esc(p.name)}</option>`).join('');
+  }
+
+  const { data: log } = await sb.from('push_notifications_log').select('*').order('created_at',{ascending:false}).limit(20);
+  const tbody = document.getElementById('notif-log-tbody');
+  if(tbody){
+    tbody.innerHTML = (log||[]).map(n => `<tr>
+      <td style="white-space:nowrap;color:var(--muted)">${new Date(n.created_at).toLocaleString('sr-RS')}</td>
+      <td style="font-weight:800">${esc(n.title)}</td>
+      <td style="color:var(--muted)">${esc(n.body)}</td>
+      <td style="text-align:right;font-weight:900;color:#6ee7b7">${n.sent_count ?? 0}</td>
+    </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">Još ništa poslato.</td></tr>';
+  }
+}
+
+async function sendPushNotification(){
+  const title = document.getElementById('notif-title').value.trim();
+  const body = document.getElementById('notif-body').value.trim();
+  const url = document.getElementById('notif-url').value.trim();
+  const partner_code = document.getElementById('notif-target').value;
+  const msgEl = document.getElementById('notif-msg');
+
+  if(!title || !body){
+    msgEl.style.color = '#f87171';
+    msgEl.textContent = 'Naslov i poruka su obavezni.';
+    return;
+  }
+  if(!confirm(`Poslati "${title}" ${partner_code ? 'gostima ovog partnera' : 'SVIM pretplatnicima'}?`)) return;
+
+  msgEl.style.color = 'var(--muted)';
+  msgEl.textContent = 'Šaljem...';
+
+  const { data, error } = await sb.functions.invoke('send-push', {
+    body: { title, body, url: url || undefined, partner_code: partner_code || undefined }
+  });
+
+  if(error){
+    msgEl.style.color = '#f87171';
+    msgEl.textContent = 'Greška pri slanju: ' + (error.message || 'proveri da li je Edge Function deploy-ovana.');
+    return;
+  }
+
+  msgEl.style.color = '#6ee7b7';
+  msgEl.textContent = `✓ Poslato ${data.sent}/${data.total} pretplatnika.`;
+  document.getElementById('notif-title').value = '';
+  document.getElementById('notif-body').value = '';
+  document.getElementById('notif-url').value = '';
+  loadNotifications();
 }
 
 // ── Helpers ───────────────────────────────────────────────────────
