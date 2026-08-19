@@ -81,7 +81,10 @@ Deno.serve(async (req) => {
         sent++;
       } catch (err) {
         const status = (err as { statusCode?: number })?.statusCode;
-        if (status === 404 || status === 410) {
+        // 404/410 = pretplata vise ne postoji; 403 = najcesce znaci da je
+        // pretplata napravljena sa starim VAPID kljucem (posle rotacije) -
+        // u oba slucaja je trajno neupotrebljiva, obrisi je.
+        if (status === 404 || status === 410 || status === 403) {
           staleIds.push(s.id as string);
         } else {
           console.error("push send error", s.endpoint, err);

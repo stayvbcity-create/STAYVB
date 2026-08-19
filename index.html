@@ -1217,6 +1217,18 @@ async function setupPushNotifications(reg){
     try{
         // Dohvati postojeću ili kreiraj novu subscription
         let sub = await reg.pushManager.getSubscription();
+
+        // Ako je postojeca subscription napravljena sa STARIM VAPID kljucem
+        // (npr. posle rotacije kljuceva na serveru), server vise ne moze da
+        // joj salje - odjavi je da bismo napravili svezu sa trenutnim kljucem.
+        if(sub && sub.options?.applicationServerKey){
+            const subKey = arrayBufferToBase64Url(sub.options.applicationServerKey);
+            if(subKey !== VAPID_PUBLIC_KEY){
+                try{ await sub.unsubscribe(); }catch(e){}
+                sub = null;
+            }
+        }
+
         if(!sub){
             sub = await reg.pushManager.subscribe({
                 userVisibleOnly: true,
@@ -1285,6 +1297,13 @@ function urlBase64ToUint8Array(base64String){
     const base64 = (base64String + padding).replace(/-/g,'+').replace(/_/g,'/');
     const rawData = window.atob(base64);
     return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
+
+function arrayBufferToBase64Url(buffer){
+    const bytes = new Uint8Array(buffer);
+    let str = '';
+    for(const b of bytes) str += String.fromCharCode(b);
+    return window.btoa(str).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
 
 let cityCategories = [];
