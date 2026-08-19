@@ -13,9 +13,17 @@ import webpush from "npm:web-push@3";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY")!;
-const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY")!;
 const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") || "mailto:admin@staytag.rs";
+
+// Otporno na copy-paste artefakte iz Dashboard Secrets unosa: skida
+// razmake/nove redove, pretvara standardni base64 (+/ i = padding) u
+// URL-safe oblik koji web-push biblioteka ocekuje.
+function normalizeVapidKey(raw: string | undefined): string {
+  return (raw || "").trim().replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+const VAPID_PUBLIC_KEY = normalizeVapidKey(Deno.env.get("VAPID_PUBLIC_KEY"));
+const VAPID_PRIVATE_KEY = normalizeVapidKey(Deno.env.get("VAPID_PRIVATE_KEY"));
 
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
