@@ -687,6 +687,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <div><div class="sec-title">Push notifikacije</div><div class="sec-sub">Šalje se ručno — koristi retko, za stvari koje stvarno vrede prekida</div></div>
       </div>
 
+      <div class="tbl-card" style="padding:20px;max-width:560px;margin-bottom:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+          <div>
+            <div class="sec-title" style="font-size:14px">Android aplikacija (APK)</div>
+            <div class="sec-sub">Uključeno: Android korisnicima se nudi instalacija StayVB APK-a. Isključeno: radi samo standardna PWA instalacija.</div>
+          </div>
+          <label class="tog"><input type="checkbox" id="android-apk-toggle" onchange="toggleAndroidApk(this.checked)"><span class="tog-s"></span></label>
+        </div>
+      </div>
+
       <div class="stats-row" style="margin-bottom:20px">
         <div class="stat"><div class="stat-accent" style="background:linear-gradient(90deg,#3b82f6,#60a5fa)"></div><div class="stat-num" id="notif-sub-count" style="color:#93c5fd">—</div><div class="stat-label">Aktivnih pretplatnika</div></div>
       </div>
@@ -2921,6 +2931,8 @@ function renderLVTable(byDate){
 
 // ── Notifikacije ──────────────────────────────────────────────────
 async function loadNotifications(){
+  loadAndroidApkSetting();
+
   const { count } = await sb.from('push_subscriptions').select('id', {count:'exact', head:true});
   const countEl = document.getElementById('notif-sub-count');
   if(countEl) countEl.textContent = count ?? '0';
@@ -2941,6 +2953,21 @@ async function loadNotifications(){
       <td style="color:var(--muted)">${esc(n.body)}</td>
       <td style="text-align:right;font-weight:900;color:#6ee7b7">${n.sent_count ?? 0}</td>
     </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">Još ništa poslato.</td></tr>';
+  }
+}
+
+async function loadAndroidApkSetting(){
+  const toggle = document.getElementById('android-apk-toggle');
+  if(!toggle) return;
+  const { data } = await sb.from('app_settings').select('value').eq('key','android_apk_enabled').maybeSingle();
+  toggle.checked = data ? !!data.value : true;
+}
+
+async function toggleAndroidApk(checked){
+  const { error } = await sb.from('app_settings').upsert({ key:'android_apk_enabled', value: checked });
+  if(error){
+    alert('Greška pri čuvanju: '+error.message);
+    loadAndroidApkSetting();
   }
 }
 

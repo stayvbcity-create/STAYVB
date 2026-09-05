@@ -754,6 +754,11 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const isAndroid = /Android/i.test(navigator.userAgent);
 const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
+let androidApkEnabled = true;
+sb.from('app_settings').select('value').eq('key','android_apk_enabled').maybeSingle()
+    .then(({data}) => { if(data && data.value === false) androidApkEnabled = false; })
+    .catch(() => {});
+
 function esc(v){ return C.escapeHtml(v); }
 function getDate(){ const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); }
 function toMins(t){ if(!t) return 0; const p=String(t).split(':'); return parseInt(p[0]||0)*60+parseInt(p[1]||0); }
@@ -1443,7 +1448,10 @@ function closeCityModal(){
     document.getElementById('city-modal-list').innerHTML = '';
 }
 
-window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; showInstallBanner('android-install'); });
+window.addEventListener('beforeinstallprompt', e => {
+    if(!androidApkEnabled) return;
+    e.preventDefault(); deferredPrompt = e; showInstallBanner('android-install');
+});
 window.addEventListener('appinstalled', () => { deferredPrompt = null; closeInstallPrompt(); });
 
 async function startApp(lang){
@@ -1510,8 +1518,8 @@ async function startApp(lang){
     document.getElementById('content').style.display = 'block';
 
     if(isIOS) showInstallBanner('ios');
-    else if(isAndroid && !deferredPrompt){
-        setTimeout(() => { if(!deferredPrompt && !isStandalone()) showInstallBanner('android-install'); }, 2500);
+    else if(isAndroid && androidApkEnabled && !deferredPrompt){
+        setTimeout(() => { if(androidApkEnabled && !deferredPrompt && !isStandalone()) showInstallBanner('android-install'); }, 2500);
     }
 
     const pointer = document.getElementById('vipPointer');
