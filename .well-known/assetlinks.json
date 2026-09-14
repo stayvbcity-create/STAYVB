@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "rs.staytag.vb",
+    "sha256_cert_fingerprints": [
+      "20:78:0B:D0:5A:01:B9:2B:F8:12:6F:AB:26:87:DA:BE:29:D0:19:D3:E1:77:63:9E:04:F9:5D:1D:0F:87:83:BB"
+    ]
+  }
+}]
