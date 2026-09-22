@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>StayVB — Radar</title>
+<title>StayVB — VBradar</title>
 <link rel="manifest" href="./manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0f172a">
@@ -155,7 +155,7 @@ body{top:0!important}
 <div class="header">
   <a href="javascript:history.back()" class="back-btn">←</a>
   <div class="lang-pills-bar" id="lang-pills"></div>
-  <h1 style="font-size:1.3rem;font-weight:900;margin:0 0 2px;letter-spacing:-0.03em" id="txt-title">Radar Popusta</h1>
+  <h1 style="font-size:1.3rem;font-weight:900;margin:0 0 2px;letter-spacing:-0.03em" id="txt-title">VBradar</h1>
   <p style="font-size:11px;color:rgba(255,255,255,0.55);font-weight:800;margin:0;text-transform:uppercase;letter-spacing:0.10em" id="txt-sub">Klikni na marker za detalje</p>
 </div>
 
@@ -184,12 +184,12 @@ const sb = C.db();
 const LANG = localStorage.getItem('stayvb_lang') || 'sr';
 
 const T = {
-  sr:{title:'Radar Popusta',sub:'Klikni na marker za detalje',all:'Sve',hh:'Happy Hour',stamps:'Pečati',restaurants:'Restorani',attractions:'Atrakcije',hotels:'Hoteli',wa:'WhatsApp rezervacija',directions:'Navigacija',stamp_loc:'Lokacija pečata',collect_stamp:'Skupi pečat ovde',hh_active:'Happy Hour aktivan'},
-  en:{title:'Discount Radar',sub:'Tap a marker for details',all:'All',hh:'Happy Hour',stamps:'Stamps',restaurants:'Restaurants',attractions:'Attractions',hotels:'Hotels',wa:'WhatsApp booking',directions:'Directions',stamp_loc:'Stamp location',collect_stamp:'Collect stamp here',hh_active:'Happy Hour active'},
-  de:{title:'Rabatt-Radar',sub:'Marker antippen für Details',all:'Alle',hh:'Happy Hour',stamps:'Stempel',restaurants:'Restaurants',attractions:'Attraktionen',hotels:'Hotels',wa:'WhatsApp Buchung',directions:'Navigation',stamp_loc:'Stempel-Standort',collect_stamp:'Hier Stempel sammeln',hh_active:'Happy Hour aktiv'},
-  ru:{title:'Радар скидок',sub:'Нажмите на маркер для деталей',all:'Всё',hh:'Happy Hour',stamps:'Штампы',restaurants:'Рестораны',attractions:'Аттракционы',hotels:'Отели',wa:'WhatsApp бронирование',directions:'Маршрут',stamp_loc:'Место штампа',collect_stamp:'Получить штамп здесь',hh_active:'Happy Hour активен'},
-  bg:{title:'Радар на отстъпките',sub:'Натисни маркер за детайли',all:'Всички',hh:'Happy Hour',stamps:'Печати',restaurants:'Ресторанти',attractions:'Атракции',hotels:'Хотели',wa:'WhatsApp резервация',directions:'Навигация',stamp_loc:'Локация за печат',collect_stamp:'Вземи печат тук',hh_active:'Happy Hour активен'},
-  'zh-CN':{title:'折扣雷达',sub:'点击标记查看详情',all:'全部',hh:'欢乐时光',stamps:'印章',restaurants:'餐厅',attractions:'景点',hotels:'酒店',wa:'WhatsApp预订',directions:'导航',stamp_loc:'集章地点',collect_stamp:'在此集章',hh_active:'欢乐时光进行中'}
+  sr:{title:'VBradar',sub:'Klikni na marker za detalje',all:'Sve',hh:'Happy Hour',stamps:'Pečati',restaurants:'Restorani',attractions:'Atrakcije',hotels:'Hoteli',wa:'WhatsApp rezervacija',directions:'Navigacija',stamp_loc:'Lokacija pečata',collect_stamp:'Skupi pečat ovde',hh_active:'Happy Hour aktivan'},
+  en:{title:'VBradar',sub:'Tap a marker for details',all:'All',hh:'Happy Hour',stamps:'Stamps',restaurants:'Restaurants',attractions:'Attractions',hotels:'Hotels',wa:'WhatsApp booking',directions:'Directions',stamp_loc:'Stamp location',collect_stamp:'Collect stamp here',hh_active:'Happy Hour active'},
+  de:{title:'VBradar',sub:'Marker antippen für Details',all:'Alle',hh:'Happy Hour',stamps:'Stempel',restaurants:'Restaurants',attractions:'Attraktionen',hotels:'Hotels',wa:'WhatsApp Buchung',directions:'Navigation',stamp_loc:'Stempel-Standort',collect_stamp:'Hier Stempel sammeln',hh_active:'Happy Hour aktiv'},
+  ru:{title:'VBradar',sub:'Нажмите на маркер для деталей',all:'Всё',hh:'Happy Hour',stamps:'Штампы',restaurants:'Рестораны',attractions:'Аттракционы',hotels:'Отели',wa:'WhatsApp бронирование',directions:'Маршрут',stamp_loc:'Место штампа',collect_stamp:'Получить штамп здесь',hh_active:'Happy Hour активен'},
+  bg:{title:'VBradar',sub:'Натисни маркер за детайли',all:'Всички',hh:'Happy Hour',stamps:'Печати',restaurants:'Ресторанти',attractions:'Атракции',hotels:'Хотели',wa:'WhatsApp резервация',directions:'Навигация',stamp_loc:'Локация за печат',collect_stamp:'Вземи печат тук',hh_active:'Happy Hour активен'},
+  'zh-CN':{title:'VBradar',sub:'点击标记查看详情',all:'全部',hh:'欢乐时光',stamps:'印章',restaurants:'餐厅',attractions:'景点',hotels:'酒店',wa:'WhatsApp预订',directions:'导航',stamp_loc:'集章地点',collect_stamp:'在此集章',hh_active:'欢乐时光进行中'}
 };
 function t(k){return (T[LANG]||T['sr'])[k]||k;}
 

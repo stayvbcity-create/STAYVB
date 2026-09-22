@@ -31,8 +31,8 @@
       "icons": [{ "src": "icon192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Radar",
-      "short_name": "Radar",
+      "name": "VBradar",
+      "short_name": "VBradar",
       "url": "./radar.html",
       "icons": [{ "src": "icon192.png", "sizes": "192x192" }]
     },
