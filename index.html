@@ -267,7 +267,7 @@
         .cta-review::after{content:"";position:absolute;inset:3px;border-radius:1.5rem;border:1px solid rgba(255,255,255,0.18);pointer-events:none;}
         .cta-review .stars{color:#fffdf5;font-size:14px;letter-spacing:1px;position:relative;z-index:2}
         .cta-review-label{position:relative;z-index:2}
-        .cta-review-badge{position:absolute;top:-9px;right:14px;z-index:3;background:#0f172a;color:#fde68a;font-size:8.5px;font-weight:900;letter-spacing:0.10em;text-transform:uppercase;padding:3px 10px;border-radius:999px;border:1px solid rgba(251,191,36,0.55);box-shadow:0 4px 10px rgba(0,0,0,0.25)}
+        .cta-review-badge{position:absolute;top:-7px;right:14px;z-index:3;background:#0f172a;color:#fde68a;font-size:8.5px;font-weight:900;letter-spacing:0.10em;text-transform:uppercase;padding:3px 10px;border-radius:999px;border:1px solid rgba(251,191,36,0.55);box-shadow:0 4px 10px rgba(0,0,0,0.25);white-space:nowrap;line-height:1.4}
         .cta-checkout{background:#fff1f2;color:#e11d48;border:2px dashed #fecdd3;box-shadow:none;font-size:12px;text-transform:uppercase;letter-spacing:0.12em;}
         .rg-mood-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 8px;border-radius:1.2rem;cursor:pointer;transition:transform 0.15s;}
         .rg-mood-btn:active{transform:scale(0.95);}
@@ -641,7 +641,7 @@
                         <!-- Korak 2: kratak upitnik (samo za "moglo bolje" / "loše") -->
                         <div id="rg-step-detail" class="hidden">
                             <p style="font-size:15px;font-weight:900;color:#0f172a;margin:6px 0 2px">Šta bismo mogli da poboljšamo?</p>
-                            <p style="font-size:11px;color:#94a3b8;font-weight:700;margin:0 0 16px">Ovo ide direktno domaćinu, ne na Google</p>
+                            <p style="font-size:11px;color:#94a3b8;font-weight:700;margin:0 0 16px">Ovo ide direktno domaćinu, kao reklamacija</p>
                             <div id="rg-issue-chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
                                 <button type="button" onclick="toggleIssue(this,'Čistoća')" class="rg-chip">Čistoća</button>
                                 <button type="button" onclick="toggleIssue(this,'Osoblje')" class="rg-chip">Osoblje</button>
@@ -652,7 +652,9 @@
                                 <button type="button" onclick="toggleIssue(this,'Ostalo')" class="rg-chip">Ostalo</button>
                             </div>
                             <textarea id="rg-message" rows="3" placeholder="Recite nam više (opciono)" style="width:100%;border:1.5px solid #e2e8f0;border-radius:1rem;padding:12px 14px;font-size:13px;font-family:inherit;resize:none;margin-bottom:10px;box-sizing:border-box"></textarea>
-                            <input id="rg-phone" type="tel" placeholder="Broj telefona (opciono, ako želite odgovor)" style="width:100%;border:1.5px solid #e2e8f0;border-radius:1rem;padding:12px 14px;font-size:13px;font-family:inherit;margin-bottom:16px;box-sizing:border-box">
+                            <input id="rg-phone" type="tel" placeholder="Broj telefona (obavezno) *" style="width:100%;border:1.5px solid #e2e8f0;border-radius:1rem;padding:12px 14px;font-size:13px;font-family:inherit;margin-bottom:4px;box-sizing:border-box">
+                            <p id="rg-phone-err" class="hidden" style="font-size:11px;color:#dc2626;font-weight:700;margin:0 0 12px">Unesite broj telefona da bismo mogli da Vam odgovorimo.</p>
+                            <p style="font-size:10px;color:#94a3b8;font-weight:600;margin:0 0 12px">Potreban je broj telefona da bi hotel mogao direktno da reši Vašu reklamaciju.</p>
                             <button onclick="submitReviewGate()" class="cta-link cta-blue" style="min-height:52px">Pošalji domaćinu</button>
                         </div>
 
@@ -696,7 +698,10 @@
                             </div>
                         </div>
                         <a id="wa-link" href="#" target="_blank" class="cta-link cta-green">💬 Pišite domaćinu / Host</a>
-                        <a id="review-link" href="javascript:void(0)" onclick="openReviewGate()" class="cta-link cta-review hidden"><span class="cta-review-badge">Preporučeno</span><span class="stars">★★★★★</span><span class="cta-review-label">Ocenite nas</span></a>
+                        <div id="review-link-wrap" class="hidden" style="position:relative">
+                            <a id="review-link" href="javascript:void(0)" onclick="openReviewGate()" class="cta-link cta-review"><span class="stars">★★★★★</span><span class="cta-review-label">Ocenite nas</span></a>
+                            <span class="cta-review-badge">Preporučeno</span>
+                        </div>
 
                         <!-- Referral kartica - samo premium -->
                         <div id="referral-card-wrap" class="hidden">
@@ -1105,7 +1110,7 @@ async function loadPartnerData(){
     currentPartnerId = partner.id;
     if(partner.google_review_url){
         currentGoogleReviewUrl = partner.google_review_url;
-        document.getElementById('review-link').classList.remove('hidden');
+        document.getElementById('review-link-wrap').classList.remove('hidden');
     }
 
     if(partner.is_premium){
@@ -1544,7 +1549,7 @@ async function pickMood(mood){
         document.getElementById('rg-step-mood').classList.add('hidden');
         document.getElementById('rg-thanks-icon').textContent = '🙌';
         document.getElementById('rg-thanks-text').textContent = 'Hvala Vam!';
-        document.getElementById('rg-thanks-sub').textContent = 'Prebacujemo Vas na Google...';
+        document.getElementById('rg-thanks-sub').textContent = 'Trenutak...';
         document.getElementById('rg-step-thanks').classList.remove('hidden');
         await saveGuestFeedback(true);
         setTimeout(() => {
@@ -1565,6 +1570,13 @@ function toggleIssue(btn, label){
 }
 
 async function submitReviewGate(){
+    const phone = (document.getElementById('rg-phone').value || '').trim();
+    if(!phone){
+        document.getElementById('rg-phone-err').classList.remove('hidden');
+        document.getElementById('rg-phone').focus();
+        return;
+    }
+    document.getElementById('rg-phone-err').classList.add('hidden');
     document.getElementById('rg-step-detail').classList.add('hidden');
     document.getElementById('rg-thanks-icon').textContent = '💛';
     document.getElementById('rg-thanks-text').textContent = 'Hvala na iskrenosti!';
