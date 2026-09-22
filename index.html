@@ -265,6 +265,10 @@
         .cta-review{background:white;color:#0f172a;border:1.5px solid #fbbf24;display:flex;align-items:center;justify-content:center;gap:8px}
         .cta-review .stars{color:#fbbf24;font-size:14px;letter-spacing:1px}
         .cta-checkout{background:#fff1f2;color:#e11d48;border:2px dashed #fecdd3;box-shadow:none;font-size:12px;text-transform:uppercase;letter-spacing:0.12em;}
+        .rg-mood-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 8px;border-radius:1.2rem;cursor:pointer;transition:transform 0.15s;}
+        .rg-mood-btn:active{transform:scale(0.95);}
+        .rg-chip{padding:8px 14px;border-radius:999px;border:1.5px solid #e2e8f0;background:white;font-size:12px;font-weight:700;color:#475569;cursor:pointer;transition:all 0.15s;}
+        .rg-chip.active{background:#0f172a;border-color:#0f172a;color:white;}
 
         /* Share card */
         .share-card{position:relative;overflow:hidden;padding:18px;border-radius:2rem;background:radial-gradient(circle at top right,rgba(236,72,153,0.16),transparent 28%),radial-gradient(circle at bottom left,rgba(251,191,36,0.16),transparent 24%),linear-gradient(135deg,#1e1b4b 0%,#312e81 40%,#7c3aed 100%);border:1px solid rgba(255,255,255,0.10);color:white;}
@@ -613,6 +617,50 @@
                     </div>
                 </div>
 
+                <!-- Review Gate Modal - pita gosta kako mu je bio boravak PRE nego sto ga posalje na Google -->
+                <div id="review-gate-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(15,23,42,0.92);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:20px">
+                    <div style="background:white;border-radius:1.75rem;width:100%;max-width:400px;max-height:88vh;overflow-y:auto;padding:24px 20px 20px;position:relative">
+                        <button onclick="closeReviewGate()" style="position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;background:#f1f5f9;border:none;font-size:12px;cursor:pointer">✕</button>
+
+                        <!-- Korak 1: raspoloženje -->
+                        <div id="rg-step-mood">
+                            <p style="font-size:15px;font-weight:900;color:#0f172a;text-align:center;margin:6px 0 2px">Kako je bio Vaš boravak?</p>
+                            <p style="font-size:11px;color:#94a3b8;font-weight:700;text-align:center;margin:0 0 20px">Vaše iskreno mišljenje nam znači</p>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                                <button onclick="pickMood('great')" class="rg-mood-btn" style="background:#f0fdf4;border:1.5px solid #bbf7d0"><span style="font-size:2rem">😍</span><span style="font-size:11px;font-weight:800;color:#166534;margin-top:6px">Odlično</span></button>
+                                <button onclick="pickMood('good')" class="rg-mood-btn" style="background:#f0f9ff;border:1.5px solid #bae6fd"><span style="font-size:2rem">🙂</span><span style="font-size:11px;font-weight:800;color:#075985;margin-top:6px">Dobro</span></button>
+                                <button onclick="pickMood('meh')" class="rg-mood-btn" style="background:#fffbeb;border:1.5px solid #fde68a"><span style="font-size:2rem">😕</span><span style="font-size:11px;font-weight:800;color:#92400e;margin-top:6px">Moglo bolje</span></button>
+                                <button onclick="pickMood('bad')" class="rg-mood-btn" style="background:#fef2f2;border:1.5px solid #fecaca"><span style="font-size:2rem">😠</span><span style="font-size:11px;font-weight:800;color:#991b1b;margin-top:6px">Loše</span></button>
+                            </div>
+                        </div>
+
+                        <!-- Korak 2: kratak upitnik (samo za "moglo bolje" / "loše") -->
+                        <div id="rg-step-detail" class="hidden">
+                            <p style="font-size:15px;font-weight:900;color:#0f172a;margin:6px 0 2px">Šta bismo mogli da poboljšamo?</p>
+                            <p style="font-size:11px;color:#94a3b8;font-weight:700;margin:0 0 16px">Ovo ide direktno domaćinu, ne na Google</p>
+                            <div id="rg-issue-chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+                                <button type="button" onclick="toggleIssue(this,'Čistoća')" class="rg-chip">Čistoća</button>
+                                <button type="button" onclick="toggleIssue(this,'Osoblje')" class="rg-chip">Osoblje</button>
+                                <button type="button" onclick="toggleIssue(this,'Buka')" class="rg-chip">Buka</button>
+                                <button type="button" onclick="toggleIssue(this,'Doručak/Hrana')" class="rg-chip">Doručak/Hrana</button>
+                                <button type="button" onclick="toggleIssue(this,'Cena')" class="rg-chip">Cena</button>
+                                <button type="button" onclick="toggleIssue(this,'WiFi')" class="rg-chip">WiFi</button>
+                                <button type="button" onclick="toggleIssue(this,'Ostalo')" class="rg-chip">Ostalo</button>
+                            </div>
+                            <textarea id="rg-message" rows="3" placeholder="Recite nam više (opciono)" style="width:100%;border:1.5px solid #e2e8f0;border-radius:1rem;padding:12px 14px;font-size:13px;font-family:inherit;resize:none;margin-bottom:10px;box-sizing:border-box"></textarea>
+                            <input id="rg-phone" type="tel" placeholder="Broj telefona (opciono, ako želite odgovor)" style="width:100%;border:1.5px solid #e2e8f0;border-radius:1rem;padding:12px 14px;font-size:13px;font-family:inherit;margin-bottom:16px;box-sizing:border-box">
+                            <button onclick="submitReviewGate()" class="cta-link cta-blue" style="min-height:52px">Pošalji domaćinu</button>
+                        </div>
+
+                        <!-- Korak 3: hvala -->
+                        <div id="rg-step-thanks" class="hidden" style="text-align:center;padding:20px 0 10px">
+                            <div id="rg-thanks-icon" style="font-size:2.5rem;margin-bottom:10px"></div>
+                            <p id="rg-thanks-text" style="font-size:14px;font-weight:800;color:#0f172a;margin:0 0 4px"></p>
+                            <p id="rg-thanks-sub" style="font-size:11px;color:#94a3b8;font-weight:700;margin:0"></p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Stay zona -->
                 <section class="stay-zone fade-in">
                     <div class="stay-zone-head">
@@ -644,7 +692,7 @@
                             </div>
                         </div>
                         <a id="wa-link" href="#" target="_blank" class="cta-link cta-green">💬 Pišite domaćinu / Host</a>
-                        <a id="review-link" href="#" target="_blank" class="cta-link cta-review hidden"><span class="stars">★★★★★</span> Ocenite nas na Google-u</a>
+                        <a id="review-link" href="javascript:void(0)" onclick="openReviewGate()" class="cta-link cta-review hidden"><span class="stars">★★★★★</span> Ocenite nas na Google-u</a>
 
                         <!-- Referral kartica - samo premium -->
                         <div id="referral-card-wrap" class="hidden">
@@ -749,6 +797,9 @@ let currentReelUrl = '';
 let currentGiftText = 'mali poklon';
 let shareCampaignActive = false;
 let deferredPrompt = null;
+let currentPartnerId = null;
+let currentGoogleReviewUrl = '';
+let reviewSentiment = '';
 let referralData = null;
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const isAndroid = /Android/i.test(navigator.userAgent);
@@ -1047,10 +1098,10 @@ async function loadPartnerData(){
         document.getElementById('wa-link').href = 'https://wa.me/' + ownerPhone.replace(/\D/g,'') + '?text=' + encodeURIComponent('Zdravo, gost sam u '+partner.name+'.');
     }
 
+    currentPartnerId = partner.id;
     if(partner.google_review_url){
-        const reviewLink = document.getElementById('review-link');
-        reviewLink.href = partner.google_review_url;
-        reviewLink.classList.remove('hidden');
+        currentGoogleReviewUrl = partner.google_review_url;
+        document.getElementById('review-link').classList.remove('hidden');
     }
 
     if(partner.is_premium){
@@ -1446,6 +1497,77 @@ function openCityModal(catId){
 function closeCityModal(){
     document.getElementById('city-modal').style.display = 'none';
     document.getElementById('city-modal-list').innerHTML = '';
+}
+
+// ── Review Gate — pita gosta kako mu je bio boravak PRE Google linka.
+// Pozitivno (odlicno/dobro) ide na Google. Negativno (moglo bolje/lose)
+// se NE salje na Google, vec ide direktno domacinu kao guest_feedback.
+let reviewIssues = [];
+
+function openReviewGate(){
+    reviewSentiment = '';
+    reviewIssues = [];
+    document.getElementById('rg-message').value = '';
+    document.getElementById('rg-phone').value = '';
+    document.querySelectorAll('.rg-chip.active').forEach(c => c.classList.remove('active'));
+    document.getElementById('rg-step-mood').classList.remove('hidden');
+    document.getElementById('rg-step-detail').classList.add('hidden');
+    document.getElementById('rg-step-thanks').classList.add('hidden');
+    document.getElementById('review-gate-modal').style.display = 'flex';
+}
+
+function closeReviewGate(){
+    document.getElementById('review-gate-modal').style.display = 'none';
+}
+
+async function saveGuestFeedback(sentToGoogle){
+    try{
+        await sb.from('guest_feedback').insert({
+            partner_id: currentPartnerId,
+            guest_token: C.getOrCreateGuestToken(),
+            sentiment: reviewSentiment,
+            issues: reviewIssues,
+            message: (document.getElementById('rg-message').value || '').trim() || null,
+            contact_phone: (document.getElementById('rg-phone').value || '').trim() || null,
+            sent_to_google: sentToGoogle
+        });
+    }catch(e){ console.error('guest_feedback insert failed:', e); }
+}
+
+async function pickMood(mood){
+    reviewSentiment = mood;
+    if(mood === 'great' || mood === 'good'){
+        document.getElementById('rg-step-mood').classList.add('hidden');
+        document.getElementById('rg-thanks-icon').textContent = '🙌';
+        document.getElementById('rg-thanks-text').textContent = 'Hvala Vam!';
+        document.getElementById('rg-thanks-sub').textContent = 'Prebacujemo Vas na Google...';
+        document.getElementById('rg-step-thanks').classList.remove('hidden');
+        await saveGuestFeedback(true);
+        setTimeout(() => {
+            if(currentGoogleReviewUrl) window.open(currentGoogleReviewUrl, '_blank');
+            closeReviewGate();
+        }, 1400);
+    } else {
+        document.getElementById('rg-step-mood').classList.add('hidden');
+        document.getElementById('rg-step-detail').classList.remove('hidden');
+    }
+}
+
+function toggleIssue(btn, label){
+    btn.classList.toggle('active');
+    const i = reviewIssues.indexOf(label);
+    if(btn.classList.contains('active')){ if(i === -1) reviewIssues.push(label); }
+    else { if(i !== -1) reviewIssues.splice(i, 1); }
+}
+
+async function submitReviewGate(){
+    document.getElementById('rg-step-detail').classList.add('hidden');
+    document.getElementById('rg-thanks-icon').textContent = '💛';
+    document.getElementById('rg-thanks-text').textContent = 'Hvala na iskrenosti!';
+    document.getElementById('rg-thanks-sub').textContent = 'Prosledili smo ovo domaćinu direktno.';
+    document.getElementById('rg-step-thanks').classList.remove('hidden');
+    await saveGuestFeedback(false);
+    setTimeout(closeReviewGate, 2200);
 }
 
 window.addEventListener('beforeinstallprompt', e => {

@@ -265,6 +265,7 @@ function buildTabs(){
   if(type === 'hotel' || type === 'attraction') tabs.push({id:'info', icon:'ℹ️',  label:'Info',        render: renderInfo});
   if(partner.has_booking) tabs.push({id:'bookings', icon:'📅', label:'Rezerv.',    render: renderBookings});
   if(type === 'hotel' || type === 'restaurant' || type === 'attraction') tabs.push({id:'events', icon:'🎉', label:'Događaji', render: renderEvents});
+  if(partner.google_review_url) tabs.push({id:'reviews', icon:'⭐', label:'Utisci', render: renderReviews});
   tabs.push({id:'stats', icon:'📊', label:'Statistike', render: renderStats});
 
   const tabsBar = document.getElementById('tabs-bar');
@@ -1000,6 +1001,60 @@ async function deleteEvent(id, btn){
   if(!confirm('Obrisati događaj?')) return;
   await sb.from('events').delete().eq('id', id);
   btn.closest('.booking-row').remove();
+}
+
+// ── Utisci gostiju (Review Gate) ────────────────────────────────────
+// Pre nego sto ode na Google, gost prvo oceni boravak u aplikaciji.
+// Pozitivne ocene idu na Google; "moglo bolje"/"lose" ostaju ovde,
+// direktno kod domacina, da moze da reaguje.
+const RG_MOOD = {great:{icon:'😍',label:'Odlično'},good:{icon:'🙂',label:'Dobro'},meh:{icon:'😕',label:'Moglo bolje'},bad:{icon:'😠',label:'Loše'}};
+
+async function renderReviews(){
+  const el = document.getElementById('tab-reviews');
+  el.innerHTML = '<p style="font-size:12px;color:rgba(255,255,255,0.4);font-weight:700">Učitavanje...</p>';
+
+  const { data:rows } = await sb.from('guest_feedback').select('*').eq('partner_id', partner.id).order('created_at', {ascending:false}).limit(50);
+  const all = rows || [];
+  const positive = all.filter(r => r.sentiment==='great' || r.sentiment==='good').length;
+  const negative = all.length - positive;
+
+  let listHtml = '';
+  if(!all.length){
+    listHtml = '<p style="font-size:12px;color:rgba(255,255,255,0.35);font-weight:700">Još nema utisaka gostiju.</p>';
+  } else {
+    listHtml = all.map(r => {
+      const mood = RG_MOOD[r.sentiment] || {icon:'❔',label:r.sentiment};
+      const isNegative = r.sentiment==='meh' || r.sentiment==='bad';
+      const when = new Date(r.created_at).toLocaleDateString('sr-RS', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      return `
+      <div class="panel-card" style="${isNegative?'border-color:rgba(251,191,36,0.25);background:rgba(251,191,36,0.04)':''}">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <span style="font-size:1.5rem">${mood.icon}</span>
+          <div style="flex:1">
+            <div style="font-weight:900;font-size:13px">${esc(mood.label)}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:700">${esc(when)}</div>
+          </div>
+          ${!isNegative ? '<span style="font-size:9px;font-weight:900;color:#6ee7b7;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);padding:3px 9px;border-radius:999px;text-transform:uppercase">Na Google-u</span>' : ''}
+        </div>
+        ${r.issues?.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">${r.issues.map(i=>`<span style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10)">${esc(i)}</span>`).join('')}</div>` : ''}
+        ${r.message ? `<p style="font-size:12px;color:rgba(255,255,255,0.65);font-weight:600;margin-top:10px;line-height:1.5">${esc(r.message)}</p>` : ''}
+        ${r.contact_phone ? `<a href="tel:${esc(r.contact_phone)}" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:11px;font-weight:900;color:#93c5fd">📞 ${esc(r.contact_phone)} — pozovi gosta</a>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  el.innerHTML = `
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <div class="panel-card" style="flex:1;text-align:center;padding:14px">
+        <div style="font-size:1.6rem;font-weight:900;color:#6ee7b7">${positive}</div>
+        <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-top:2px">Poslato na Google</div>
+      </div>
+      <div class="panel-card" style="flex:1;text-align:center;padding:14px">
+        <div style="font-size:1.6rem;font-weight:900;color:#fcd34d">${negative}</div>
+        <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-top:2px">Zaustavljeno, kod vas</div>
+      </div>
+    </div>
+    ${listHtml}`;
 }
 
 // ── Stats Tab ─────────────────────────────────────────────────────
