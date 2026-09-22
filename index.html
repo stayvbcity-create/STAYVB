@@ -291,7 +291,7 @@
         @keyframes shine{0%{left:-100%;}20%{left:200%;}100%{left:200%;}}
 
         /* PWA install */
-        #pwa-install-prompt{display:none;position:fixed;bottom:20px;left:16px;right:16px;background:rgba(15,23,42,0.96);backdrop-filter:blur(12px);border:1px solid rgba(251,191,36,0.22);border-radius:1.5rem;padding:14px 16px;z-index:1000;box-shadow:0 20px 30px rgba(0,0,0,0.32);animation:slideUpPwa 0.4s ease-out;max-width:398px;margin:0 auto;}
+        #pwa-install-prompt{display:none;position:fixed;bottom:0;left:0;right:0;height:50vh;min-height:340px;background:#ffffff;border:3px solid #d4af37;border-bottom:none;border-top-left-radius:2.25rem;border-top-right-radius:2.25rem;padding:32px 28px;z-index:1000;box-shadow:0 -16px 50px rgba(0,0,0,0.30);animation:slideUpPwa 0.4s ease-out;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
         @keyframes slideUpPwa{from{transform:translateY(80px);opacity:0;}to{transform:translateY(0);opacity:1;}}
         .fade-in{animation:fadeInUp 0.45s ease both;}
         @keyframes fadeInUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
@@ -790,20 +790,12 @@
 
 <!-- PWA INSTALL -->
 <div id="pwa-install-prompt">
-    <div class="flex items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-            <div class="bg-amber-500/20 p-2 rounded-xl text-xl">📲</div>
-            <div class="text-left">
-                <p class="text-white text-[11px] font-black uppercase tracking-tight leading-none mb-1">Instaliraj StayVB</p>
-                <p id="install-instruction" class="text-slate-400 text-[9px] font-bold leading-tight">Brži pristup i popusti bez otvaranja browsera.</p>
-                <div id="install-debug" class="install-debug"></div>
-            </div>
-        </div>
-        <div class="flex gap-1">
-            <button onclick="closeInstallPrompt()" class="text-slate-500 text-[9px] font-black px-2 uppercase">Ne</button>
-            <button id="pwa-action-btn" class="bg-gradient-to-r from-amber-600 to-amber-400 text-slate-950 px-3 py-2 rounded-xl font-black text-[10px] uppercase shadow-lg">OK</button>
-        </div>
-    </div>
+    <button onclick="closeInstallPrompt()" style="position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;background:#f1f5f9;border:none;font-size:13px;cursor:pointer;color:#0f172a">✕</button>
+    <div style="width:64px;height:64px;border-radius:20px;background:#fff8e1;border:2px solid #d4af37;display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:18px">📲</div>
+    <p style="color:#0f172a;font-size:17px;font-weight:900;letter-spacing:-0.02em;margin:0 0 8px">Instaliraj StayVB</p>
+    <p id="install-instruction" style="color:#0f172a;opacity:0.72;font-size:13px;font-weight:700;line-height:1.5;max-width:280px;margin:0 0 24px">Brži pristup i popusti bez otvaranja browsera.</p>
+    <div id="install-debug" class="install-debug"></div>
+    <button id="pwa-action-btn" style="width:100%;max-width:280px;padding:16px;border-radius:1.25rem;background:#d4af37;color:#0f172a;font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:0.06em;border:none;cursor:pointer;box-shadow:0 10px 24px rgba(212,175,55,0.35)">OK</button>
 </div>
 
 <script>
@@ -1233,7 +1225,7 @@ function showInstallBanner(mode){
         instruction.innerText = 'U Safariju klikni Share pa "Add to Home Screen".';
         btn.innerText = 'Uputstvo';
         btn.onclick = () => alert('Na iPhone-u otvori ovu stranicu u Safari browseru, klikni Share i izaberi "Add to Home Screen".');
-        promptEl.style.display = 'block';
+        promptEl.style.display = 'flex';
         return;
     }
     if(mode === 'android-install'){
@@ -1243,7 +1235,22 @@ function showInstallBanner(mode){
             window.location.href = 'stayvb.apk';
             promptEl.style.display = 'none';
         };
-        promptEl.style.display = 'block';
+        promptEl.style.display = 'flex';
+    }
+    if(mode === 'android-pwa'){
+        instruction.innerText = 'Instaliraj prečicu na početni ekran za brži pristup.';
+        btn.innerText = 'Instaliraj prečicu';
+        btn.onclick = async () => {
+            if(deferredPrompt){
+                deferredPrompt.prompt();
+                try{ await deferredPrompt.userChoice; }catch(e){}
+                deferredPrompt = null;
+            } else {
+                alert('Otvori meni browsera (⋮) i izaberi "Dodaj na početni ekran" ili "Instaliraj aplikaciju".');
+            }
+            promptEl.style.display = 'none';
+        };
+        promptEl.style.display = 'flex';
     }
 }
 function closeInstallPrompt(){ document.getElementById('pwa-install-prompt').style.display = 'none'; }
@@ -1603,8 +1610,8 @@ async function submitReviewGate(){
 }
 
 window.addEventListener('beforeinstallprompt', e => {
-    if(!androidApkEnabled) return;
-    e.preventDefault(); deferredPrompt = e; showInstallBanner('android-install');
+    e.preventDefault(); deferredPrompt = e;
+    showInstallBanner(androidApkEnabled ? 'android-install' : 'android-pwa');
 });
 window.addEventListener('appinstalled', () => { deferredPrompt = null; closeInstallPrompt(); });
 
@@ -1682,8 +1689,8 @@ async function startApp(lang){
     document.getElementById('content').style.display = 'block';
 
     if(isIOS) showInstallBanner('ios');
-    else if(isAndroid && androidApkEnabled && !deferredPrompt){
-        setTimeout(() => { if(androidApkEnabled && !deferredPrompt && !isStandalone()) showInstallBanner('android-install'); }, 2500);
+    else if(isAndroid && !deferredPrompt){
+        setTimeout(() => { if(!deferredPrompt && !isStandalone()) showInstallBanner(androidApkEnabled ? 'android-install' : 'android-pwa'); }, 2500);
     }
 
     const pointer = document.getElementById('vipPointer');
