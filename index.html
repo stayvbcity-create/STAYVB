@@ -814,9 +814,9 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const isAndroid = /Android/i.test(navigator.userAgent);
 const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-let androidApkEnabled = true;
-sb.from('app_settings').select('value').eq('key','android_apk_enabled').maybeSingle()
-    .then(({data}) => { if(data && data.value === false) androidApkEnabled = false; })
+let androidApkEnabled = false;
+const appSettingsPromise = sb.from('app_settings').select('value').eq('key','android_apk_enabled').maybeSingle()
+    .then(({data}) => { androidApkEnabled = !!(data && data.value === true); })
     .catch(() => {});
 
 function esc(v){ return C.escapeHtml(v); }
@@ -1609,8 +1609,9 @@ async function submitReviewGate(){
     setTimeout(closeReviewGate, 2200);
 }
 
-window.addEventListener('beforeinstallprompt', e => {
+window.addEventListener('beforeinstallprompt', async e => {
     e.preventDefault(); deferredPrompt = e;
+    await appSettingsPromise;
     showInstallBanner(androidApkEnabled ? 'android-install' : 'android-pwa');
 });
 window.addEventListener('appinstalled', () => { deferredPrompt = null; closeInstallPrompt(); });
@@ -1690,7 +1691,10 @@ async function startApp(lang){
 
     if(isIOS) showInstallBanner('ios');
     else if(isAndroid && !deferredPrompt){
-        setTimeout(() => { if(!deferredPrompt && !isStandalone()) showInstallBanner(androidApkEnabled ? 'android-install' : 'android-pwa'); }, 2500);
+        setTimeout(async () => {
+            await appSettingsPromise;
+            if(!deferredPrompt && !isStandalone()) showInstallBanner(androidApkEnabled ? 'android-install' : 'android-pwa');
+        }, 2500);
     }
 
     const pointer = document.getElementById('vipPointer');
