@@ -574,7 +574,7 @@
                 </div>
 
                 <!-- Smeštaj - premium apartmani i vile -->
-                <div onclick="location.href='smestaj.html'" class="feature-card action-card delay-4 fade-in" style="background:linear-gradient(150deg,#fffbeb 0%,#fef3c7 100%);border:1px solid #fde68a">
+                <div id="smestaj-card" onclick="location.href='smestaj.html'" class="feature-card action-card delay-4 fade-in" style="background:linear-gradient(150deg,#fffbeb 0%,#fef3c7 100%);border:1px solid #fde68a">
                     <div class="action-open-badge">Otvori</div>
                     <div class="feature-head">
                         <div class="text-left">
@@ -1458,6 +1458,7 @@ async function startApp(lang){
     const params = new URLSearchParams(window.location.search);
     const urlUnitId = (params.get('id') || '').toUpperCase();
 
+    let isAccommodationStay = false;
     if(urlUnitId){
         currentUnitId = urlUnitId;
         // Čuvaj u localStorage SAMO ako je hotel ili apartman
@@ -1467,6 +1468,7 @@ async function startApp(lang){
                 .select('type').eq('partner_code', urlUnitId).eq('is_active',true).maybeSingle();
             if(pt && (pt.type === 'hotel' || pt.type === 'apartment')){
                 localStorage.setItem('stayvb_unit_id', urlUnitId);
+                isAccommodationStay = true;
             }
             // Ako nije hotel/apartman — currentUnitId se koristi samo za ovaj posjet
             // ali localStorage ostaje nepromijenjen (čuva stari smeštaj)
@@ -1474,6 +1476,9 @@ async function startApp(lang){
     } else {
         // Nema ?id= u URL-u (npr. otvoreno iz instalirane PWA ikonice) - koristi sacuvani
         try{ currentUnitId = localStorage.getItem('stayvb_unit_id') || ''; }catch(e){ currentUnitId = ''; }
+        // localStorage se pise samo za hotel/apartman (vidi granu iznad), pa je
+        // svako postojece currentUnitId ovde garantovano smestaj gosta.
+        isAccommodationStay = !!currentUnitId;
     }
 
     // Ako se gost vraca preko sacuvanog linka (ne svezeg QR skena), a boravak
@@ -1484,6 +1489,11 @@ async function startApp(lang){
         isExpiredStay = await checkStayExpiry();
         if(isExpiredStay) showCityMode();
     }
+
+    // "Smeštaj" (ponuda drugih apartmana/vila) nema smisla da se nudi gostu
+    // dok je aktivno smešten - tek posle isteka boravka (10+ dana) postaje
+    // relevantna preporuka za sledeću posetu.
+    document.getElementById('smestaj-card')?.classList.toggle('hidden', isAccommodationStay && !isExpiredStay);
 
     updateLangPills(lang || '');
 

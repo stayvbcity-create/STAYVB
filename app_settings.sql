@@ -23,6 +23,13 @@ CREATE POLICY app_settings_select_public ON public.app_settings
 CREATE POLICY app_settings_all_admin ON public.app_settings
     FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 
+-- RLS politike filtriraju REDOVE, ali osnovni GRANT na tabelu mora
+-- postojati da bi anon/authenticated uopšte smeli da pokušaju upit
+-- (bez ovoga Postgres vraća "permission denied for table" pre nego
+-- sto RLS dodje na red).
+GRANT SELECT ON public.app_settings TO anon;
+GRANT SELECT, INSERT, UPDATE ON public.app_settings TO authenticated;
+
 INSERT INTO public.app_settings(key, value) VALUES ('android_apk_enabled', true)
 ON CONFLICT (key) DO NOTHING;
 
