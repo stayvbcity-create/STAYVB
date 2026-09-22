@@ -953,7 +953,7 @@ async function autoStamp(partnerId, isPremium){
         if(existing){
             guestId = existing.id;
         } else {
-            const { data: ng } = await sb.from('guests').insert({ token, lang: localStorage.getItem('stayvb_lang')||'sr' }).select('id').single();
+            const { data: ng } = await sb.from('guests').insert({ token, accommodation_id: partnerId, lang: localStorage.getItem('stayvb_lang')||'sr' }).select('id').single();
             if(ng) guestId = ng.id;
         }
         if(!guestId) return;
