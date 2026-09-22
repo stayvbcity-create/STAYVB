@@ -220,25 +220,15 @@
         .hh-card .action-open-badge{background:rgba(255,247,237,0.88);color:#ea580c;border:1px solid rgba(251,146,60,0.28);}
         .hh-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:999px;background:rgba(251,146,60,0.14);color:#ea580c;font-size:10px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:12px;position:relative;z-index:2;}
 
-        /* Radar card */
-        .radar-card{background:radial-gradient(circle at 80% 20%,rgba(250,204,21,0.12),transparent 22%),linear-gradient(180deg,#0f172a 0%,#111827 100%);border:1px solid rgba(250,204,21,0.16);color:white;}
-        .radar-card .action-glow{top:-18px;right:-10px;background:rgba(250,204,21,0.30);}
-        .radar-card .action-open-badge{background:rgba(255,255,255,0.08);color:#fde047;border:1px solid rgba(250,204,21,0.28);}
-        .radar-ring{position:absolute;right:-16px;top:-12px;width:130px;height:130px;border-radius:999px;border:1px solid rgba(250,204,21,0.14);pointer-events:none;z-index:1;animation:radarBreath 2.8s ease-in-out infinite;}
-        @keyframes radarBreath{0%,100%{transform:scale(1);opacity:0.9;}50%{transform:scale(1.05);opacity:1;}}
-
-        /* Live card */
-        .live-card{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 45%,#9333ea 100%);color:white;border:1px solid rgba(255,255,255,0.10);}
-        .live-card::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at top left,rgba(255,255,255,0.12),transparent 28%);pointer-events:none;}
-        .live-card .action-glow{bottom:-22px;right:-12px;background:rgba(196,181,253,0.35);}
-        .live-card .action-open-badge{background:rgba(255,255,255,0.10);color:#ffffff;border:1px solid rgba(255,255,255,0.18);}
-
-        /* Attractions card */
-        .attractions-card{background:linear-gradient(180deg,#f0fdfa 0%,#ffffff 100%);border:1px solid #99f6e4;}
-        .attractions-card .action-glow{top:-18px;left:-14px;background:rgba(20,184,166,0.26);}
-        .attractions-card .action-open-badge{background:rgba(240,253,250,0.88);color:#0f766e;border:1px solid rgba(20,184,166,0.25);}
+        /* Explore Banju card (spojeni VBradar + Banja Live + Atrakcije + City Info) */
+        .explore-card{background:radial-gradient(circle at 80% 20%,rgba(250,204,21,0.12),transparent 22%),linear-gradient(180deg,#0f172a 0%,#111827 100%);border:1px solid rgba(250,204,21,0.16);color:white;}
+        .explore-card .action-glow{top:-18px;right:-10px;background:rgba(250,204,21,0.30);}
+        .explore-card .action-open-badge{background:rgba(255,255,255,0.08);color:#fde047;border:1px solid rgba(250,204,21,0.28);}
+        .explore-row{display:flex;align-items:center;gap:12px;padding:14px;border-radius:1.25rem;cursor:pointer;margin-bottom:10px;transition:transform 0.18s;}
+        .explore-row:active{transform:scale(0.98);}
         .chip-grid{display:flex;flex-wrap:wrap;gap:8px;position:relative;z-index:2;}
         .chip{padding:9px 12px;border-radius:999px;background:white;border:1px solid #ccfbf1;color:#115e59;font-size:11px;font-weight:800;box-shadow:0 6px 12px rgba(15,23,42,0.04);}
+        .chip-dark{padding:9px 12px;border-radius:999px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:white;font-size:11px;font-weight:800;}
 
         /* Service panel */
         .service-panel{padding:18px;}
@@ -514,71 +504,73 @@
                     <p class="feature-hint text-orange-500">Otvori sve ponude u gradu</p>
                 </div>
 
-                <!-- Radar -->
-                <div onclick="goTo('radar.html')" class="feature-card action-card delay-2 radar-card fade-in">
-                    <div class="action-glow"></div><div class="action-shine"></div><div class="action-ring"></div>
-                    <div class="action-open-badge">Otvori</div>
-                    <div class="radar-ring"></div>
-                    <div class="feature-head">
-                        <div class="text-left">
-                            <h2 class="feature-title text-white">VBradar</h2>
-                            <p class="feature-sub text-yellow-300">Pronađi mesta u blizini</p>
-                        </div>
-                        <div class="icon-bubble bg-yellow-400 text-slate-900">📡</div>
-                    </div>
-                    <div class="preview-list">
-                        <div class="preview-item bg-white/6 border border-white/8 text-white"><span>Skeniraj Banju i otkrij partnere</span><span class="text-yellow-300">OTVORI</span></div>
-                        <div class="preview-item bg-white/6 border border-white/8 text-white"><span>Lokacije, popusti i VIP ponude</span><span class="text-yellow-300">MAPA</span></div>
-                    </div>
-                    <p class="feature-hint text-yellow-300">Pregledaj radar lokacije</p>
-                </div>
-
-                <!-- Banja Live -->
-                <div onclick="goTo('dogadjaji.html')" class="feature-card action-card delay-3 live-card fade-in">
+                <!-- Istraži Banju - objedinjeno: VBradar, Banja Live, Atrakcije, City Info -->
+                <div onclick="openExploreHub()" class="feature-card action-card delay-2 explore-card fade-in">
                     <div class="action-glow"></div><div class="action-shine"></div><div class="action-ring"></div>
                     <div class="action-open-badge">Otvori</div>
                     <div class="feature-head">
                         <div class="text-left">
-                            <h2 class="feature-title text-white">Banja Live</h2>
-                            <p class="feature-sub text-white/80">Događaji, muzika i dešavanja</p>
+                            <h2 class="feature-title text-white">Istraži Banju</h2>
+                            <p class="feature-sub text-yellow-300">VBradar · Banja Live · Atrakcije · City Info</p>
                         </div>
-                        <div class="icon-bubble bg-white/20 text-white">🎸</div>
-                    </div>
-                    <div id="events-preview" class="preview-list"></div>
-                    <p class="feature-hint text-white/80">Klikni za kompletan kalendar</p>
-                </div>
-
-                <!-- Atrakcije -->
-                <div onclick="goTo('atrakcije.html')" class="feature-card action-card delay-4 attractions-card fade-in">
-                    <div class="action-glow"></div><div class="action-shine"></div><div class="action-ring"></div>
-                    <div class="action-open-badge">Otvori</div>
-                    <div class="feature-head">
-                        <div class="text-left">
-                            <h2 class="feature-title text-teal-800">Atrakcije i Zabava</h2>
-                            <p class="feature-sub text-teal-600">Bazeni, ture, izleti i aktivnosti</p>
-                        </div>
-                        <div class="icon-bubble bg-teal-500 text-white">🎡</div>
+                        <div class="icon-bubble bg-yellow-400 text-slate-900">🧭</div>
                     </div>
                     <div class="chip-grid">
-                        <span class="chip">🏊 Bazeni</span><span class="chip">🚲 Bicikli</span>
-                        <span class="chip">🦓 Zoo vrt</span><span class="chip">💦 Aqua park</span>
-                        <span class="chip">⛰️ Ture</span><span class="chip">🧭 Izleti</span>
+                        <span class="chip-dark">📡 VBradar</span><span class="chip-dark">🎸 Banja Live</span>
+                        <span class="chip-dark">🎡 Atrakcije</span><span class="chip-dark">📍 City Info</span>
                     </div>
-                    <p class="feature-hint text-teal-600">Pogledaj šta nudi Vrnjačka Banja</p>
+                    <p class="feature-hint text-yellow-300">Sve o gradu na jednom mestu</p>
                 </div>
 
-                <!-- City Info -->
-                <div class="soft-card service-panel fade-in">
-                    <p class="section-label text-center">Brze usluge / City Info</p>
-                    <!-- Hitne uvek vidljive -->
-                    <div class="grid grid-cols-3 gap-3" style="margin-bottom:12px">
-                        <a href="tel:194" class="service-btn"><span class="text-xl">🚑</span><span class="text-[9px] font-black uppercase">Hitna</span></a>
-                        <a href="tel:193" class="service-btn"><span class="text-xl">🚒</span><span class="text-[9px] font-black uppercase">Vatrogasci</span></a>
-                        <a href="tel:192" class="service-btn"><span class="text-xl">👮</span><span class="text-[9px] font-black uppercase">Policija</span></a>
+                <!-- Explore Hub Modal -->
+                <div id="explore-modal" style="display:none;position:fixed;inset:0;z-index:998;background:rgba(15,23,42,0.92);backdrop-filter:blur(10px);align-items:flex-end;justify-content:center;padding:0">
+                    <div style="background:white;border-top-left-radius:2rem;border-top-right-radius:2rem;width:100%;max-width:430px;max-height:88vh;overflow-y:auto">
+                        <div style="padding:14px 20px 10px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:white;z-index:10">
+                            <span style="font-size:14px;font-weight:900;color:#0f172a">🧭 Istraži Banju</span>
+                            <button onclick="closeExploreHub()" style="width:30px;height:30px;border-radius:50%;background:#f1f5f9;border:none;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+                        </div>
+                        <div style="padding:16px">
+                            <!-- VBradar -->
+                            <div id="explore-row-radar" onclick="goTo('radar.html')" class="explore-row" style="background:linear-gradient(180deg,#0f172a 0%,#111827 100%);border:1px solid rgba(250,204,21,0.16)">
+                                <div class="icon-bubble bg-yellow-400 text-slate-900">📡</div>
+                                <div class="text-left" style="flex:1">
+                                    <h3 style="color:white;font-weight:900;font-size:14px;margin:0">VBradar</h3>
+                                    <p style="color:#fde68a;font-size:11px;font-weight:700;margin:2px 0 0">Lokacije, popusti i VIP ponude u blizini</p>
+                                </div>
+                                <span style="color:#fde68a">→</span>
+                            </div>
+                            <!-- Banja Live -->
+                            <div onclick="goTo('dogadjaji.html')" class="explore-row" style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 45%,#9333ea 100%)">
+                                <div class="icon-bubble bg-white/20 text-white">🎸</div>
+                                <div class="text-left" style="flex:1">
+                                    <h3 style="color:white;font-weight:900;font-size:14px;margin:0">Banja Live</h3>
+                                    <p style="color:rgba(255,255,255,0.8);font-size:11px;font-weight:700;margin:2px 0 0">Događaji, muzika i dešavanja</p>
+                                </div>
+                                <span style="color:white">→</span>
+                            </div>
+                            <!-- Atrakcije -->
+                            <div onclick="goTo('atrakcije.html')" class="explore-row" style="background:linear-gradient(180deg,#f0fdfa 0%,#ffffff 100%);border:1px solid #99f6e4">
+                                <div class="icon-bubble bg-teal-500 text-white">🎡</div>
+                                <div class="text-left" style="flex:1">
+                                    <h3 style="color:#115e59;font-weight:900;font-size:14px;margin:0">Atrakcije i Zabava</h3>
+                                    <p style="color:#0f766e;font-size:11px;font-weight:700;margin:2px 0 0">Bazeni, ture, izleti i aktivnosti</p>
+                                </div>
+                                <span style="color:#115e59">→</span>
+                            </div>
+
+                            <!-- City Info -->
+                            <div id="explore-row-cityinfo" class="soft-card service-panel" style="margin-top:4px">
+                                <p class="section-label text-center">Brze usluge / City Info</p>
+                                <div class="grid grid-cols-3 gap-3" style="margin-bottom:12px">
+                                    <a href="tel:194" class="service-btn"><span class="text-xl">🚑</span><span class="text-[9px] font-black uppercase">Hitna</span></a>
+                                    <a href="tel:193" class="service-btn"><span class="text-xl">🚒</span><span class="text-[9px] font-black uppercase">Vatrogasci</span></a>
+                                    <a href="tel:192" class="service-btn"><span class="text-xl">👮</span><span class="text-[9px] font-black uppercase">Policija</span></a>
+                                </div>
+                                <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.08),transparent);margin-bottom:12px"></div>
+                                <div id="city-categories-grid" class="grid grid-cols-3 gap-3"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(0,0,0,0.08),transparent);margin-bottom:12px"></div>
-                    <!-- Kategorije iz baze -->
-                    <div id="city-categories-grid" class="grid grid-cols-3 gap-3"></div>
                 </div>
 
                 <!-- Smeštaj - premium apartmani i vile -->
@@ -1062,8 +1054,8 @@ function showCityMode(){
     // sto ima smisla planirati/preporuciti i posle odlaska (dogadjaji, atrakcije,
     // smestaj, nekretnine).
     document.querySelector('.hh-card')?.classList.add('hidden');
-    document.querySelector('.radar-card')?.classList.add('hidden');
-    document.querySelector('.service-panel')?.classList.add('hidden');
+    document.getElementById('explore-row-radar')?.classList.add('hidden');
+    document.getElementById('explore-row-cityinfo')?.classList.add('hidden');
 }
 
 async function loadPartnerData(){
@@ -1202,6 +1194,7 @@ async function loadEvents(){
         .limit(3);
 
     const target = document.getElementById('events-preview');
+    if(!target) return;
     if(!events?.length){
         target.innerHTML = '<div class="preview-item bg-white/10 border border-white/10 text-white/90"><span>Trenutno nema novih najava</span><span>USKORO</span></div>';
         return;
@@ -1506,6 +1499,13 @@ function openCityModal(catId){
 function closeCityModal(){
     document.getElementById('city-modal').style.display = 'none';
     document.getElementById('city-modal-list').innerHTML = '';
+}
+
+function openExploreHub(){
+    document.getElementById('explore-modal').style.display = 'flex';
+}
+function closeExploreHub(){
+    document.getElementById('explore-modal').style.display = 'none';
 }
 
 // ── Review Gate — pita gosta kako mu je bio boravak PRE Google linka.
