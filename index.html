@@ -226,6 +226,8 @@
         .explore-card .action-open-badge{background:rgba(255,255,255,0.08);color:#fde047;border:1px solid rgba(250,204,21,0.28);}
         .explore-row{display:flex;align-items:center;gap:12px;padding:14px;border-radius:1.25rem;cursor:pointer;margin-bottom:10px;transition:transform 0.18s;}
         .explore-row:active{transform:scale(0.98);}
+        .explore-row-lg{display:block;padding:18px;}
+        .explore-row-icon{width:60px;height:60px;font-size:1.8rem;}
         .chip-grid{display:flex;flex-wrap:wrap;gap:8px;position:relative;z-index:2;}
         .chip{padding:9px 12px;border-radius:999px;background:white;border:1px solid #ccfbf1;color:#115e59;font-size:11px;font-weight:800;box-shadow:0 6px 12px rgba(15,23,42,0.04);}
         .chip-dark{padding:9px 12px;border-radius:999px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:white;font-size:11px;font-weight:800;}
@@ -531,32 +533,58 @@
                         </div>
                         <div style="padding:16px">
                             <!-- VBradar -->
-                            <div id="explore-row-radar" onclick="goTo('radar.html')" class="explore-row" style="background:linear-gradient(180deg,#0f172a 0%,#111827 100%);border:1px solid rgba(250,204,21,0.16)">
-                                <div class="icon-bubble bg-yellow-400 text-slate-900">📡</div>
-                                <div class="text-left" style="flex:1">
-                                    <h3 style="color:white;font-weight:900;font-size:14px;margin:0">VBradar</h3>
-                                    <p style="color:#fde68a;font-size:11px;font-weight:700;margin:2px 0 0">Lokacije, popusti i VIP ponude u blizini</p>
+                            <div id="explore-row-radar" onclick="goTo('radar.html')" class="explore-row explore-row-lg" style="background:linear-gradient(180deg,#0f172a 0%,#111827 100%);border:1px solid rgba(250,204,21,0.16)">
+                                <div class="feature-head" style="margin-bottom:10px">
+                                    <div class="text-left">
+                                        <h3 style="color:white;font-weight:900;font-size:15px;margin:0">VBradar</h3>
+                                        <p style="color:#fde68a;font-size:11px;font-weight:700;margin:2px 0 0">Pronađi mesta u blizini</p>
+                                    </div>
+                                    <div class="icon-bubble explore-row-icon bg-yellow-400 text-slate-900">📡</div>
                                 </div>
-                                <span style="color:#fde68a">→</span>
+                                <div class="preview-list">
+                                    <div class="preview-item bg-white/6 border border-white/8 text-white"><span>Skeniraj Banju i otkrij partnere</span><span class="text-yellow-300">OTVORI</span></div>
+                                    <div class="preview-item bg-white/6 border border-white/8 text-white"><span>Lokacije, popusti i VIP ponude</span><span class="text-yellow-300">MAPA</span></div>
+                                </div>
                             </div>
                             <!-- Banja Live -->
-                            <div onclick="goTo('dogadjaji.html')" class="explore-row" style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 45%,#9333ea 100%)">
-                                <div class="icon-bubble bg-white/20 text-white">🎸</div>
-                                <div class="text-left" style="flex:1">
-                                    <h3 style="color:white;font-weight:900;font-size:14px;margin:0">Banja Live</h3>
-                                    <p style="color:rgba(255,255,255,0.8);font-size:11px;font-weight:700;margin:2px 0 0">Događaji, muzika i dešavanja</p>
+                            <div onclick="goTo('dogadjaji.html')" class="explore-row explore-row-lg" style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 45%,#9333ea 100%)">
+                                <div class="feature-head" style="margin-bottom:10px">
+                                    <div class="text-left">
+                                        <h3 style="color:white;font-weight:900;font-size:15px;margin:0">Banja Live</h3>
+                                        <p style="color:rgba(255,255,255,0.8);font-size:11px;font-weight:700;margin:2px 0 0">Događaji, muzika i dešavanja</p>
+                                    </div>
+                                    <div class="icon-bubble explore-row-icon bg-white/20 text-white">🎸</div>
                                 </div>
-                                <span style="color:white">→</span>
+                                <div id="events-preview" class="preview-list"></div>
                             </div>
                             <!-- Atrakcije -->
-                            <div onclick="goTo('atrakcije.html')" class="explore-row" style="background:linear-gradient(180deg,#f0fdfa 0%,#ffffff 100%);border:1px solid #99f6e4">
-                                <div class="icon-bubble bg-teal-500 text-white">🎡</div>
-                                <div class="text-left" style="flex:1">
-                                    <h3 style="color:#115e59;font-weight:900;font-size:14px;margin:0">Atrakcije i Zabava</h3>
-                                    <p style="color:#0f766e;font-size:11px;font-weight:700;margin:2px 0 0">Bazeni, ture, izleti i aktivnosti</p>
+                            <div onclick="goTo('atrakcije.html')" class="explore-row explore-row-lg" style="background:linear-gradient(180deg,#f0fdfa 0%,#ffffff 100%);border:1px solid #99f6e4">
+                                <div class="feature-head" style="margin-bottom:10px">
+                                    <div class="text-left">
+                                        <h3 style="color:#115e59;font-weight:900;font-size:15px;margin:0">Atrakcije i Zabava</h3>
+                                        <p style="color:#0f766e;font-size:11px;font-weight:700;margin:2px 0 0">Bazeni, ture, izleti i aktivnosti</p>
+                                    </div>
+                                    <div class="icon-bubble explore-row-icon bg-teal-500 text-white">🎡</div>
                                 </div>
-                                <span style="color:#115e59">→</span>
+                                <div class="chip-grid">
+                                    <span class="chip">🏊 Bazeni</span><span class="chip">🚲 Bicikli</span>
+                                    <span class="chip">🦓 Zoo vrt</span><span class="chip">💦 Aqua park</span>
+                                    <span class="chip">⛰️ Ture</span><span class="chip">🧭 Izleti</span>
+                                </div>
                             </div>
+
+                            <!-- Nekretnine -->
+                            <a href="nekretnine.html" class="property-cta fade-in" style="margin:0 0 10px">
+                                <div class="property-cta-shine"></div>
+                                <div class="property-cta-icon">🌿</div>
+                                <div class="property-cta-text">
+                                    Vrnjačka Banja nije samo odmor, može biti vaš dom
+                                    <span class="property-cta-link">Pogledajte nekretnine</span>
+                                </div>
+                                <div class="property-cta-arrow-wrap">
+                                    <div class="property-cta-arrow">→</div>
+                                </div>
+                            </a>
 
                             <!-- City Info -->
                             <div id="explore-row-cityinfo" class="soft-card service-panel" style="margin-top:4px">
@@ -586,18 +614,6 @@
                     <p class="feature-hint" style="color:#b45309">Pregledaj ponudu i pošalji upit</p>
                 </div>
 
-                <!-- Nekretnine - Vaš dom u Banji -->
-                <a href="nekretnine.html" class="property-cta fade-in">
-                    <div class="property-cta-shine"></div>
-                    <div class="property-cta-icon">🌿</div>
-                    <div class="property-cta-text">
-                        Vrnjačka Banja nije samo odmor, može biti vaš dom
-                        <span class="property-cta-link">Pogledajte nekretnine</span>
-                    </div>
-                    <div class="property-cta-arrow-wrap">
-                        <div class="property-cta-arrow">→</div>
-                    </div>
-                </a>
 
                 <!-- City Info Modal -->
                 <div id="city-modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(15,23,42,0.92);backdrop-filter:blur(10px);align-items:flex-end;justify-content:center;padding:0">
