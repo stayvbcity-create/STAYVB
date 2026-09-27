@@ -113,8 +113,18 @@ async function load(){
     try{ guestUnitId = (localStorage.getItem('stayvb_unit_id') || '').toUpperCase(); }catch(e){}
   }
 
+  // Competitor Blackout — Premium domaćin sme da sakrije događaje koje su
+  // objavili DRUGI HOTELI. Restorani/atrakcije/mali biznisi ostaju vidljivi uvek.
+  let blackoutActive = false;
+  if(guestUnitId){
+    const { data:hostData } = await sb.from('partners')
+      .select('is_premium, hide_competitors').eq('partner_code', guestUnitId).eq('is_active', true).maybeSingle();
+    blackoutActive = !!(hostData && hostData.is_premium && hostData.hide_competitors);
+  }
+
   // Filtriraj po vidljivosti - 'own_guests' samo za gosta tog hotela
   const all = (events || []).filter(e => {
+    if(blackoutActive && e.partners?.type === 'hotel' && e.partners?.partner_code !== guestUnitId) return false;
     if((e.visibility||'all') === 'own_guests'){
       return e.partners?.partner_code === guestUnitId;
     }

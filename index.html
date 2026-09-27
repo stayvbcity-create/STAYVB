@@ -809,6 +809,19 @@ let deferredPrompt = null;
 let currentPartnerId = null;
 let currentGoogleReviewUrl = '';
 let reviewSentiment = '';
+
+// Competitor Blackout — Premium partner sme da sakrije sadržaj koji su
+// objavili DRUGI HOTELI iz "Istraži Banju" (VBradar, Banja Live, City Info).
+// Restorani, atrakcije i mali biznisi ostaju vidljivi uvek.
+let hotelBlackoutActive = false;
+async function getHotelBlackout(){
+    if(!currentUnitId) return { active: false, id: null };
+    try{
+        const { data } = await sb.from('partners').select('id, is_premium, hide_competitors')
+            .eq('partner_code', currentUnitId).eq('is_active', true).maybeSingle();
+        return { active: !!(data && data.is_premium && data.hide_competitors), id: data?.id || null };
+    }catch(e){ return { active: false, id: null }; }
+}
 let referralData = null;
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const isAndroid = /Android/i.test(navigator.userAgent);
@@ -1191,15 +1204,20 @@ async function loadHH(){
         </div>`).join('');
 }
 
-async function loadEvents(){
+async function loadEvents(blackoutPromise){
     const todayStr = getDate();
-    const { data: events } = await sb
+    const { data: raw } = await sb
         .from('events')
-        .select('title, event_date')
+        .select('title, event_date, partner_id, partners(type)')
         .gte('event_date', todayStr)
         .eq('is_active', true)
         .order('event_date', {ascending:true})
-        .limit(3);
+        .limit(10);
+
+    const bo = blackoutPromise ? await blackoutPromise : { active: hotelBlackoutActive, id: currentPartnerId };
+    const events = (raw || []).filter(e =>
+        !(bo.active && e.partners?.type === 'hotel' && e.partner_id !== bo.id)
+    ).slice(0, 3);
 
     const target = document.getElementById('events-preview');
     if(!target) return;
@@ -1460,7 +1478,7 @@ function loadReferral(partner, isPremiumApplicable){
     if(pctEl) pctEl.textContent = (partner.referral_discount || 10) + '%';
 }
 
-async function loadCityInfo(){
+async function loadCityInfo(blackoutPromise){
     const {data:cats} = await sb.from('city_categories')
         .select('id,name,icon,color,sort_order')
         .eq('is_active', true)
@@ -1468,11 +1486,15 @@ async function loadCityInfo(){
     cityCategories = cats || [];
 
     const {data:partners} = await sb.from('partners')
-        .select('id,name,phone,whatsapp,city_category_id')
+        .select('id,name,type,phone,whatsapp,city_category_id')
         .eq('is_active', true)
         .eq('show_in_city_info', true)
         .order('name');
-    cityPartners = partners || [];
+
+    const bo = blackoutPromise ? await blackoutPromise : { active: hotelBlackoutActive, id: currentPartnerId };
+    cityPartners = (partners || []).filter(p =>
+        !(bo.active && p.type === 'hotel' && p.id !== bo.id)
+    );
 
     if(cityPartners.length){
         const ids = cityPartners.map(p => p.id);
@@ -1689,12 +1711,13 @@ async function startApp(lang){
 
     try{
         const timeout = new Promise(resolve => setTimeout(resolve, 8000));
+        const blackoutPromise = getHotelBlackout().then(v => { hotelBlackoutActive = v.active; return v; });
         await Promise.race([
             Promise.all([
                 isExpiredStay ? Promise.resolve() : loadPartnerData(),
                 loadHH(),
-                loadEvents(),
-                loadCityInfo()
+                loadEvents(blackoutPromise),
+                loadCityInfo(blackoutPromise)
             ]),
             timeout
         ]);
