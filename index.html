@@ -1403,15 +1403,31 @@ async function shareReferral(){
     const partnerName = document.getElementById('unit-name')?.innerText || 'smeštaj';
     const phone = ownerPhone.replace(/[^0-9+]/g,'');
     const waUrl = phone ? 'https://wa.me/' + phone.replace('+','') : '';
-    const indexUrl = location.origin + location.pathname + '?id=' + encodeURIComponent(currentUnitId);
+    // Generičan link ka app-u, BEZ ?id= — link koji dobija prijatelj ne sme
+    // da ga "prijavi" kao gosta u ovaj smeštaj (prepisalo bi mu njegov
+    // sopstveni boravak ako je i sam negde StayVB gost).
+    const discoverUrl = location.origin + location.pathname;
+
+    // Ako partner ima aktivnu ponudu u booking modulu, prijatelj dobija
+    // link DIREKTNO na tu ponudu u našem sistemu (Pošalji upit), umesto
+    // da mora da zove/piše vlasniku napolju.
+    let bookingUrl = '';
+    try{
+        const { data: listing } = await sb.from('accommodation_listings')
+            .select('id').eq('partner_id', referralData.partnerId).eq('is_active', true).maybeSingle();
+        if(listing) bookingUrl = location.origin + location.pathname.replace('index.html', 'smestaj.html') + '?id=' + listing.id;
+    }catch(e){}
 
     const msg = '🏨 Tvoj prijatelj ti je obezbedio ' + referralData.discount + '% popusta u Vrnjačkoj Banji!\n\n'
         + 'Ostani u ' + partnerName + ' i uštedi na direktnoj rezervaciji.\n\n'
         + '🎟️ Kod za popust: ' + referralData.code + '\n\n'
-        + 'Rezerviši direktno:\n'
-        + (ownerPhone ? '📞 ' + ownerPhone + '\n' : '')
-        + (waUrl ? '💬 ' + waUrl + '\n' : '')
-        + '\n🗺️ Otkrij Vrnjačku Banju: ' + indexUrl;
+        + (bookingUrl
+            ? '🔗 Rezerviši direktno: ' + bookingUrl + '\n'
+              + (ownerPhone ? '📞 Ili pozovi: ' + ownerPhone + '\n' : '')
+            : 'Rezerviši direktno:\n'
+              + (ownerPhone ? '📞 ' + ownerPhone + '\n' : '')
+              + (waUrl ? '💬 ' + waUrl + '\n' : ''))
+        + '\n🗺️ Otkrij Vrnjačku Banju: ' + discoverUrl;
 
     if(navigator.share){
         try{ await navigator.share({ title: 'Popust u Vrnjačkoj Banji 🎁', text: msg }); }catch(e){}
