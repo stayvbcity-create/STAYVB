@@ -991,7 +991,21 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <script>
 const sb = C.db();
 let allPartners = [];
+let partnersPage = 1;
+let partnersFilterTimer = null;
+const PAGE_SIZE = 50;
 let charts = {};
+
+function paginationBar(current, totalPages, totalCount, label, onPrev, onNext){
+  if(totalCount <= PAGE_SIZE) return '';
+  return `<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-top:1px solid var(--border2)">
+    <span style="font-size:11px;color:var(--muted);font-weight:700">${totalCount} ${label} · strana ${current}/${totalPages}</span>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" ${current<=1?'disabled':''} onclick="${onPrev}">← Prethodna</button>
+      <button class="btn btn-ghost btn-sm" ${current>=totalPages?'disabled':''} onclick="${onNext}">Sledeća →</button>
+    </div>
+  </div>`;
+}
 
 // ── Helpers ───────────────────────────────────────────────────────
 function esc(s){ return C.escapeHtml(s||''); }
@@ -1668,21 +1682,39 @@ async function loadPartners(){
   const {data, error} = await sb.from('partners').select('*').order('partner_code');
   if(error){ console.error('loadPartners error:', error); return; }
   allPartners = data||[];
+  partnersPage = 1;
   renderPartners(allPartners);
 }
 
-function filterPartners(){
+function getFilteredPartners(){
   const q = document.getElementById('p-search').value.toLowerCase();
   const type = document.getElementById('p-filter-type').value;
   const pay = document.getElementById('p-filter-pay').value;
-  renderPartners(allPartners.filter(p =>
+  return allPartners.filter(p =>
     (!q || p.name.toLowerCase().includes(q) || (p.partner_code||'').includes(q) || (p.pin||'').includes(q)) &&
     (!type || p.type === type) &&
     (!pay || p.payment_status === pay)
-  ));
+  );
+}
+
+function filterPartners(){
+  clearTimeout(partnersFilterTimer);
+  partnersFilterTimer = setTimeout(() => {
+    partnersPage = 1;
+    renderPartners(getFilteredPartners());
+  }, 250);
+}
+
+function changePartnersPage(delta){
+  partnersPage += delta;
+  renderPartners(getFilteredPartners());
 }
 
 function renderPartners(list){
+  const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  if(partnersPage > totalPages) partnersPage = totalPages;
+  if(partnersPage < 1) partnersPage = 1;
+  const pageItems = list.slice((partnersPage-1)*PAGE_SIZE, partnersPage*PAGE_SIZE);
   document.getElementById('partners-tbl').innerHTML = `
     <table class="tbl">
       <thead><tr>
@@ -1690,7 +1722,7 @@ function renderPartners(list){
         <th>Cena/mes</th><th>Plaćanje</th><th>Ističe</th>
         <th>Aktivan</th><th title="Samo za apartmane i hotele">Premium ⓘ</th><th>Akcije</th>
       </tr></thead>
-      <tbody>${list.map(p=>`<tr>
+      <tbody>${pageItems.map(p=>`<tr>
         <td><span class="p-code">${esc(p.partner_code||'')}</span></td>
         <td style="font-weight:800;max-width:140px">
           ${esc(p.name)}
@@ -1713,7 +1745,8 @@ function renderPartners(list){
           <button class="btn btn-red btn-sm" onclick="delPartner('${p.id}')">✕</button>
         </div></td>
       </tr>`).join('')}</tbody>
-    </table>`;
+    </table>
+    ${paginationBar(partnersPage, totalPages, list.length, 'partnera', 'changePartnersPage(-1)', 'changePartnersPage(1)')}`;
 }
 
 async function tog(id,field,val){
@@ -1722,7 +1755,7 @@ async function tog(id,field,val){
   // Ažuriraj lokalno da ne reloadujemo celu tabelu
   const p = allPartners.find(x=>x.id===id);
   if(p) p[field] = val;
-  renderPartners(allPartners);
+  renderPartners(getFilteredPartners());
 }
 
 // ── Nekretnine (Vaš dom u Banji) ────────────────────────────────────
@@ -1922,7 +1955,7 @@ async function togPremium(id,val){
   // Ažuriraj lokalno
   const p = allPartners.find(x=>x.id===id);
   if(p){ p.is_premium = val; p.loyalty_enabled = val; }
-  renderPartners(allPartners);
+  renderPartners(getFilteredPartners());
 }
 
 async function regenToken(id){
@@ -2783,20 +2816,36 @@ async function updateLeadStatus(id, status, btn){
 
 // ── QR ────────────────────────────────────────────────────────────
 let allQrPartners = [];
+let qrPage = 1;
+let qrFilterTimer = null;
 
 async function loadQR(){
   const {data}=await sb.from('partners').select('id,name,type,partner_code,access_token,pin').eq('is_active',true).order('partner_code');
   allQrPartners = data||[];
+  qrPage = 1;
   renderQRList(allQrPartners);
 }
 
-function filterQR(){
+function getFilteredQrPartners(){
   const q = (document.getElementById('qr-search')?.value||'').toLowerCase();
   const type = document.getElementById('qr-filter-type')?.value||'';
-  renderQRList(allQrPartners.filter(p=>
+  return allQrPartners.filter(p=>
     (!q || p.name.toLowerCase().includes(q) || (p.partner_code||'').includes(q) || (p.pin||'').includes(q)) &&
     (!type || p.type===type)
-  ));
+  );
+}
+
+function filterQR(){
+  clearTimeout(qrFilterTimer);
+  qrFilterTimer = setTimeout(() => {
+    qrPage = 1;
+    renderQRList(getFilteredQrPartners());
+  }, 250);
+}
+
+function changeQrPage(delta){
+  qrPage += delta;
+  renderQRList(getFilteredQrPartners());
 }
 
 function renderQRList(data){
@@ -2808,7 +2857,12 @@ function renderQRList(data){
     return;
   }
 
-  list.innerHTML=data.map(p=>{
+  const totalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
+  if(qrPage > totalPages) qrPage = totalPages;
+  if(qrPage < 1) qrPage = 1;
+  const pageItems = data.slice((qrPage-1)*PAGE_SIZE, qrPage*PAGE_SIZE);
+
+  list.innerHTML=pageItems.map(p=>{
     const gUrl=(p.type==='apartment'||p.type==='hotel')?`${base}index.html?id=${p.partner_code}`:`${base}stamp.html?code=${p.partner_code}`;
     const pUrl=`${base}partner.html?t=${p.access_token}`;
     return `<div class="tbl-card" style="margin-bottom:12px;padding:18px">
@@ -2830,9 +2884,9 @@ function renderQRList(data){
         </div>
       </div>
     </div>`;
-  }).join('');
+  }).join('') + paginationBar(qrPage, totalPages, data.length, 'partnera', 'changeQrPage(-1)', 'changeQrPage(1)');
 
-  data.forEach(p=>{
+  pageItems.forEach(p=>{
     const url=(p.type==='apartment'||p.type==='hotel')?`${base}index.html?id=${p.partner_code}`:`${base}stamp.html?code=${p.partner_code}`;
     QRCode.toCanvas(document.createElement('canvas'),url,{width:110,margin:1},(err,canvas)=>{
       if(!err){const el=document.getElementById('qr-'+p.id);if(el){el.innerHTML='';el.appendChild(canvas);}}
