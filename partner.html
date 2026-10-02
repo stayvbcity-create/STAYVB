@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>StayVB — Partner Panel</title>
 <meta name="robots" content="noindex,nofollow">
+<link rel="manifest" id="partner-manifest" href="./manifest-partner.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="icon192.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
@@ -22,6 +27,7 @@ body{top:0!important}
 /* Header */
 .header{background:linear-gradient(135deg,rgba(251,191,36,0.12),transparent),linear-gradient(180deg,#0f172a,#111827);padding:52px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.06);position:relative}
 .logout-btn{position:absolute;top:14px;right:14px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);font-size:10px;font-weight:900;color:rgba(255,255,255,0.5);cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:0.08em}
+.install-btn{display:none;position:absolute;top:14px;left:14px;padding:6px 12px;border-radius:999px;background:rgba(251,191,36,0.14);border:1px solid rgba(251,191,36,0.30);font-size:10px;font-weight:900;color:#fbbf24;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:0.06em}
 
 /* PIN screen */
 #pin-screen{min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center}
@@ -172,6 +178,7 @@ select.field-input option{background:#1e293b;color:white}
 <div id="main-app" class="app hidden">
   <div class="header">
     <button class="logout-btn" onclick="doLogout()">Odjavi se</button>
+    <button class="install-btn" id="install-btn" onclick="installPartnerApp()">📲 Instaliraj</button>
     <p style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.35);margin:0 0 4px" id="partner-type-label">Partner</p>
     <h1 style="font-size:1.4rem;font-weight:900;margin:0;letter-spacing:-0.03em;color:white" id="partner-name-header">Partner</h1>
   </div>
@@ -185,6 +192,60 @@ select.field-input option{background:#1e293b;color:white}
 const sb = C.db();
 const token = C.getPartnerToken();
 let partner = null, partnerContent = null;
+
+// ── Instalacija partnerske aplikacije (posebna od gostinske) ───────
+// Manifest dinamički dobija start_url sa ovim konkretnim tokenom, tako
+// da instalirana ikonica vodi direktno u panel ovog partnera, bez
+// ponovnog otvaranja originalnog linka.
+function isStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+(async function setupPartnerManifest(){
+  try{
+    const res = await fetch('./manifest-partner.json');
+    const manifest = await res.json();
+    manifest.start_url = './partner.html?t=' + encodeURIComponent(token);
+    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+    document.getElementById('partner-manifest').href = URL.createObjectURL(blob);
+  } catch(e){ /* manifest ostaje statičan, instalacija i dalje radi */ }
+})();
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  if(!isStandalone()) document.getElementById('install-btn').style.display = 'block';
+});
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  document.getElementById('install-btn').style.display = 'none';
+});
+
+async function installPartnerApp(){
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    try{ await deferredInstallPrompt.userChoice; }catch(e){}
+    deferredInstallPrompt = null;
+    document.getElementById('install-btn').style.display = 'none';
+    return;
+  }
+  if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){
+    alert('Na iPhone-u: otvori ovu stranicu u Safari-ju, klikni Share (📤) pa "Add to Home Screen".');
+  } else {
+    alert('Otvori meni browsera (⋮) i izaberi "Dodaj na početni ekran" ili "Instaliraj aplikaciju".');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if(/iPhone|iPad|iPod/i.test(navigator.userAgent) && !isStandalone()){
+    document.getElementById('install-btn').style.display = 'block';
+  }
+});
 
 // ── PIN Login ─────────────────────────────────────────────────────
 document.getElementById('pin-input').addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
