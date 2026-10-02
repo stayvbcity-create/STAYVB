@@ -95,6 +95,7 @@ window.STAYVB_CONFIG = (function () {
 
     function partnerUrl(accessToken) { return PARTNER_PANEL_URL + '?t=' + encodeURIComponent(accessToken); }
     function stampUrl(partnerCode) { return STAMP_URL + '?code=' + encodeURIComponent(partnerCode); }
+    function scannerUrl(scannerToken) { return APP_URL + '/scan.html?s=' + encodeURIComponent(scannerToken); }
 
     async function trackAction(partnerId, guestId, action) {
         const sb = getClient();
@@ -115,7 +116,7 @@ window.STAYVB_CONFIG = (function () {
         setAdminSession, checkAdminSession, clearAdminSession,
         getPartnerToken, partnerLogin, getPartnerSession, clearPartnerSession,
         getOrCreateGuestToken,
-        partnerUrl, stampUrl,
+        partnerUrl, stampUrl, scannerUrl,
         trackAction, escapeHtml,
     };
 })();
