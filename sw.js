@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════
 // StayVB v2 — Service Worker
 // ═══════════════════════════════════════════════════════════════════
-const CACHE_NAME = 'stayvb-v2-cache';
+const CACHE_NAME = 'stayvb-v3-cache';
 const SUPABASE_URL = 'https://zapmsxvwxjeoglpzldhl.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcG1zeHZ3eGplb2dscHpsZGhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMjY4NDQsImV4cCI6MjA5NjcwMjg0NH0.szTiMlsQJZCgbFE89eRn1YIN133smnEkPhVmcaVmGqM';
 
