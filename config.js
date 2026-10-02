@@ -4,7 +4,13 @@ window.STAYVB_CONFIG = (function () {
     const SUPABASE_URL = 'https://zapmsxvwxjeoglpzldhl.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcG1zeHZ3eGplb2dscHpsZGhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMjY4NDQsImV4cCI6MjA5NjcwMjg0NH0.szTiMlsQJZCgbFE89eRn1YIN133smnEkPhVmcaVmGqM';
     const APP_URL = 'https://vb.staytag.rs';
-    const PARTNER_PANEL_URL = APP_URL + '/partner.html';
+    // Partner panel živi na posebnom poddomenu (iste statičke datoteke,
+    // samo drugi custom domain na istom Render servisu) — to je JEDINI
+    // način da Chrome/Android tretira instalaciju "StayVB Partner" kao
+    // potpuno nezavisnu app od gostinske, umesto da je blokira jer je
+    // gostinska app (scope "./") već instalirana na tom uređaju.
+    const PARTNER_APP_URL = 'https://partner.vb.staytag.rs';
+    const PARTNER_PANEL_URL = PARTNER_APP_URL + '/partner.html';
     const STAMP_URL = APP_URL + '/stamp.html';
     const LOYALTY_GOAL = 10;
     const GUEST_EXPIRY_DAYS = 14;
@@ -95,7 +101,7 @@ window.STAYVB_CONFIG = (function () {
 
     function partnerUrl(accessToken) { return PARTNER_PANEL_URL + '?t=' + encodeURIComponent(accessToken); }
     function stampUrl(partnerCode) { return STAMP_URL + '?code=' + encodeURIComponent(partnerCode); }
-    function scannerUrl(scannerToken) { return APP_URL + '/scan.html?s=' + encodeURIComponent(scannerToken); }
+    function scannerUrl(scannerToken) { return PARTNER_APP_URL + '/scan.html?s=' + encodeURIComponent(scannerToken); }
 
     async function trackAction(partnerId, guestId, action) {
         const sb = getClient();
@@ -111,7 +117,7 @@ window.STAYVB_CONFIG = (function () {
 
     return {
         db: getClient,
-        APP_URL, LOYALTY_GOAL, GUEST_EXPIRY_DAYS, SAFE_PARTNER_COLUMNS,
+        APP_URL, PARTNER_APP_URL, LOYALTY_GOAL, GUEST_EXPIRY_DAYS, SAFE_PARTNER_COLUMNS,
         verifyAdmin,
         setAdminSession, checkAdminSession, clearAdminSession,
         getPartnerToken, partnerLogin, getPartnerSession, clearPartnerSession,

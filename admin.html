@@ -6,7 +6,7 @@
 <title>StayVB — God Mode Admin</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=2"></script>
+<script src="config.js?v=3"></script>
 <script src="security-guard.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
@@ -1994,7 +1994,7 @@ async function togPremium(id,val){
 async function regenToken(id){
   if(!confirm('Regenerisati URL? Stari link prestaje da radi.')) return;
   const {data} = await sb.rpc('regenerate_partner_token',{p_partner_id:id});
-  prompt('Novi URL (kopiraj i pošalji):',location.origin+'/partner.html?t='+data);
+  prompt('Novi URL (kopiraj i pošalji):', C.partnerUrl(data));
   loadPartners();
 }
 
@@ -2186,7 +2186,7 @@ async function savePartner(){
     admin_note:document.getElementById('mp-note').value.trim()||null
   }).eq('id',data[0].partner_id);
   closeModal('modal-partner');
-  alert('✅ Partner kreiran!\n\nKod: '+data[0].partner_code+'\nPIN: '+pin+'\n\nURL za partnera:\n'+location.origin+'/partner.html?t='+data[0].access_token);
+  alert('✅ Partner kreiran!\n\nKod: '+data[0].partner_code+'\nPIN: '+pin+'\n\nURL za partnera:\n'+C.partnerUrl(data[0].access_token));
   loadPartners();
 }
 
@@ -2944,7 +2944,7 @@ function renderQRList(data){
 
   list.innerHTML=pageItems.map(p=>{
     const gUrl=(p.type==='apartment'||p.type==='hotel')?`${base}index.html?id=${p.partner_code}`:`${base}stamp.html?code=${p.partner_code}`;
-    const pUrl=`${base}partner.html?t=${p.access_token}`;
+    const pUrl=C.partnerUrl(p.access_token);
     return `<div class="tbl-card" style="margin-bottom:12px;padding:18px">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
         <span class="p-code">${esc(p.partner_code)}</span>${typeBadge(p.type)}
