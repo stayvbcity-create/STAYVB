@@ -8,6 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="security-guard.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
@@ -179,6 +180,16 @@ select.field-input option{background:#1e293b;color:white}
   <div class="tabs" id="tabs-bar"></div>
 
   <div id="tabs-content"></div>
+</div>
+
+<!-- Skener za realizaciju rezervacije (čita QR kod sa telefona gosta) -->
+<div id="scanner-overlay" class="hidden" style="position:fixed;inset:0;z-index:999;background:#05070e;display:flex;flex-direction:column">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,0.08)">
+    <span style="font-size:13px;font-weight:900;color:white">📷 Skeniraj kod gosta</span>
+    <button onclick="closeScanner()" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:white;font-size:14px;cursor:pointer">✕</button>
+  </div>
+  <div id="qr-reader" style="width:100%;max-width:430px;margin:0 auto"></div>
+  <div id="scan-result" style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center"></div>
 </div>
 
 <script>
@@ -855,6 +866,7 @@ async function renderBookings(){
   if(partner.type === 'attraction'){
     const r = resources?.[0];
     resourceEditor = `
+    <button class="btn-primary" style="background:linear-gradient(135deg,#059669,#10b981);margin-bottom:12px" onclick="openScanner()">📷 Skeniraj kod gosta</button>
     <div class="panel-card" style="border-color:rgba(59,130,246,0.18);background:rgba(59,130,246,0.04)">
       <p class="panel-card-title" style="color:#93c5fd">Podešavanje termina</p>
       <div class="field-group"><label class="field-label">Naziv termina</label><input class="field-input" id="res-name" value="${esc(r?.name||'Termin')}" placeholder="npr. Vožnja, Obilazak, Sto"></div>
@@ -894,7 +906,7 @@ async function renderBookings(){
         return `<div class="booking-row">
           <div class="booking-time">${b.slot_time.slice(0,5)}</div>
           <div class="booking-info">
-            <div style="font-weight:900;color:white">${esc(b.guest_name)}</div>
+            <div style="font-weight:900;color:white">${esc(b.guest_name)} ${b.redeemed_at ? '<span style="color:#6ee7b7;font-size:10px">✓ Realizovano</span>' : ''}</div>
             <div style="color:rgba(255,255,255,0.5)">${esc(b.guest_phone)} · ${esc(res?.name||'')}</div>
           </div>
           <span class="booking-qty">${b.qty}</span>
@@ -911,6 +923,80 @@ async function cancelBooking(bookingId, btn){
   if(!confirm('Otkazati rezervaciju?')) return;
   await sb.from('bookings').update({status:'cancelled'}).eq('id', bookingId);
   btn.closest('.booking-row').remove();
+}
+
+// ── Skener za realizaciju rezervacije ──────────────────────────────
+// Gost dobije QR kod ("STAYVB:<booking_id>") posle rezervacije u
+// atrakcije.html. Atrakcija ga skenira ovde kad gost dođe/plati —
+// to postavlja bookings.redeemed_at, a baza (triger) sama upisuje
+// proviziju apartmanu ako uslovi budu ispunjeni. Ne može se lažirati
+// sa klijenta jer samo triger piše u tabelu provizija.
+let qrScanner = null;
+
+function openScanner(){
+  document.getElementById('scanner-overlay').classList.remove('hidden');
+  document.getElementById('scan-result').innerHTML = '';
+  qrScanner = new Html5Qrcode('qr-reader');
+  qrScanner.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: 230 },
+    onScanDecoded,
+    () => {}
+  ).catch(() => {
+    document.getElementById('scan-result').innerHTML = '<p style="color:#fca5a5;font-weight:800;font-size:13px">Nije moguće pristupiti kameri. Proveri dozvole browsera.</p>';
+  });
+}
+
+function closeScanner(){
+  if(qrScanner){
+    qrScanner.stop().then(() => qrScanner.clear()).catch(() => {});
+    qrScanner = null;
+  }
+  document.getElementById('scanner-overlay').classList.add('hidden');
+}
+
+let scanLock = false;
+async function onScanDecoded(decodedText){
+  if(scanLock) return;
+  const m = /^STAYVB:([0-9a-f-]{20,})$/i.exec((decodedText || '').trim());
+  if(!m) return; // nije naš kod, nastavi skeniranje
+
+  scanLock = true;
+  if(qrScanner) qrScanner.pause(true);
+  const bookingId = m[1];
+  const resultEl = document.getElementById('scan-result');
+  resultEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);font-weight:700;font-size:13px">Provera...</p>';
+
+  try{
+    const { data:booking, error } = await sb.from('bookings')
+      .select('id, status, redeemed_at, guest_name, resource_id, bookable_resources(name, partner_id)')
+      .eq('id', bookingId).maybeSingle();
+
+    if(error || !booking){
+      resultEl.innerHTML = '<p style="color:#fca5a5;font-weight:900;font-size:14px">⚠️ Kod nije prepoznat.</p>';
+    } else if(booking.bookable_resources?.partner_id !== partner.id){
+      resultEl.innerHTML = '<p style="color:#fca5a5;font-weight:900;font-size:14px">⚠️ Ova rezervacija ne pripada vašem biznisu.</p>';
+    } else if(booking.status === 'cancelled'){
+      resultEl.innerHTML = '<p style="color:#fca5a5;font-weight:900;font-size:14px">⚠️ Rezervacija je otkazana.</p>';
+    } else if(booking.redeemed_at){
+      resultEl.innerHTML = `<p style="color:#fcd34d;font-weight:900;font-size:14px">⚠️ Kod je već iskorišćen<br><span style="font-size:11px;font-weight:700">${new Date(booking.redeemed_at).toLocaleString('sr-RS')}</span></p>`;
+    } else {
+      const { error: updErr } = await sb.from('bookings').update({ redeemed_at: new Date().toISOString() }).eq('id', bookingId);
+      if(updErr){
+        resultEl.innerHTML = '<p style="color:#fca5a5;font-weight:900;font-size:14px">⚠️ Greška, pokušaj ponovo.</p>';
+      } else {
+        resultEl.innerHTML = `<div><div style="font-size:2.5rem;margin-bottom:8px">✅</div><p style="color:#6ee7b7;font-weight:900;font-size:15px;margin:0 0 4px">${esc(booking.guest_name)}</p><p style="color:rgba(255,255,255,0.6);font-weight:700;font-size:12px">${esc(booking.bookable_resources?.name||'')} — realizovano</p></div>`;
+      }
+    }
+  } catch(e){
+    resultEl.innerHTML = '<p style="color:#fca5a5;font-weight:900;font-size:14px">⚠️ Greška, pokušaj ponovo.</p>';
+  }
+
+  setTimeout(() => {
+    scanLock = false;
+    if(qrScanner){ try{ qrScanner.resume(); }catch(e){} }
+    resultEl.innerHTML = '';
+  }, 2500);
 }
 
 async function saveResource(resId){

@@ -12,6 +12,7 @@
 <script src="config.js"></script>
 <script src="lang-init.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
 *{box-sizing:border-box}
@@ -161,6 +162,21 @@ body{top:0!important}
 const sb = C.db();
 const LANG = localStorage.getItem('stayvb_lang') || 'sr';
 let allAttr = [], activeFilter = '', currentPartner = null, currentResources = [], selectedResource = null, selectedSlot = null;
+let currentAccommodationId = null;
+
+// Ko je gost koji rezerviše — treba nam apartman (ako postoji) da bismo
+// znali kome eventualno pripada provizija kad se rezervacija realizuje.
+async function resolveAccommodation(){
+  let unitId = (new URLSearchParams(location.search).get('id') || '').toUpperCase();
+  if(!unitId){
+    try{ unitId = (localStorage.getItem('stayvb_unit_id') || '').toUpperCase(); }catch(e){}
+  }
+  if(!unitId) return;
+  try{
+    const { data } = await sb.from('partners').select('id').eq('partner_code', unitId).eq('is_active', true).maybeSingle();
+    if(data) currentAccommodationId = data.id;
+  }catch(e){ /* nastavi bez toga */ }
+}
 
 const CAT_ICONS = {outdoor:'🏕',sport:'⚽',voda:'💧',kultura:'🎭',default:'🎡'};
 
@@ -323,16 +339,17 @@ async function confirmBooking(){
   const { data:g } = await sb.from('guests').select('id').eq('token', guestToken).maybeSingle();
   if(g) guestId = g.id;
 
-  const { error } = await sb.from('bookings').insert({
+  const { data:inserted, error } = await sb.from('bookings').insert({
     resource_id:  selectedResource.id,
     guest_id:     guestId,
+    accommodation_id: currentAccommodationId,
     booking_date: date,
     slot_time:    selectedSlot,
     qty,
     guest_name:   name,
     guest_phone:  phone,
     status:       'confirmed'
-  });
+  }).select('id').single();
 
   if(error){
     document.getElementById('booking-msg').textContent = error.code === '23505' ? '⚠️ Taj termin je već zauzet.' : '⚠️ Greška. Pokušaj ponovo.';
@@ -347,11 +364,18 @@ async function confirmBooking(){
         <div style="font-size:3rem;margin-bottom:16px">✅</div>
         <h2 style="font-size:1.3rem;font-weight:900;color:#065f46;margin:0 0 8px">Rezervacija potvrđena!</h2>
         <p style="font-size:13px;color:#475569;font-weight:600;margin:0 0 6px">${C.escapeHtml(currentPartner.name)}</p>
-        <p style="font-size:13px;color:#10b981;font-weight:900;margin:0 0 24px">📅 ${date} u ${selectedSlot.slice(0,5)} · ${qty} ${qty===1?'osoba':'osoba'}</p>
+        <p style="font-size:13px;color:#10b981;font-weight:900;margin:0 0 20px">📅 ${date} u ${selectedSlot.slice(0,5)} · ${qty} ${qty===1?'osoba':'osoba'}</p>
+        <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:1.5rem;padding:18px;margin-bottom:20px">
+          <canvas id="booking-qr-canvas" style="margin:0 auto 10px;display:block"></canvas>
+          <p style="font-size:11px;color:#64748b;font-weight:700;line-height:1.5;margin:0">Pokaži ovaj kod na licu mesta — osoblje ga skenira kad dođeš.</p>
+        </div>
         <button onclick="closeBooking()" style="width:100%;padding:16px;background:#0f172a;color:white;border:none;border-radius:1.2rem;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit">Zatvori</button>
       </div>
     </div>`;
   document.getElementById('booking-modal').classList.add('open');
+  if(inserted?.id && window.QRCode){
+      QRCode.toCanvas(document.getElementById('booking-qr-canvas'), 'STAYVB:' + inserted.id, { width: 170, margin: 1 }, () => {});
+  }
   C.trackAction(currentPartner.id, guestId, 'booking_made');
 }
 
@@ -361,6 +385,7 @@ function closeBooking(){
 
 async function init(){
   buildLangPills();
+  resolveAccommodation();
 
   // Prikaži loader
   document.getElementById('attr-list').innerHTML = `<div style="text-align:center;padding:40px 20px"><div style="font-size:2rem;margin-bottom:8px">⏳</div><p style="font-size:13px;font-weight:700;color:#64748b">Učitavanje...</p></div>`;
