@@ -213,7 +213,7 @@ async function doLogin(){
   // Sigurnosna mera: RPC ponekad ne vraća sve kolone (npr. nove kolone dodate posle RPC definicije)
   // Dovuci svez red direktno iz partners tabele da budemo sigurni da imamo najnovije podatke
   try {
-    const { data: freshPartner } = await sb.from('partners').select('id, name, type, partner_code, is_active, is_premium, loyalty_enabled, has_booking, hh_active, hh_date, hh_start, hh_end, lat, lng, phone, whatsapp, created_at, updated_at, plan, city_category_id, show_in_city_info, referral_active, referral_discount, referral_code, hh_visibility, google_review_url, hide_competitors').eq('id', partner.id).maybeSingle();
+    const { data: freshPartner } = await sb.from('partners').select('id, name, type, partner_code, is_active, is_premium, loyalty_enabled, has_booking, hh_active, hh_date, hh_start, hh_end, lat, lng, phone, whatsapp, created_at, updated_at, plan, city_category_id, show_in_city_info, referral_active, referral_discount, referral_code, hh_visibility, google_review_url, hide_competitors, commission_sharing_active, apartment_commission_pct').eq('id', partner.id).maybeSingle();
     if(freshPartner) partner = { ...partner, ...freshPartner };
   } catch(e){ console.log('fresh partner fetch skip:', e.message); }
 
@@ -271,6 +271,7 @@ function buildTabs(){
   // Apartman/Hotel - Smeštaj
   if(type === 'apartment' || type === 'hotel') tabs.push({id:'stay',     icon:'🏠', label:'Smeštaj',    render: renderStay});
   if((type === 'apartment' || type === 'hotel') && partner.is_premium) tabs.push({id:'accommodation', icon:'🛎️', label:'Rezervacije', render: renderAccommodation});
+  if(type === 'apartment' && partner.is_premium) tabs.push({id:'earnings', icon:'💰', label:'Zarada', render: renderEarnings});
   if(type === 'hotel' || type === 'restaurant' || type === 'attraction') tabs.push({id:'hh', icon:'🍹', label:'Happy Hour', render: renderHH});
   if(type === 'business') tabs.push({id:'promo',    icon:'📢', label:'Promocije',  render: renderPromo});
   if(type === 'hotel' || type === 'attraction') tabs.push({id:'info', icon:'ℹ️',  label:'Info',        render: renderInfo});
@@ -873,7 +874,24 @@ async function renderBookings(){
       <div class="field-group"><label class="field-label">Kapacitet po terminu</label><input type="number" class="field-input" id="res-qty" value="${r?.total_qty||10}" min="1" max="999"></div>
       <button class="btn-primary" onclick="saveResource('${r?.id||''}')">💾 Sačuvaj podešavanje</button>
       <p class="save-msg" id="res-msg"></p>
-    </div>`;
+    </div>
+    <div class="panel-card" style="border-color:rgba(16,185,129,0.18);background:rgba(16,185,129,0.04)">
+      <p class="panel-card-title" style="color:#6ee7b7">Provizija za apartmane</p>
+      <p style="font-size:11px;color:rgba(255,255,255,0.45);font-weight:600;line-height:1.5;margin:-8px 0 12px">Kad gost Premium apartmana kod vas realizuje rezervaciju, apartmanu se knjiži procenat koji ovde odredite.</p>
+      <label style="display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;cursor:pointer;padding:12px;background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.18);border-radius:1.2rem;margin-bottom:10px">
+        <input type="checkbox" id="comm-active" ${partner.commission_sharing_active?'checked':''} onchange="document.getElementById('comm-pct-wrap').style.display=this.checked?'block':'none'" style="width:18px;height:18px;accent-color:#10b981;flex-shrink:0">
+        <div>
+          <div style="font-weight:900;color:#6ee7b7">Delim proviziju sa apartmanima</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:2px">Isključeno — apartmani ne vide ponudu kao izvor zarade</div>
+        </div>
+      </label>
+      <div id="comm-pct-wrap" style="display:${partner.commission_sharing_active?'block':'none'}">
+        <div class="field-group"><label class="field-label">Procenat koji dajete apartmanu (%)</label><input type="number" class="field-input" id="comm-pct" value="${partner.apartment_commission_pct||10}" min="1" max="100"></div>
+      </div>
+      <button class="btn-primary" onclick="saveCommissionSettings()">💾 Sačuvaj proviziju</button>
+      <p class="save-msg" id="comm-msg"></p>
+    </div>
+    ${await renderAttractionDebts()}`;
   }
 
   if(!resources?.length){
@@ -997,6 +1015,22 @@ async function onScanDecoded(decodedText){
     if(qrScanner){ try{ qrScanner.resume(); }catch(e){} }
     resultEl.innerHTML = '';
   }, 2500);
+}
+
+async function saveCommissionSettings(){
+  const active = document.getElementById('comm-active').checked;
+  const pct = Math.max(1, Math.min(100, parseInt(document.getElementById('comm-pct').value) || 10));
+  const msg = document.getElementById('comm-msg');
+  const { error } = await sb.from('partners').update({
+    commission_sharing_active: active,
+    apartment_commission_pct: pct
+  }).eq('id', partner.id);
+  if(error){ msg.style.color = '#fca5a5'; msg.textContent = '⚠️ Greška pri čuvanju.'; return; }
+  partner.commission_sharing_active = active;
+  partner.apartment_commission_pct = pct;
+  msg.style.color = '#6ee7b7';
+  msg.textContent = '✓ Sačuvano!';
+  setTimeout(() => { msg.textContent=''; }, 1500);
 }
 
 async function saveResource(resId){
@@ -1141,6 +1175,122 @@ async function renderReviews(){
       </div>
     </div>
     ${listHtml}`;
+}
+
+// ── Zarada Tab (Premium apartmani) ──────────────────────────────────
+async function renderEarnings(){
+  const el = document.getElementById('tab-earnings');
+  el.innerHTML = '<p style="font-size:12px;color:rgba(255,255,255,0.4);font-weight:700">Učitavanje...</p>';
+
+  const { data:commissions } = await sb.from('apartment_commissions')
+    .select('*, bookings(guest_name, booking_date), attraction:partners!apartment_commissions_attraction_partner_id_fkey(name)')
+    .eq('apartment_partner_id', partner.id)
+    .order('created_at', {ascending:false});
+
+  const { data:attractions } = await sb.from('partners')
+    .select('name, apartment_commission_pct')
+    .eq('type','attraction').eq('is_active', true).eq('commission_sharing_active', true)
+    .order('apartment_commission_pct', {ascending:false});
+
+  const rows = commissions || [];
+  const totalPaid = rows.filter(c => c.paid_at).reduce((s,c) => s + c.amount_rsd, 0);
+  const totalPending = rows.filter(c => !c.paid_at).reduce((s,c) => s + c.amount_rsd, 0);
+
+  let listHtml = '';
+  if(!rows.length){
+    listHtml = '<p style="font-size:12px;color:rgba(255,255,255,0.35);font-weight:700">Još nema realizovanih rezervacija vaših gostiju.</p>';
+  } else {
+    listHtml = rows.map(c => {
+      const when = c.bookings?.booking_date ? new Date(c.bookings.booking_date).toLocaleDateString('sr-RS') : '';
+      return `
+      <div class="panel-card" style="${c.paid_at?'opacity:0.55':''}">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div>
+            <div style="font-weight:900;color:white">${esc(c.attraction?.name||'Atrakcija')}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:2px">${esc(c.bookings?.guest_name||'')} · ${when} · ${c.commission_pct_applied}%</div>
+          </div>
+          <div style="font-weight:900;color:#fcd34d;font-size:15px;white-space:nowrap">${c.amount_rsd.toLocaleString('sr-RS')} RSD</div>
+        </div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between">
+          ${c.paid_at
+            ? '<span style="font-size:10px;font-weight:900;color:#6ee7b7;text-transform:uppercase">✓ Isplaćeno (potvrđeno obostrano)</span>'
+            : `<label style="display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);cursor:pointer">
+                <input type="checkbox" ${c.apartment_paid_confirmed?'checked':''} onchange="toggleApartmentPaidConfirm('${c.id}', this.checked)" style="width:16px;height:16px;accent-color:#10b981">
+                Potvrđujem da sam primio/la isplatu
+               </label>`}
+          ${!c.paid_at && c.apartment_paid_confirmed ? '<span style="font-size:10px;color:#fcd34d;font-weight:800">Čeka se potvrda atrakcije</span>' : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  const attrHtml = (attractions||[]).length
+    ? attractions.map(a => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:12px"><span style="color:rgba(255,255,255,0.7);font-weight:700">${esc(a.name)}</span><span style="color:#6ee7b7;font-weight:900">${a.apartment_commission_pct}%</span></div>`).join('')
+    : '<p style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:700">Trenutno nijedna atrakcija ne deli proviziju.</p>';
+
+  el.innerHTML = `
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <div class="panel-card" style="flex:1;text-align:center;padding:14px">
+        <div style="font-size:1.3rem;font-weight:900;color:#6ee7b7">${totalPaid.toLocaleString('sr-RS')}</div>
+        <div style="font-size:9px;font-weight:800;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-top:2px">Isplaćeno (RSD)</div>
+      </div>
+      <div class="panel-card" style="flex:1;text-align:center;padding:14px">
+        <div style="font-size:1.3rem;font-weight:900;color:#fcd34d">${totalPending.toLocaleString('sr-RS')}</div>
+        <div style="font-size:9px;font-weight:800;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-top:2px">Na čekanju (RSD)</div>
+      </div>
+    </div>
+    ${listHtml}
+    <div class="panel-card" style="margin-top:16px">
+      <p class="panel-card-title">Atrakcije koje dele proviziju</p>
+      ${attrHtml}
+    </div>`;
+}
+
+async function toggleApartmentPaidConfirm(commissionId, checked){
+  await sb.from('apartment_commissions').update({ apartment_paid_confirmed: checked }).eq('id', commissionId);
+  renderEarnings();
+}
+
+// ── Dugovanja apartmanima (prikazano atrakciji u Rezerv. tabu) ─────
+async function renderAttractionDebts(){
+  const { data:rows } = await sb.from('apartment_commissions')
+    .select('*, apartment:partners!apartment_commissions_apartment_partner_id_fkey(name)')
+    .eq('attraction_partner_id', partner.id)
+    .is('paid_at', null)
+    .order('created_at', {ascending:false});
+
+  if(!rows?.length){
+    return `<div class="panel-card">
+      <p class="panel-card-title">Dugovanja apartmanima</p>
+      <p style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:700">Trenutno nema neisplaćenih provizija.</p>
+    </div>`;
+  }
+
+  const total = rows.reduce((s,c) => s + c.amount_rsd, 0);
+  const list = rows.map(c => `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+      <div>
+        <div style="font-weight:800;color:white;font-size:12px">${esc(c.apartment?.name||'Apartman')}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4)">${new Date(c.created_at).toLocaleDateString('sr-RS')} · ${c.amount_rsd.toLocaleString('sr-RS')} RSD</div>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.6);cursor:pointer;white-space:nowrap">
+        <input type="checkbox" ${c.attraction_paid_confirmed?'checked':''} onchange="toggleAttractionPaidConfirm('${c.id}', this.checked)" style="width:15px;height:15px;accent-color:#10b981">
+        Isplatio/la sam
+      </label>
+    </div>`).join('');
+
+  return `<div class="panel-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <p class="panel-card-title" style="margin:0">Dugovanja apartmanima</p>
+      <span style="font-weight:900;color:#fcd34d;font-size:13px">${total.toLocaleString('sr-RS')} RSD</span>
+    </div>
+    ${list}
+  </div>`;
+}
+
+async function toggleAttractionPaidConfirm(commissionId, checked){
+  await sb.from('apartment_commissions').update({ attraction_paid_confirmed: checked }).eq('id', commissionId);
+  renderBookings();
 }
 
 // ── Stats Tab ─────────────────────────────────────────────────────
@@ -1424,7 +1574,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     // (is_active, is_premium, plan, hh_active...) da UI ne bi prikazivao pogrešno stanje
     let fresh = null;
     try {
-      const { data } = await sb.from('partners').select('id, name, type, partner_code, is_active, is_premium, loyalty_enabled, has_booking, hh_active, hh_date, hh_start, hh_end, lat, lng, phone, whatsapp, created_at, updated_at, plan, city_category_id, show_in_city_info, referral_active, referral_discount, referral_code, hh_visibility, google_review_url, hide_competitors').eq('id', saved.id).maybeSingle();
+      const { data } = await sb.from('partners').select('id, name, type, partner_code, is_active, is_premium, loyalty_enabled, has_booking, hh_active, hh_date, hh_start, hh_end, lat, lng, phone, whatsapp, created_at, updated_at, plan, city_category_id, show_in_city_info, referral_active, referral_discount, referral_code, hh_visibility, google_review_url, hide_competitors, commission_sharing_active, apartment_commission_pct').eq('id', saved.id).maybeSingle();
       fresh = data;
     } catch(e){ console.log('auto-login fresh fetch skip:', e.message); }
 

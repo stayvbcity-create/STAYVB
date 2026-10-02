@@ -197,6 +197,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="nav-section">Finansije</div>
     <div class="nav-item" onclick="nav('billing',this)"><span class="nav-icon">💰</span>Naplata<span class="nav-badge" id="nb-billing">0</span></div>
     <div class="nav-item" onclick="nav('revenue',this)"><span class="nav-icon">📋</span>Prihodi</div>
+    <div class="nav-item" onclick="nav('commissions',this)"><span class="nav-icon">🤝</span>Provizije</div>
     <div class="nav-section">Alati</div>
     <div class="nav-item" onclick="nav('qr',this)"><span class="nav-icon">📱</span>QR Generator</div>
     <div class="nav-section">Marketing</div>
@@ -623,6 +624,37 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       </div>
     </div>
 
+    <!-- ═══ PROVIZIJE (apartman ↔ atrakcija) ═══ -->
+    <div id="page-commissions" class="page">
+      <div class="sec-header">
+        <div><div class="sec-title">Provizije</div><div class="sec-sub">Ko kome duguje — apartman ↔ atrakcija, posle realizovanih rezervacija</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="loadCommissions()">🔄 Osveži</button>
+      </div>
+      <div class="billing-summary" style="margin-bottom:16px">
+        <div class="billing-sum-card"><div class="billing-sum-num" id="comm-total-pending" style="color:var(--red)">—</div><div class="billing-sum-label">Na čekanju (RSD)</div></div>
+        <div class="billing-sum-card"><div class="billing-sum-num" id="comm-total-paid" style="color:var(--green)">—</div><div class="billing-sum-label">✓ Isplaćeno (RSD)</div></div>
+        <div class="billing-sum-card"><div class="billing-sum-num" id="comm-stale-count" style="color:var(--gold)">—</div><div class="billing-sum-label">Neskenirane rezervacije (prošao datum)</div></div>
+      </div>
+      <div class="tbl-card" style="margin-bottom:16px">
+        <div class="tbl-header"><div class="tbl-title">Knjižene provizije</div></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>Datum</th><th>Apartman</th><th>Atrakcija</th><th>Gost</th><th>%</th><th>Iznos</th><th>Apartman potvrdio</th><th>Atrakcija potvrdila</th><th>Status</th></tr></thead>
+            <tbody id="comm-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="tbl-card">
+        <div class="tbl-header"><div class="tbl-title">⚠️ Rezervacije bez skeniranja (prošao datum termina)</div></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>Datum</th><th>Atrakcija</th><th>Gost</th><th>Status</th></tr></thead>
+            <tbody id="comm-stale-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══ PRIJAVE ═══ -->
     <div id="page-leads" class="page">
       <div class="sec-header">
@@ -1043,6 +1075,7 @@ const PAGE_META = {
   events:['Gradski događaji','Javni kalendar'],
   billing:['Naplata','Mesečna pretplata po partneru'],
   revenue:['Prihodi','Istorija naplate'],
+  commissions:['Provizije','Apartman ↔ atrakcija — ko kome duguje'],
   qr:['QR Generator','QR kodovi i partner URL-ovi'],
   leads:['Prijave partnera','Zainteresovani vlasnici objekata'],
   landingviews:['Landing posete','Posete join.html po danima'],
@@ -1055,7 +1088,7 @@ const LOADERS = {
   dashboard:loadDashboard, stats:loadStats, partners:loadPartners,
   stamps:loadStamps, loyalty:loadLoyalty, events:loadEvents,
   billing:loadBilling, revenue:loadRevenue, qr:loadQR, properties:loadProperties, leads:loadLeads, landingviews:loadLandingViews,
-  notifications:loadNotifications
+  notifications:loadNotifications, commissions:loadCommissions
 };
 
 function nav(id, el){
@@ -2407,6 +2440,53 @@ async function loadRevenue(){
         <td></td>
       </tr></tfoot>
     </table>`;
+}
+
+// ── Provizije (apartman ↔ atrakcija) ────────────────────────────────
+async function loadCommissions(){
+  const { data:rows } = await sb.from('apartment_commissions')
+    .select('*, apartment:partners!apartment_commissions_apartment_partner_id_fkey(name), attraction:partners!apartment_commissions_attraction_partner_id_fkey(name), bookings(guest_name, booking_date)')
+    .order('created_at', {ascending:false});
+
+  const all = rows || [];
+  const totalPending = all.filter(c=>!c.paid_at).reduce((s,c)=>s+c.amount_rsd,0);
+  const totalPaid = all.filter(c=>c.paid_at).reduce((s,c)=>s+c.amount_rsd,0);
+  document.getElementById('comm-total-pending').textContent = totalPending.toLocaleString('sr-RS');
+  document.getElementById('comm-total-paid').textContent = totalPaid.toLocaleString('sr-RS');
+
+  const tbody = document.getElementById('comm-tbody');
+  tbody.innerHTML = all.length ? all.map(c => `
+    <tr>
+      <td>${fmtDate(c.created_at)}</td>
+      <td style="font-weight:800">${esc(c.apartment?.name||'—')}</td>
+      <td>${esc(c.attraction?.name||'—')}</td>
+      <td>${esc(c.bookings?.guest_name||'—')}</td>
+      <td>${c.commission_pct_applied}%</td>
+      <td style="font-weight:800;color:var(--gold)">${fmtRsd(c.amount_rsd)}</td>
+      <td>${c.apartment_paid_confirmed ? '✓' : '—'}</td>
+      <td>${c.attraction_paid_confirmed ? '✓' : '—'}</td>
+      <td>${c.paid_at ? '<span class="badge b-paid">✓ Isplaćeno</span>' : '<span class="badge b-pending">Na čekanju</span>'}</td>
+    </tr>`).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:16px">Još nema knjiženih provizija.</td></tr>';
+
+  // Rezervacije koje su prošle a nikad skenirane — signal za moguću sankciju atrakcije
+  const today = new Date().toISOString().split('T')[0];
+  const { data:stale } = await sb.from('bookings')
+    .select('booking_date, guest_name, status, bookable_resources(name)')
+    .lt('booking_date', today)
+    .eq('status', 'confirmed')
+    .is('redeemed_at', null)
+    .order('booking_date', {ascending:false})
+    .limit(100);
+
+  document.getElementById('comm-stale-count').textContent = stale?.length || 0;
+  const staleTbody = document.getElementById('comm-stale-tbody');
+  staleTbody.innerHTML = stale?.length ? stale.map(b => `
+    <tr>
+      <td>${fmtDate(b.booking_date)}</td>
+      <td style="font-weight:800">${esc(b.bookable_resources?.name||'—')}</td>
+      <td>${esc(b.guest_name)}</td>
+      <td><span class="badge b-pending">Nije skenirano</span></td>
+    </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">Nema zaostalih, neskeniranih rezervacija.</td></tr>';
 }
 
 // ── Stamps ────────────────────────────────────────────────────────
