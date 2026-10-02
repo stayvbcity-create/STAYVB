@@ -105,6 +105,22 @@ body{top:0!important}
   </div>
 </div>
 
+<!-- Dugme za ponovno otvaranje aktivnog koda (dok se ne realizuje) -->
+<button id="my-code-btn" onclick="openMyCodeModal()" style="display:none;position:fixed;bottom:20px;right:20px;z-index:200;padding:14px 20px;border-radius:999px;background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;font-size:12px;font-weight:900;box-shadow:0 8px 24px rgba(16,185,129,0.4);cursor:pointer;align-items:center;gap:6px;font-family:inherit">🎫 Moj kod</button>
+
+<!-- Modal za prikaz aktivnih kodova -->
+<div id="my-code-modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(15,23,42,0.90);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;padding:0">
+  <div class="modal-sheet" style="position:relative">
+    <button class="modal-close" onclick="closeMyCodeModal()">✕</button>
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <h2 class="modal-title">Moji kodovi</h2>
+      <p style="font-size:11px;color:#94a3b8;font-weight:700;margin:0">Važe dok ih ne skenira osoblje na licu mesta</p>
+    </div>
+    <div class="modal-body" id="my-code-list"></div>
+  </div>
+</div>
+
 <!-- Booking Modal -->
 <div id="booking-modal">
   <div class="modal-sheet" style="position:relative">
@@ -377,15 +393,69 @@ async function confirmBooking(){
       QRCode.toCanvas(document.getElementById('booking-qr-canvas'), 'STAYVB:' + inserted.id, { width: 170, margin: 1 }, () => {});
   }
   C.trackAction(currentPartner.id, guestId, 'booking_made');
+  refreshMyCodeButton();
 }
 
 function closeBooking(){
   document.getElementById('booking-modal').classList.remove('open');
 }
 
+// ── Aktivni kodovi gosta (nerealizovane rezervacije) ───────────────
+// Kod se čuva vezan za guest_token (localStorage), isti po kom gost
+// već ima svoj profil u "guests" tabeli — tako gost u bilo kom trenutku
+// može ponovo da otvori kod, sve dok ga atrakcija ne skenira.
+async function fetchMyActiveBookings(){
+  const guestToken = C.getOrCreateGuestToken();
+  const { data:g } = await sb.from('guests').select('id').eq('token', guestToken).maybeSingle();
+  if(!g) return [];
+  const { data:bookings } = await sb.from('bookings')
+    .select('id, booking_date, slot_time, qty, resource_id, bookable_resources(name, partners(name))')
+    .eq('guest_id', g.id)
+    .eq('status', 'confirmed')
+    .is('redeemed_at', null)
+    .order('created_at', { ascending:false });
+  return bookings || [];
+}
+
+async function refreshMyCodeButton(){
+  const bookings = await fetchMyActiveBookings();
+  document.getElementById('my-code-btn').style.display = bookings.length ? 'flex' : 'none';
+}
+
+async function openMyCodeModal(){
+  const modal = document.getElementById('my-code-modal');
+  const list = document.getElementById('my-code-list');
+  list.innerHTML = '<p style="text-align:center;padding:20px;font-size:13px;color:#64748b;font-weight:700">Učitavanje...</p>';
+  modal.style.display = 'flex';
+
+  const bookings = await fetchMyActiveBookings();
+  if(!bookings.length){
+    list.innerHTML = '<p style="text-align:center;padding:20px;font-size:13px;color:#64748b;font-weight:700">Nemaš aktivnih kodova.</p>';
+    document.getElementById('my-code-btn').style.display = 'none';
+    return;
+  }
+
+  list.innerHTML = bookings.map((b,i) => `
+    <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:1.5rem;padding:18px;margin-bottom:14px;text-align:center">
+      <p style="font-size:13px;font-weight:900;color:#065f46;margin:0 0 2px">${C.escapeHtml(b.bookable_resources?.partners?.name||'')}</p>
+      <p style="font-size:11px;color:#64748b;font-weight:700;margin:0 0 12px">${C.escapeHtml(b.bookable_resources?.name||'')} · 📅 ${b.booking_date} u ${(b.slot_time||'').slice(0,5)} · ${b.qty} ${b.qty===1?'osoba':'osoba'}</p>
+      <canvas id="my-code-qr-${i}" style="margin:0 auto 10px;display:block"></canvas>
+      <p style="font-size:11px;color:#64748b;font-weight:700;line-height:1.5;margin:0">Pokaži ovaj kod na licu mesta — osoblje ga skenira kad dođeš.</p>
+    </div>`).join('');
+
+  bookings.forEach((b,i) => {
+    if(window.QRCode) QRCode.toCanvas(document.getElementById('my-code-qr-'+i), 'STAYVB:' + b.id, { width:170, margin:1 }, () => {});
+  });
+}
+
+function closeMyCodeModal(){
+  document.getElementById('my-code-modal').style.display = 'none';
+}
+
 async function init(){
   buildLangPills();
   resolveAccommodation();
+  refreshMyCodeButton();
 
   // Prikaži loader
   document.getElementById('attr-list').innerHTML = `<div style="text-align:center;padding:40px 20px"><div style="font-size:2rem;margin-bottom:8px">⏳</div><p style="font-size:13px;font-weight:700;color:#64748b">Učitavanje...</p></div>`;
