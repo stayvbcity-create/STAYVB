@@ -951,11 +951,15 @@ async function cancelBooking(bookingId, btn){
 // to je isti link koji se može dati i zaposlenom, bez pristupa ostatku
 // panela. Vlasnik ovde samo otvara svoj trenutni link.
 async function openOwnScanner(){
-  let scannerToken = await C.db().rpc('get_scanner_token', { p_access_token: token }).then(r => r.data);
+  let r = await C.db().rpc('get_scanner_token', { p_access_token: token });
+  let scannerToken = r.data;
+  if(r.error) console.error('get_scanner_token:', r.error);
   if(!scannerToken){
-    scannerToken = await C.db().rpc('regenerate_scanner_token', { p_access_token: token }).then(r => r.data);
+    r = await C.db().rpc('regenerate_scanner_token', { p_access_token: token });
+    scannerToken = r.data;
+    if(r.error) console.error('regenerate_scanner_token:', r.error);
   }
-  if(!scannerToken){ alert('Greška, pokušaj ponovo.'); return; }
+  if(!scannerToken){ alert('Greška: ' + (r.error?.message || 'nepoznata') + '\n\nProveri da li je scanner_token.sql pokrenut u Supabase.'); return; }
   window.open(C.scannerUrl(scannerToken), '_blank');
 }
 

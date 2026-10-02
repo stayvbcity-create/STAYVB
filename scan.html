@@ -45,9 +45,10 @@ async function init(){
   if(!scannerToken){ msgEl.textContent = 'Nevažeći link.'; return; }
 
   const { data, error } = await sb.rpc('scanner_login', { p_scanner_token: scannerToken });
+  if(error) console.error('scanner_login:', error);
   if(error || !data || data.length === 0){
     document.getElementById('msg-screen').querySelector('p').textContent = '⚠️';
-    msgEl.textContent = 'Nevažeći ili istekao link. Zatraži nov link od vlasnika.';
+    msgEl.textContent = 'Nevažeći ili istekao link. Zatraži nov link od vlasnika.' + (error ? (' (' + error.message + ')') : '');
     return;
   }
 
