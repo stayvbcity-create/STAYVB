@@ -188,6 +188,17 @@ select.field-input option{background:#1e293b;color:white}
   <div id="tabs-content"></div>
 </div>
 
+<!-- Ponuda za instalaciju StayVB Partner aplikacije (odvojena od gostinske) -->
+<div id="partner-install-prompt" style="display:none;position:fixed;inset:0;z-index:998;background:rgba(15,23,42,0.92);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center">
+  <div style="background:white;border-top-left-radius:2.5rem;border-top-right-radius:2.5rem;width:100%;max-width:430px;padding:40px 28px 48px;text-align:center;position:relative">
+    <button onclick="closePartnerInstallPrompt()" style="position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;background:#f1f5f9;border:none;font-size:13px;cursor:pointer;color:#0f172a">✕</button>
+    <div style="width:64px;height:64px;border-radius:20px;background:#fff8e1;border:2px solid #d4af37;display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 18px">📲</div>
+    <p style="color:#0f172a;font-size:17px;font-weight:900;letter-spacing:-0.02em;margin:0 0 8px">Instaliraj StayVB Partner</p>
+    <p id="partner-install-instruction" style="color:#0f172a;opacity:0.72;font-size:13px;font-weight:700;line-height:1.5;max-width:280px;margin:0 auto 24px">Posebna aplikacija samo za partnere — brži pristup panelu, bez otvaranja browsera i ponovnog kucanja linka.</p>
+    <button id="partner-install-action-btn" onclick="installPartnerApp()" style="width:100%;max-width:280px;padding:16px;border-radius:1.25rem;background:#d4af37;color:#0f172a;font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:0.06em;border:none;cursor:pointer;box-shadow:0 10px 24px rgba(212,175,55,0.35)">Instaliraj</button>
+  </div>
+</div>
+
 <script>
 const sb = C.db();
 const token = C.getPartnerToken();
@@ -216,15 +227,36 @@ if('serviceWorker' in navigator){
 }
 
 let deferredInstallPrompt = null;
+const isIOSDevice = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+const INSTALL_DISMISS_KEY = 'stayvb_partner_install_dismissed_at';
+
+function installDismissedRecently(){
+  const ts = parseInt(localStorage.getItem(INSTALL_DISMISS_KEY) || '0');
+  return (Date.now() - ts) < 7 * 24 * 60 * 60 * 1000; // ne gnjavi 7 dana posle "Zatvori"
+}
+
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredInstallPrompt = e;
-  if(!isStandalone()) document.getElementById('install-btn').style.display = 'block';
+  if(!isStandalone()){
+    document.getElementById('install-btn').style.display = 'block';
+    if(partner && !installDismissedRecently()) showPartnerInstallPrompt();
+  }
 });
 window.addEventListener('appinstalled', () => {
   deferredInstallPrompt = null;
   document.getElementById('install-btn').style.display = 'none';
+  closePartnerInstallPrompt();
 });
+
+function showPartnerInstallPrompt(){
+  if(isStandalone()) return;
+  document.getElementById('partner-install-prompt').style.display = 'flex';
+}
+function closePartnerInstallPrompt(){
+  document.getElementById('partner-install-prompt').style.display = 'none';
+  localStorage.setItem(INSTALL_DISMISS_KEY, Date.now().toString());
+}
 
 async function installPartnerApp(){
   if(deferredInstallPrompt){
@@ -232,17 +264,21 @@ async function installPartnerApp(){
     try{ await deferredInstallPrompt.userChoice; }catch(e){}
     deferredInstallPrompt = null;
     document.getElementById('install-btn').style.display = 'none';
+    closePartnerInstallPrompt();
     return;
   }
-  if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){
-    alert('Na iPhone-u: otvori ovu stranicu u Safari-ju, klikni Share (📤) pa "Add to Home Screen".');
+  if(isIOSDevice){
+    document.getElementById('partner-install-instruction').textContent = 'Na iPhone-u: klikni Share (📤) dole na ekranu, pa "Add to Home Screen".';
+    showPartnerInstallPrompt();
+    document.getElementById('partner-install-action-btn').textContent = 'Razumem';
+    document.getElementById('partner-install-action-btn').onclick = closePartnerInstallPrompt;
   } else {
     alert('Otvori meni browsera (⋮) i izaberi "Dodaj na početni ekran" ili "Instaliraj aplikaciju".');
   }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  if(/iPhone|iPad|iPod/i.test(navigator.userAgent) && !isStandalone()){
+  if(isIOSDevice && !isStandalone()){
     document.getElementById('install-btn').style.display = 'block';
   }
 });
@@ -282,6 +318,13 @@ async function doLogin(){
   document.getElementById('pin-screen').classList.add('hidden');
   document.getElementById('main-app').classList.remove('hidden');
   initApp();
+
+  // Ponudi instalaciju StayVB Partner aplikacije (iOS nema beforeinstallprompt
+  // event pa se nudi direktno; Android/Chrome je već moglo da okine event ranije)
+  setTimeout(() => {
+    if(isStandalone() || installDismissedRecently()) return;
+    if(isIOSDevice || deferredInstallPrompt) showPartnerInstallPrompt();
+  }, 1500);
 }
 
 function doLogout(){
