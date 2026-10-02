@@ -61,7 +61,10 @@ SET search_path = public, pg_temp
 AS $$
 DECLARE v_new text;
 BEGIN
-    v_new := translate(encode(gen_random_bytes(14), 'base64'), '+/=', '-_');
+    -- gen_random_uuid() je ugrađen u Postgres (za razliku od gen_random_bytes
+    -- koji zahteva pgcrypto ekstenziju) — dve spojene UUID vrednosti daju
+    -- dovoljno entropije za ovaj token.
+    v_new := replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '');
     UPDATE public.partners SET scanner_token = v_new
     WHERE access_token = p_access_token AND is_active = true AND type = 'attraction';
     IF NOT FOUND THEN RETURN NULL; END IF;
