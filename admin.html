@@ -3362,7 +3362,8 @@ function stDraw(ts){
     const col = q.ok ? '#4ade80' : '#f43f5e';
     x.beginPath(); q.trail.forEach((pt,k)=> k ? x.lineTo(pt[0],pt[1]) : x.moveTo(pt[0],pt[1]));
     x.strokeStyle = col; x.globalAlpha = 0.5; x.lineWidth = 2; x.stroke(); x.globalAlpha = 1;
-    x.beginPath(); x.arc(px,py,3.6,0,Math.PI*2); x.fillStyle = col; x.shadowColor = col; x.shadowBlur = 14; x.fill(); x.shadowBlur = 0;
+    x.beginPath(); x.arc(px,py,6,0,Math.PI*2); x.fillStyle = col; x.globalAlpha = 0.25; x.fill();
+    x.globalAlpha = 1; x.beginPath(); x.arc(px,py,3.2,0,Math.PI*2); x.fillStyle = col; x.fill();
     if(q.t >= 1 && !q.arrived){ q.arrived = true; stArrive(q); }
   });
 
@@ -3416,10 +3417,12 @@ function stDrawChart(){
   x.beginPath(); x.arc(last[0],last[1],pulse,0,Math.PI*2); x.fillStyle = '#4ade80'; x.shadowColor = '#4ade80'; x.shadowBlur = 14; x.fill(); x.shadowBlur = 0;
 }
 
+let stLastDraw = 0;
 function stLoop(ts){
   const page = document.getElementById('page-stresstest');
   if(!page || !page.classList.contains('active')){ ST.raf = null; return; }
-  stDraw(ts); stDrawChart();
+  const minGap = ST.running ? 50 : 16;
+  if(ts - stLastDraw >= minGap){ stLastDraw = ts; stDraw(ts); stDrawChart(); }
   ST.raf = requestAnimationFrame(stLoop);
 }
 function stEnsureLoop(){ if(!ST.raf) ST.raf = requestAnimationFrame(stLoop); }
@@ -3456,6 +3459,7 @@ function stRecord(ok, ms, node){
   ST.samples.push({ok, ms}); ok ? ST.ok++ : ST.fail++;
   ST.chart.push(ms);
   ST.particles.push({node, ok, t:0, speed:0.8+Math.random()*0.7, trail:[], arrived:false});
+  if(ST.particles.length > 90) ST.particles.splice(0, ST.particles.length - 90);
   ST.live[8] = `${ST.ok}/${ST.ok+ST.fail} uspešno`;
   if((ST.ok+ST.fail) % 8 === 0) stUpdateRow(8);
   stKpis();
