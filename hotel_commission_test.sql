@@ -1,17 +1,13 @@
 -- ═══════════════════════════════════════════════════════════════════
 -- hotel_commission_test.sql — end-to-end test provizije za HOTELE.
 --
--- Sve se radi u jednoj transakciji i na kraju se RADI ROLLBACK, pa
--- se u bazi ništa ne zadržava (test partner, rezervacije, provizije —
--- sve nestaje). Rezultat se prikazuje u poslednjoj tabeli.
+-- Sve je u jednom DO bloku (jedna transakcija). Na kraju bloka namerno
+-- se baca greška koja nosi izveštaj; ona automatski poništava transakciju,
+-- pa test partner, rezervacije i provizije NISU ostali u bazi.
+-- Izveštaj je u poruci greške (crveno), to je očekivano.
 --
--- Pokreni u Supabase SQL editoru (sve odjednom). Preduslov: seed
--- (loadtest_seed_v2.sql) i hotel_commissions.sql moraju biti pokrenuti.
+-- Preduslov: seed (loadtest_seed_v2.sql) i hotel_commissions.sql.
 -- ═══════════════════════════════════════════════════════════════════
-
-BEGIN;
-
-CREATE TEMP TABLE st_results(ord int, name text, pass boolean, detail text);
 
 DO $$
 DECLARE
@@ -28,6 +24,10 @@ DECLARE
     v_pct        int;
     v_apt        text;
     v_paid       timestamptz;
+    v_report     text := '';
+    v_pass       int := 0;
+    v_total      int := 0;
+    v_ok         boolean;
 BEGIN
     SELECT id INTO v_hot FROM public.partners
     WHERE type = 'hotel' AND is_premium AND partner_code LIKE 'TST_%' ORDER BY partner_code LIMIT 1;
@@ -49,57 +49,80 @@ BEGIN
     VALUES (v_attr, 'Test vožnja', 10, 1000, true)
     RETURNING id INTO v_res;
 
-    -- Rezervacija gosta PREMIUM hotela (2 osobe, 1000 RSD po osobi, 10 % provizije => 200 RSD)
+    -- 1. Rezervacija gosta PREMIUM hotela: 2 osobe × 1000 RSD × 10 % = 200 RSD
     INSERT INTO public.bookings (resource_id, booking_date, slot_time, qty, guest_name, guest_phone, status, accommodation_id)
     VALUES (v_res, CURRENT_DATE, '23:01', 2, 'TEST Gost Hotel', '+381600000001', 'confirmed', v_hot)
     RETURNING id INTO v_book;
 
     SELECT * INTO v_r FROM public.redeem_booking(v_token, v_book);
-    INSERT INTO st_results VALUES (1, 'Realizacija rezervacije preko skenera (premium hotel)', v_r.ok, v_r.msg);
+    v_ok := v_r.ok;
+    v_total := v_total + 1; IF v_ok THEN v_pass := v_pass + 1; END IF;
+    v_report := v_report || format('%s  Realizacija preko skenera (premium hotel) — %s' || E'\n',
+        CASE WHEN v_ok THEN '✅ PROŠLO' ELSE '❌ PALO' END, v_r.msg);
 
     SELECT count(*), coalesce(max(amount_rsd), 0), coalesce(max(commission_pct_applied), 0), max(apartment_partner_id::text)
     INTO v_cnt, v_amt, v_pct, v_apt
     FROM public.apartment_commissions WHERE booking_id = v_book;
 
-    INSERT INTO st_results VALUES (2, 'Provizija upisana tačno jednom', v_cnt = 1, 'redova: ' || v_cnt);
-    INSERT INTO st_results VALUES (3, 'Iznos = 2 × 1000 × 10 % = 200 RSD', v_amt = 200, 'iznos: ' || v_amt || ' RSD, % = ' || v_pct);
-    INSERT INTO st_results VALUES (4, 'Provizija pripada HOTELU (ne atrakciji)', v_apt = v_hot::text,
-        CASE WHEN v_apt = v_hot::text THEN 'ok' ELSE 'pogrešan partner' END);
+    v_ok := v_cnt = 1;
+    v_total := v_total + 1; IF v_ok THEN v_pass := v_pass + 1; END IF;
+    v_report := v_report || format('%s  Provizija upisana tačno jednom — redova: %s' || E'\n',
+        CASE WHEN v_ok THEN '✅ PROŠLO' ELSE '❌ PALO' END, v_cnt);
 
-    -- Ponovna realizacija istog koda ne sme da napravi drugu proviziju
+    v_ok := v_amt = 200;
+    v_total := v_total + 1; IF v_ok THEN v_pass := v_pass + 1; END IF;
+    v_report := v_report || format('%s  Iznos = 2 × 1000 × 10 %% = 200 RSD — iznos: %s RSD, %%: %s' || E'\n',
+        CASE WHEN v_ok THEN '✅ PROŠLO' ELSE '❌ PALO' END, v_amt, v_pct);
+
+    v_ok := v_apt = v_hot::text;
+    v_total := v_total + 1; IF v_ok THEN v_pass := v_pass + 1; END IF;
+    v_report := v_report || format('%s  Provizija pripada HOTELU (ne atrakciji) — %s' || E'\n',
+        CASE WHEN v_ok THEN '✅ PROŠLO' ELSE '❌ PALO' END, CASE WHEN v_ok THEN 'ok' ELSE 'pogrešan partner' END);
+
+    -- 2. Ponovna realizacija istog koda ne sme da napravi drugu proviziju
     SELECT * INTO v_r FROM public.redeem_booking(v_token, v_book);
     SELECT count(*) INTO v_cnt FROM public.apartment_commissions WHERE booking_id = v_book;
-    INSERT INTO st_results VALUES (5, 'Drugi pokušaj realizacije je odbijen', v_r.ok = false, v_r.msg);
-    INSERT INTO st_results VALUES (6, 'Posle drugog pokušaja i dalje 1 provizija', v_cnt = 1, 'redova: ' || v_cnt);
+    v_ok := v_r.ok = false;
+    v_total := v_total + 1; IF v_ok THEN v_pass := v_pass + 1; END IF;
+    v_report := v_report || format('%s  Drugi pokušaj realizacije je odbijen — %s' || E'\n',
+        CASE WHEN v_ok THEN '✅ PROŠLO' ELSE '❌ PALO' END, v_r.msg);
 
-    -- Gost BASIC hotela (bez premium statusa) ne stvara proviziju
+    v_ok := v_cnt = 1;
+    v_total := v_total + 1; IF v_ok THEN v_pass := v_pass + 1; END IF;
+    v_report := v_report || format('%s  Posle drugog pokušaja i dalje 1 provizija — redova: %s' || E'\n',
+        CASE WHEN v_ok THEN '✅ PROŠLO' ELSE '❌ PALO' END, v_cnt);
+
+    -- 3. Gost BASIC hotela ne stvara proviziju
     INSERT INTO public.bookings (resource_id, booking_date, slot_time, qty, guest_name, guest_phone, status, accommodation_id)
     VALUES (v_res, CURRENT_DATE, '23:02', 2, 'TEST Gost Basic', '+381600000002', 'confirmed', v_hot_basic)
     RETURNING id INTO v_book2;
     PERFORM public.redeem_booking(v_token, v_book2);
     SELECT count(*) INTO v_cnt FROM public.apartment_commissions WHERE booking_id = v_book2;
-    INSERT INTO st_results VALUES (7, 'Basic hotel NE dobija proviziju', v_cnt = 0, 'redova: ' || v_cnt);
+    v_ok := v_cnt = 0;
+    v_total := v_total + 1; IF v_ok THEN v_pass := v_pass + 1; END IF;
+    v_report := v_report || format('%s  Basic hotel NE dobija proviziju — redova: %s' || E'\n',
+        CASE WHEN v_ok THEN '✅ PROŠLO' ELSE '❌ PALO' END, v_cnt);
 
-    -- Lažni token ne sme da realizuje ništa
+    -- 4. Lažni token ne realizuje rezervaciju
     INSERT INTO public.bookings (resource_id, booking_date, slot_time, qty, guest_name, guest_phone, status, accommodation_id)
     VALUES (v_res, CURRENT_DATE, '23:03', 1, 'TEST Lažni token', '+381600000003', 'confirmed', v_hot)
     RETURNING id INTO v_book2;
     SELECT * INTO v_r FROM public.redeem_booking('lazan-token', v_book2);
-    INSERT INTO st_results VALUES (8, 'Lažni token ne realizuje rezervaciju', v_r.ok = false, v_r.msg);
+    v_ok := v_r.ok = false;
+    v_total := v_total + 1; IF v_ok THEN v_pass := v_pass + 1; END IF;
+    v_report := v_report || format('%s  Lažni token ne realizuje rezervaciju — %s' || E'\n',
+        CASE WHEN v_ok THEN '✅ PROŠLO' ELSE '❌ PALO' END, v_r.msg);
 
-    -- Obostrana potvrda isplate: tek kad OBE strane potvrde, paid_at se postavlja
+    -- 5. Isplata se knjiži tek kad OBE strane potvrde
     UPDATE public.apartment_commissions SET attraction_paid_confirmed = true WHERE booking_id = v_book;
     UPDATE public.apartment_commissions SET apartment_paid_confirmed = true WHERE booking_id = v_book;
     SELECT paid_at INTO v_paid FROM public.apartment_commissions WHERE booking_id = v_book;
-    INSERT INTO st_results VALUES (9, 'Isplata se knjiži kad obe strane potvrde', v_paid IS NOT NULL,
-        CASE WHEN v_paid IS NULL THEN 'paid_at je NULL' ELSE 'paid_at postavljen' END);
+    v_ok := v_paid IS NOT NULL;
+    v_total := v_total + 1; IF v_ok THEN v_pass := v_pass + 1; END IF;
+    v_report := v_report || format('%s  Isplata se knjiži kad obe strane potvrde — %s' || E'\n',
+        CASE WHEN v_ok THEN '✅ PROŠLO' ELSE '❌ PALO' END, CASE WHEN v_ok THEN 'paid_at postavljen' ELSE 'paid_at je NULL' END);
+
+    RAISE EXCEPTION E'\nHOTEL PROVIZIJA TEST: %/% prošlo\n%\n(Ovo je namerna greška: transakcija je poništena, test podaci nisu ostali u bazi.)',
+        v_pass, v_total, v_report;
 END;
 $$;
-
-SELECT ord AS "#", name AS "Provera",
-       CASE WHEN pass THEN '✅ PROŠLO' ELSE '❌ PALO' END AS "Rezultat",
-       detail AS "Detalj"
-FROM st_results
-ORDER BY ord;
-
-ROLLBACK;
