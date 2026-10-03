@@ -97,6 +97,22 @@ const directWrite = await fetch(`${URL_BASE}/rest/v1/partners?id=eq.${FAKE_ID}`,
 });
 check('anon NE može direktno da postavi scanner_token', directWrite.status >= 400, `HTTP ${directWrite.status}`);
 
+const directRedeem = await fetch(`${URL_BASE}/rest/v1/bookings?id=eq.${FAKE_ID}`, {
+  method: 'PATCH', headers: { ...H, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ redeemed_at: new Date().toISOString() }),
+});
+check('anon NE može direktno da realizuje rezervaciju (redeemed_at)', directRedeem.status >= 400, `HTTP ${directRedeem.status}`);
+
+const directAcc = await fetch(`${URL_BASE}/rest/v1/bookings?id=eq.${FAKE_ID}`, {
+  method: 'PATCH', headers: { ...H, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ accommodation_id: FAKE_ID }),
+});
+check('anon NE može direktno da veže apartman na rezervaciju', directAcc.status >= 400, `HTTP ${directAcc.status}`);
+
+const rpcRedeemFake = await rpc('redeem_booking', { p_scanner_token: 'nepostojeci', p_booking_id: FAKE_ID });
+check('redeem_booking sa lažnim tokenom ne realizuje ništa',
+  Array.isArray(rpcRedeemFake.body) && rpcRedeemFake.body[0]?.ok === false, `HTTP ${rpcRedeemFake.status}`);
+
 const directPin = await fetch(`${URL_BASE}/rest/v1/partners?id=eq.${FAKE_ID}`, {
   method: 'PATCH', headers: { ...H, 'Content-Type': 'application/json' },
   body: JSON.stringify({ pin: '0000' }),

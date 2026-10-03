@@ -36,7 +36,6 @@ body{font-family:'Inter',sans-serif;background:#05070e;color:white;min-height:10
 <script>
 const sb = C.db();
 const scannerToken = new URLSearchParams(window.location.search).get('s') || '';
-let partnerId = null;
 
 function esc(s){ return C.escapeHtml(s); }
 
@@ -52,7 +51,6 @@ async function init(){
     return;
   }
 
-  partnerId = data[0].id;
   document.getElementById('scanner-partner-name').textContent = data[0].name;
   document.getElementById('msg-screen').classList.add('hidden');
   document.getElementById('scanner-wrap').classList.remove('hidden');
@@ -91,25 +89,15 @@ async function onScanDecoded(decodedText){
   resultEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);font-weight:700;font-size:13px">Provera...</p>';
 
   try{
-    const { data:booking, error } = await sb.from('bookings')
-      .select('id, status, redeemed_at, guest_name, resource_id, bookable_resources(name, partner_id)')
-      .eq('id', bookingId).maybeSingle();
+    const { data, error } = await sb.rpc('redeem_booking', { p_scanner_token: scannerToken, p_booking_id: bookingId });
+    const r = Array.isArray(data) ? data[0] : null;
 
-    if(error || !booking){
-      resultEl.innerHTML = '<p style="color:#fca5a5;font-weight:900;font-size:14px">⚠️ Kod nije prepoznat.</p>';
-    } else if(booking.bookable_resources?.partner_id !== partnerId){
-      resultEl.innerHTML = '<p style="color:#fca5a5;font-weight:900;font-size:14px">⚠️ Ova rezervacija ne pripada ovom biznisu.</p>';
-    } else if(booking.status === 'cancelled'){
-      resultEl.innerHTML = '<p style="color:#fca5a5;font-weight:900;font-size:14px">⚠️ Rezervacija je otkazana.</p>';
-    } else if(booking.redeemed_at){
-      resultEl.innerHTML = `<p style="color:#fcd34d;font-weight:900;font-size:14px">⚠️ Kod je već iskorišćen<br><span style="font-size:11px;font-weight:700">${new Date(booking.redeemed_at).toLocaleString('sr-RS')}</span></p>`;
+    if(error || !r){
+      resultEl.innerHTML = '<p style="color:#fca5a5;font-weight:900;font-size:14px">⚠️ Greška, pokušaj ponovo.</p>';
+    } else if(!r.ok){
+      resultEl.innerHTML = `<p style="color:#fcd34d;font-weight:900;font-size:14px">⚠️ ${esc(r.msg)}</p>`;
     } else {
-      const { error: updErr } = await sb.from('bookings').update({ redeemed_at: new Date().toISOString() }).eq('id', bookingId);
-      if(updErr){
-        resultEl.innerHTML = '<p style="color:#fca5a5;font-weight:900;font-size:14px">⚠️ Greška, pokušaj ponovo.</p>';
-      } else {
-        resultEl.innerHTML = `<div><div style="font-size:2.5rem;margin-bottom:8px">✅</div><p style="color:#6ee7b7;font-weight:900;font-size:15px;margin:0 0 4px">${esc(booking.guest_name)}</p><p style="color:rgba(255,255,255,0.6);font-weight:700;font-size:12px">${esc(booking.bookable_resources?.name||'')} — realizovano</p></div>`;
-      }
+      resultEl.innerHTML = `<div><div style="font-size:2.5rem;margin-bottom:8px">✅</div><p style="color:#6ee7b7;font-weight:900;font-size:15px;margin:0 0 4px">${esc(r.guest_name)}</p><p style="color:rgba(255,255,255,0.6);font-weight:700;font-size:12px">${esc(r.resource_name||'')} — realizovano</p></div>`;
     }
   } catch(e){
     resultEl.innerHTML = '<p style="color:#fca5a5;font-weight:900;font-size:14px">⚠️ Greška, pokušaj ponovo.</p>';
