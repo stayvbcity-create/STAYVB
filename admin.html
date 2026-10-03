@@ -204,6 +204,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="nav-item" onclick="nav('leads',this)"><span class="nav-icon">🎯</span>Prijave<span class="nav-badge" id="nb-leads" style="display:none">0</span></div>
     <div class="nav-item" onclick="nav('landingviews',this)"><span class="nav-icon">👁️</span>Landing posete</div>
     <div class="nav-item" onclick="nav('notifications',this)"><span class="nav-icon">🔔</span>Notifikacije</div>
+    <div class="nav-item" onclick="nav('stresstest',this)" style="color:#22d3ee;font-weight:900"><span class="nav-icon">⚡</span>STRESS TEST</div>
   </div>
   <div class="sidebar-bottom">
     <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" onclick="StayVBGuard.logoutAdmin()">🚪 Odjavi se</button>
@@ -767,6 +768,75 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       </div>
     </div>
 
+    <!-- ═══ STRESS TEST ═══ -->
+    <div id="page-stresstest" class="page">
+      <style>
+        .st-hero{position:relative;overflow:hidden;border-radius:24px;padding:28px 30px;background:radial-gradient(circle at 12% 0%,rgba(34,211,238,.28),transparent 45%),radial-gradient(circle at 92% 100%,rgba(244,63,94,.20),transparent 42%),linear-gradient(135deg,#0b1220,#111827);border:1px solid rgba(34,211,238,.28);display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;box-shadow:0 20px 60px rgba(34,211,238,.12)}
+        .st-kicker{font-size:10px;font-weight:900;letter-spacing:.3em;color:#22d3ee}
+        .st-title{font-size:46px;font-weight:900;letter-spacing:-.03em;line-height:1;background:linear-gradient(90deg,#fff,#22d3ee,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent;margin-top:6px}
+        .st-sub{font-size:12px;color:rgba(255,255,255,.55);font-weight:700;margin-top:10px;max-width:520px;line-height:1.5}
+        .st-run{padding:18px 30px;border-radius:999px;border:none;font-weight:900;font-size:13px;letter-spacing:.12em;color:#06121a;background:linear-gradient(135deg,#22d3ee,#4ade80);cursor:pointer;animation:stPulse 2.2s infinite;font-family:inherit}
+        .st-run:disabled{opacity:.5;cursor:not-allowed;animation:none}
+        @keyframes stPulse{0%{box-shadow:0 0 0 0 rgba(34,211,238,.55)}70%{box-shadow:0 0 0 18px rgba(34,211,238,0)}100%{box-shadow:0 0 0 0 rgba(34,211,238,0)}}
+        .st-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin:18px 0}
+        @media(max-width:900px){.st-kpis{grid-template-columns:repeat(2,1fr)}.st-grid{grid-template-columns:1fr!important}}
+        .st-kpi{position:relative;overflow:hidden;background:rgba(15,23,42,.85);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:16px}
+        .st-kpi::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--c,#22d3ee);box-shadow:0 0 12px var(--c,#22d3ee)}
+        .st-kpi-v{font-size:26px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums}
+        .st-kpi-l{font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:4px}
+        .st-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+        .st-card{background:rgba(15,23,42,.85);border:1px solid rgba(255,255,255,.07);border-radius:22px;padding:16px}
+        .st-card-title{font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:10px}
+        .st-canvas{width:100%;height:300px;display:block}
+        .st-step{display:grid;grid-template-columns:14px 1fr auto auto;gap:12px;align-items:center;padding:12px 6px;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px}
+        .st-dot{width:12px;height:12px;border-radius:50%;background:#334155}
+        .st-step.running .st-dot{background:#fbbf24;box-shadow:0 0 12px #fbbf24;animation:stBlink 1s infinite}
+        .st-step.pass .st-dot{background:#4ade80;box-shadow:0 0 10px #4ade80}
+        .st-step.fail .st-dot{background:#f43f5e;box-shadow:0 0 10px #f43f5e}
+        @keyframes stBlink{50%{opacity:.25}}
+        .st-badge{font-size:10px;font-weight:900;padding:4px 10px;border-radius:999px;letter-spacing:.08em;white-space:nowrap}
+        .st-report{animation:stFade .6s ease}
+        @keyframes stFade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+        .st-verdict{font-size:22px;font-weight:900;letter-spacing:.04em;padding:18px 20px;border-radius:18px;text-align:center;margin-bottom:14px}
+      </style>
+
+      <div class="st-hero">
+        <div>
+          <div class="st-kicker">● LIVE · SUPABASE · OPTEREĆENJE</div>
+          <div class="st-title">STRESS TEST</div>
+          <div class="st-sub" id="st-sub">Spreman. Simulacija: 530 partnera (30 hotela, 200 restorana, 300 apartmana) i 3000 gostiju. Test je samo za čitanje.</div>
+        </div>
+        <button class="st-run" id="st-run-btn" onclick="runStressTest()">▶ POKRENI TEST</button>
+      </div>
+
+      <div class="st-kpis">
+        <div class="st-kpi" style="--c:#22d3ee"><div class="st-kpi-v" id="st-k-req">0</div><div class="st-kpi-l">Zahteva poslato</div></div>
+        <div class="st-kpi" style="--c:#4ade80"><div class="st-kpi-v" id="st-k-ok">0</div><div class="st-kpi-l">Uspešno</div></div>
+        <div class="st-kpi" style="--c:#f43f5e"><div class="st-kpi-v" id="st-k-fail">0</div><div class="st-kpi-l">Neuspešno</div></div>
+        <div class="st-kpi" style="--c:#fbbf24"><div class="st-kpi-v" id="st-k-avg">—</div><div class="st-kpi-l">Prosek (ms)</div></div>
+        <div class="st-kpi" style="--c:#a78bfa"><div class="st-kpi-v" id="st-k-p95">—</div><div class="st-kpi-l">p95 (ms)</div></div>
+        <div class="st-kpi" style="--c:#fb7185"><div class="st-kpi-v" id="st-k-rps">—</div><div class="st-kpi-l">Zahteva / s</div></div>
+      </div>
+
+      <div class="st-grid">
+        <div class="st-card">
+          <div class="st-card-title">Živi tok zahteva</div>
+          <canvas id="st-canvas" class="st-canvas"></canvas>
+        </div>
+        <div class="st-card">
+          <div class="st-card-title">Latencija uživo (crvena linija = 1500 ms)</div>
+          <canvas id="st-chart" class="st-canvas"></canvas>
+        </div>
+      </div>
+
+      <div class="st-card">
+        <div class="st-card-title">Koraci testa</div>
+        <div id="st-steps"></div>
+      </div>
+
+      <div class="st-card st-report" id="st-report" style="display:none;margin-top:14px"></div>
+    </div>
+
     <!-- ═══ QR ═══ -->
     <div id="page-qr" class="page">
       <div class="sec-header"><div><div class="sec-title">QR Generator</div><div class="sec-sub">QR kodovi i partner URL-ovi</div></div></div>
@@ -1081,14 +1151,15 @@ const PAGE_META = {
   landingviews:['Landing posete','Posete join.html po danima'],
   cityinfo:['City Info','Kategorije i mali biznisi'],
   properties:['Nekretnine','Vaš dom u Banji — direktna prodaja'],
-  notifications:['Notifikacije','Pošalji push obaveštenje gostima']
+  notifications:['Notifikacije','Pošalji push obaveštenje gostima'],
+  stresstest:['STRESS TEST','Live simulacija opterećenja sistema']
 };
 
 const LOADERS = {
   dashboard:loadDashboard, stats:loadStats, partners:loadPartners,
   stamps:loadStamps, loyalty:loadLoyalty, events:loadEvents,
   billing:loadBilling, revenue:loadRevenue, qr:loadQR, properties:loadProperties, leads:loadLeads, landingviews:loadLandingViews,
-  notifications:loadNotifications, commissions:loadCommissions
+  notifications:loadNotifications, commissions:loadCommissions, stresstest:loadStressTest
 };
 
 function nav(id, el){
@@ -3138,6 +3209,302 @@ async function sendPushNotification(){
   document.getElementById('notif-body').value = '';
   document.getElementById('notif-url').value = '';
   loadNotifications();
+}
+
+// ── STRESS TEST — live dashboard + izveštaj (samo čitanje) ─────────
+const ST_NODES = [
+  {label:'Hoteli', icon:'🏨', color:'#fbbf24', ang:-Math.PI/2},
+  {label:'Restorani', icon:'🍽️', color:'#fb7185', ang:0},
+  {label:'Apartmani', icon:'🏡', color:'#a78bfa', ang:Math.PI/2},
+  {label:'Gosti', icon:'👥', color:'#22d3ee', ang:Math.PI},
+];
+const ST_STEP_DEFS = [
+  'Test partneri po tipu', 'Test gosti', 'Relacija gost → smeštaj', 'Relacija partner → sadržaj',
+  'Happy Hour aktivan danas', 'Aktivne promocije', 'Pečati gostiju',
+  'Opterećenje: 400 paralelnih upita', 'Pun prolaz kroz 3000 gostiju'
+];
+const ST_STEP_EXPECT = [
+  '30 / 200 / 300', '3000', 'svaki gost ima objekat', '530 profila', '230', '230', '1200–1800',
+  '≥ 99% uspešno, p95 ≤ 1500 ms', '3000 redova'
+];
+const ST = { running:false, ok:0, fail:0, samples:[], chart:[], particles:[], steps:[], cur:-1, t0:0, start:0, end:0, raf:null, load:null, reportText:'' };
+
+const stToday = () => new Date().toLocaleDateString('sv-SE');
+const stPct = (arr,p) => { if(!arr.length) return 0; const s=[...arr].sort((a,b)=>a-b); return s[Math.min(s.length-1, Math.ceil(p/100*s.length)-1)]; };
+const stCount = q => q.then(r => { if(r.error) throw new Error(r.error.message); return r.count ?? 0; });
+
+function stNodePos(i,w,h){
+  const R = Math.min(w,h)*0.36, n = ST_NODES[i];
+  return { x: w/2 + Math.cos(n.ang)*R, y: h/2 + Math.sin(n.ang)*R };
+}
+
+function stFit(c){
+  const dpr = window.devicePixelRatio||1, w = c.clientWidth, h = c.clientHeight;
+  if(c.width !== Math.round(w*dpr) || c.height !== Math.round(h*dpr)){ c.width = Math.round(w*dpr); c.height = Math.round(h*dpr); }
+  const x = c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,w,h);
+  return { x, w, h };
+}
+
+function stDraw(ts){
+  const c = document.getElementById('st-canvas'); if(!c) return;
+  const {x,w,h} = stFit(c), cx = w/2, cy = h/2;
+  for(let k=0;k<3;k++){
+    x.beginPath(); x.arc(cx,cy,34+k*24+Math.sin(ts/500+k)*5,0,Math.PI*2);
+    x.strokeStyle = `rgba(34,211,238,${0.28-k*0.08})`; x.lineWidth = 1.2; x.stroke();
+  }
+  ST_NODES.forEach((n,i)=>{
+    const p = stNodePos(i,w,h);
+    x.beginPath(); x.moveTo(cx,cy); x.lineTo(p.x,p.y); x.strokeStyle='rgba(255,255,255,0.08)'; x.lineWidth=1; x.stroke();
+  });
+  const g = x.createRadialGradient(cx,cy,0,cx,cy,46);
+  g.addColorStop(0,'rgba(34,211,238,0.9)'); g.addColorStop(1,'rgba(34,211,238,0)');
+  x.fillStyle = g; x.beginPath(); x.arc(cx,cy,46,0,Math.PI*2); x.fill();
+  x.fillStyle = '#e0f2fe'; x.font = '900 10px Inter, sans-serif'; x.textAlign='center'; x.textBaseline='middle';
+  x.fillText('SUPABASE', cx, cy);
+  ST_NODES.forEach((n,i)=>{
+    const p = stNodePos(i,w,h), pr = 13 + Math.sin(ts/380 + i*1.7)*2.5;
+    x.beginPath(); x.arc(p.x,p.y,pr+8,0,Math.PI*2); x.fillStyle = n.color+'26'; x.fill();
+    x.beginPath(); x.arc(p.x,p.y,pr,0,Math.PI*2); x.fillStyle='#0b1220'; x.fill();
+    x.strokeStyle = n.color; x.lineWidth = 2; x.stroke();
+    x.font = '15px sans-serif'; x.fillStyle='#fff'; x.fillText(n.icon, p.x, p.y+1);
+    x.font = '800 10px Inter, sans-serif'; x.fillStyle='rgba(255,255,255,0.75)';
+    x.fillText(n.label, p.x, p.y + (p.y > cy ? 30 : -30));
+  });
+  ST.particles = ST.particles.filter(q => q.t < 1);
+  ST.particles.forEach(q => {
+    q.t = Math.min(1, q.t + 0.022*q.speed);
+    const p = stNodePos(q.node,w,h), px = cx + (p.x-cx)*q.t, py = cy + (p.y-cy)*q.t;
+    const col = q.ok ? '#4ade80' : '#f43f5e';
+    x.beginPath(); x.arc(px,py,3.2,0,Math.PI*2); x.fillStyle = col;
+    x.shadowColor = col; x.shadowBlur = 12; x.fill(); x.shadowBlur = 0;
+  });
+}
+
+function stDrawChart(){
+  const c = document.getElementById('st-chart'); if(!c) return;
+  const {x,w,h} = stFit(c);
+  const data = ST.chart.slice(-160);
+  const padL = 48, padR = 12, padT = 12, padB = 18;
+  const W = w-padL-padR, H = h-padT-padB;
+  const max = Math.max(2000, ...data, 1);
+  x.font = '700 9px Inter, sans-serif'; x.textAlign='left'; x.textBaseline='middle';
+  for(let g=0; g<=4; g++){
+    const yy = padT + H*g/4;
+    x.beginPath(); x.moveTo(padL,yy); x.lineTo(padL+W,yy); x.strokeStyle='rgba(255,255,255,0.06)'; x.lineWidth=1; x.stroke();
+    x.fillStyle='rgba(255,255,255,0.35)'; x.fillText(Math.round(max*(1-g/4))+' ms', 4, yy);
+  }
+  const ty = padT + H*(1-1500/max);
+  x.beginPath(); x.moveTo(padL,ty); x.lineTo(padL+W,ty); x.setLineDash([5,4]);
+  x.strokeStyle='rgba(244,63,94,0.7)'; x.lineWidth=1; x.stroke(); x.setLineDash([]);
+  if(data.length < 2) return;
+  const pts = data.map((v,i) => [padL + i*(W/(data.length-1)), padT + H*(1 - v/max)]);
+  const grad = x.createLinearGradient(0,padT,0,padT+H);
+  grad.addColorStop(0,'rgba(34,211,238,0.35)'); grad.addColorStop(1,'rgba(34,211,238,0)');
+  x.beginPath(); x.moveTo(pts[0][0], padT+H);
+  pts.forEach(p => x.lineTo(p[0],p[1]));
+  x.lineTo(pts[pts.length-1][0], padT+H); x.closePath(); x.fillStyle = grad; x.fill();
+  x.beginPath(); pts.forEach((p,i)=> i ? x.lineTo(p[0],p[1]) : x.moveTo(p[0],p[1]));
+  x.strokeStyle='#22d3ee'; x.lineWidth=2; x.shadowColor='#22d3ee'; x.shadowBlur=8; x.stroke(); x.shadowBlur=0;
+}
+
+function stLoop(ts){
+  const page = document.getElementById('page-stresstest');
+  if(!page || !page.classList.contains('active')){ ST.raf = null; return; }
+  stDraw(ts); stDrawChart();
+  ST.raf = requestAnimationFrame(stLoop);
+}
+function stEnsureLoop(){ if(!ST.raf) ST.raf = requestAnimationFrame(stLoop); }
+
+function loadStressTest(){ stRenderSteps(); stKpis(); stEnsureLoop(); }
+
+function stKpis(){
+  const total = ST.ok + ST.fail, ms = ST.samples.map(s=>s.ms);
+  const set = (id,v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
+  set('st-k-req', total); set('st-k-ok', ST.ok); set('st-k-fail', ST.fail);
+  set('st-k-avg', ms.length ? Math.round(ms.reduce((a,b)=>a+b,0)/ms.length) : '—');
+  set('st-k-p95', ms.length ? Math.round(stPct(ms,95)) : '—');
+  const secs = (performance.now()-ST.t0)/1000;
+  set('st-k-rps', total && secs>0 ? (total/secs).toFixed(1) : '—');
+}
+
+function stRecord(ok, ms, node){
+  ST.samples.push({ok, ms}); ok ? ST.ok++ : ST.fail++;
+  ST.chart.push(ms);
+  ST.particles.push({node, ok, t:0, speed:0.8+Math.random()*0.6});
+  stKpis();
+}
+
+function stStepRowsHtml(){
+  return ST_STEP_DEFS.map((name,i)=>{
+    const s = ST.steps[i];
+    const cls = s ? (s.pass ? 'pass' : 'fail') : (i===ST.cur ? 'running' : '');
+    const badge = s
+      ? (s.pass ? '<span class="st-badge" style="background:rgba(74,222,128,.15);color:#4ade80">PROŠLO</span>' : '<span class="st-badge" style="background:rgba(244,63,94,.15);color:#f43f5e">PALO</span>')
+      : (i===ST.cur ? '<span class="st-badge" style="background:rgba(251,191,36,.15);color:#fbbf24">U TOKU</span>' : '<span class="st-badge" style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.4)">ČEKA</span>');
+    const actual = s ? esc(String(s.actual)) : '—';
+    const ms = s && s.ms != null ? Math.round(s.ms)+' ms' : '';
+    return `<div class="st-step ${cls}"><span class="st-dot"></span>
+      <div><div style="font-weight:900;color:#fff">${i+1}. ${name}</div><div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:700;margin-top:2px">Očekivano: ${ST_STEP_EXPECT[i]}</div></div>
+      <div style="font-weight:800;color:rgba(255,255,255,.8);font-variant-numeric:tabular-nums;text-align:right">${actual}<div style="font-size:10px;color:rgba(255,255,255,.4)">${ms}</div></div>
+      ${badge}</div>`;
+  }).join('');
+}
+
+function stRenderSteps(){
+  const el = document.getElementById('st-steps'); if(el) el.innerHTML = stStepRowsHtml();
+}
+
+async function stRun(i, fn){
+  ST.cur = i; stRenderSteps();
+  const t0 = performance.now(); let r;
+  try{ r = await fn(); } catch(e){ r = { pass:false, actual:'greška: '+e.message }; }
+  ST.steps[i] = { pass:!!r.pass, actual:r.actual, ms: performance.now()-t0 };
+  ST.cur = -1; stRenderSteps();
+  return ST.steps[i];
+}
+
+async function stLoadPhase(){
+  const today = stToday();
+  const KINDS = [
+    {w:30, node:1, name:'Lista partnera', mk:()=>sb.from('partners').select('id,name,type,hh_active,hh_date,lat,lng').in('type',['restaurant','hotel']).like('partner_code','TST_%').eq('is_active',true)},
+    {w:20, node:0, name:'Ponude', mk:()=>sb.from('partner_content').select('partner_id,current_offer,offer_expires_at').not('current_offer','is',null).limit(500)},
+    {w:15, node:1, name:'Geofence (VBradar)', mk:()=>sb.from('partners').select('id,lat,lng,hh_active').gte('lat',43.59).lte('lat',43.65).gte('lng',20.86).lte('lng',20.93).like('partner_code','TST_%')},
+    {w:10, node:3, name:'Događaji', mk:()=>sb.from('events').select('id,title,event_date').like('title','TEST%').gte('event_date',today).limit(200)},
+    {w:10, node:2, name:'Smeštaj', mk:()=>sb.from('accommodation_listings').select('id,partner_id,title,price_per_night').eq('is_active',true).limit(400)},
+    {w:15, node:3, name:'Gosti online', mk:()=>sb.from('guests').select('id,accommodation_id').like('token','TESTGUEST_%').eq('checkin_date',today).limit(1000)},
+  ];
+  const TOTAL = 400, CONC = 25, queue = [];
+  for(let i=0;i<TOTAL;i++){
+    const r = Math.random()*100; let acc = 0, pick = KINDS[KINDS.length-1];
+    for(const k of KINDS){ acc += k.w; if(r < acc){ pick = k; break; } }
+    queue.push(pick);
+  }
+  let idx = 0;
+  ST.t0 = performance.now();
+  const worker = async () => {
+    while(idx < queue.length){
+      const k = queue[idx++]; const t0 = performance.now(); let ok = false;
+      try{ const r = await k.mk(); ok = !r.error; } catch(e){ ok = false; }
+      stRecord(ok, performance.now()-t0, k.node);
+    }
+  };
+  await Promise.all(Array.from({length:CONC}, worker));
+  const ms = ST.samples.map(s=>s.ms), total = ST.ok+ST.fail, secs = (performance.now()-ST.t0)/1000;
+  ST.load = {
+    total, ok:ST.ok, fail:ST.fail,
+    avg: Math.round(ms.reduce((a,b)=>a+b,0)/Math.max(1,ms.length)),
+    p50: Math.round(stPct(ms,50)), p95: Math.round(stPct(ms,95)), max: Math.round(Math.max(0,...ms)),
+    rps: (total/secs).toFixed(1), secs: secs.toFixed(1)
+  };
+  const okRate = total ? ST.ok/total : 0;
+  return { pass: okRate >= 0.99 && ST.load.p95 <= 1500, actual: `${ST.ok}/${total} uspešno · p95 ${ST.load.p95} ms` };
+}
+
+async function runStressTest(){
+  if(ST.running) return;
+  Object.assign(ST, { running:true, ok:0, fail:0, samples:[], chart:[], particles:[], steps:[], cur:-1, load:null });
+  document.getElementById('st-report').style.display = 'none';
+  const btn = document.getElementById('st-run-btn');
+  btn.disabled = true; btn.textContent = '⏳ TEST U TOKU…';
+  document.getElementById('st-sub').textContent = 'Test je u toku. Svi upiti su samo za čitanje — ništa se ne menja u bazi.';
+  stEnsureLoop(); stKpis(); stRenderSteps();
+  ST.start = performance.now();
+  const today = stToday();
+
+  await stRun(0, async()=>{
+    const [h,r,a] = await Promise.all([
+      stCount(sb.from('partners').select('id',{count:'exact',head:true}).eq('type','hotel').like('partner_code','TST_%')),
+      stCount(sb.from('partners').select('id',{count:'exact',head:true}).eq('type','restaurant').like('partner_code','TST_%')),
+      stCount(sb.from('partners').select('id',{count:'exact',head:true}).eq('type','apartment').like('partner_code','TST_%')),
+    ]);
+    return { pass: h===30 && r===200 && a===300, actual: `${h} / ${r} / ${a}` };
+  });
+  await stRun(1, async()=>{
+    const n = await stCount(sb.from('guests').select('id',{count:'exact',head:true}).like('token','TESTGUEST_%'));
+    return { pass: n===3000, actual: n };
+  });
+  await stRun(2, async()=>{
+    const n = await stCount(sb.from('guests').select('id',{count:'exact',head:true}).like('token','TESTGUEST_%').not('accommodation_id','is',null));
+    return { pass: n===3000, actual: n };
+  });
+  await stRun(3, async()=>{
+    const n = await stCount(sb.from('partner_content').select('partner_id, partners!inner(partner_code)',{count:'exact',head:true}).like('partners.partner_code','TST_%'));
+    return { pass: n===530, actual: n };
+  });
+  await stRun(4, async()=>{
+    const n = await stCount(sb.from('partners').select('id',{count:'exact',head:true}).like('partner_code','TST_%').eq('hh_active',true).eq('hh_date',today));
+    return { pass: n===230, actual: n };
+  });
+  await stRun(5, async()=>{
+    const n = await stCount(sb.from('partner_content').select('partner_id, partners!inner(partner_code)',{count:'exact',head:true}).not('current_offer','is',null).like('partners.partner_code','TST_%'));
+    return { pass: n===230, actual: n };
+  });
+  await stRun(6, async()=>{
+    const n = await stCount(sb.from('stamps').select('id, guests!inner(token)',{count:'exact',head:true}).like('guests.token','TESTGUEST_%'));
+    return { pass: n>=1200 && n<=1800, actual: n };
+  });
+  await stRun(7, stLoadPhase);
+  await stRun(8, async()=>{
+    let got = 0, withAcc = 0;
+    for(let from=0; ; from+=1000){
+      const { data, error } = await sb.from('guests').select('id,accommodation_id').like('token','TESTGUEST_%').order('id').range(from, from+999);
+      if(error) throw new Error(error.message);
+      got += data.length; withAcc += data.filter(g => g.accommodation_id).length;
+      if(data.length < 1000) break;
+    }
+    return { pass: got===3000 && withAcc===3000, actual: `${got} redova · ${withAcc} sa objektom` };
+  });
+
+  ST.end = performance.now();
+  ST.running = false;
+  btn.disabled = false; btn.textContent = '▶ POKRENI PONOVO';
+  const allPass = ST.steps.length===ST_STEP_DEFS.length && ST.steps.every(s => s.pass);
+  document.getElementById('st-sub').textContent = allPass
+    ? 'Test završen — svi koraci su prošli.'
+    : 'Test završen — neki koraci nisu prošli. Pogledaj izveštaj ispod.';
+  stBuildReport(allPass);
+}
+
+function stBuildReport(allPass){
+  const el = document.getElementById('st-report'), L = ST.load || {};
+  const dur = ((ST.end-ST.start)/1000).toFixed(1);
+  const v = allPass
+    ? { t:'✅ SISTEM PROŠAO TEST', c:'#4ade80', bg:'rgba(74,222,128,.12)', b:'rgba(74,222,128,.35)' }
+    : { t:'⚠️ POTREBNA PROVERA', c:'#f43f5e', bg:'rgba(244,63,94,.12)', b:'rgba(244,63,94,.35)' };
+  const kpi = (val,label,c) => `<div class="st-kpi" style="--c:${c}"><div class="st-kpi-v">${val}</div><div class="st-kpi-l">${label}</div></div>`;
+  const rate = L.total ? ((L.ok/L.total)*100).toFixed(2) : '0';
+  el.innerHTML = `
+    <div class="st-verdict" style="color:${v.c};background:${v.bg};border:1px solid ${v.b}">${v.t}</div>
+    <div class="st-kpis" style="margin-top:0">
+      ${kpi(dur+' s','Trajanje testa','#22d3ee')}
+      ${kpi(L.total??0,'Ukupno upita','#a78bfa')}
+      ${kpi(rate+' %','Uspešnost','#4ade80')}
+      ${kpi((L.avg??'—')+' ms','Prosek','#fbbf24')}
+      ${kpi((L.p95??'—')+' ms','p95','#fb7185')}
+      ${kpi((L.max??'—')+' ms','Najsporiji upit','#f43f5e')}
+    </div>
+    <div style="margin-bottom:12px">${stStepRowsHtml()}</div>
+    <p style="font-size:11px;color:rgba(255,255,255,.5);font-weight:700;line-height:1.6">
+      Vreme: ${new Date().toLocaleString('sr-RS')} · Opterećenje: 25 paralelnih konekcija · Propusnost: ${L.rps ?? '—'} zahteva/s · Pravila: uspeh ≥ 99 % i p95 ≤ 1500 ms.<br>
+      Test je samo za čitanje — nijedan red u bazi nije izmenjen.
+    </p>
+    <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="stCopyReport()">📋 Kopiraj izveštaj</button>
+      <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨 Štampaj</button>
+    </div>`;
+  el.style.display = 'block';
+  ST.reportText = [
+    `STAYVB STRESS TEST — ${new Date().toLocaleString('sr-RS')}`,
+    `Rezultat: ${allPass ? 'PROŠAO' : 'POTREBNA PROVERA'}`,
+    `Trajanje: ${dur} s · Upita: ${L.total ?? 0} · Uspešnost: ${rate}% · Prosek: ${L.avg ?? '—'} ms · p95: ${L.p95 ?? '—'} ms · Najsporiji: ${L.max ?? '—'} ms`,
+    '',
+    ...ST_STEP_DEFS.map((name,i)=>{ const s = ST.steps[i]; return `${i+1}. ${name} — ${s ? (s.pass?'PROŠLO':'PALO') : 'NIJE POKRENUTO'} (${s ? s.actual : '—'}; očekivano ${ST_STEP_EXPECT[i]})`; })
+  ].join('\n');
+  el.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function stCopyReport(){
+  navigator.clipboard.writeText(ST.reportText).then(() => alert('✓ Izveštaj kopiran.')).catch(() => alert('Kopiranje nije uspelo.'));
 }
 
 // ── Helpers ───────────────────────────────────────────────────────
