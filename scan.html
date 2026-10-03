@@ -77,6 +77,27 @@ function openScanner(){
 }
 
 let scanLock = false;
+let currentBookingId = null;
+
+const rsd = n => (Number(n) || 0).toLocaleString('sr-RS') + ' RSD';
+const row = (label, value) => `<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08)">
+  <div style="font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,0.4)">${label}</div>
+  <div style="font-size:14px;font-weight:800;color:white;margin-top:3px">${value}</div></div>`;
+
+function scanCardHtml(d){
+  return `<div style="width:100%;max-width:400px;text-align:left">
+    <div style="font-size:20px;font-weight:900;color:white;margin-bottom:4px">${esc(d.guest_name)}</div>
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);margin-bottom:12px">${esc(d.booking_date)} u ${esc(d.slot_time)} · ${d.qty} ${d.qty===1?'osoba':'osoba'}</div>
+    ${row('Odakle gost dolazi', d.accommodation_name ? esc(d.accommodation_name) : '—')}
+    ${row('Šta rezervacija obuhvata', esc(d.resource_name) + (d.description ? '<div style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.7);margin-top:4px;line-height:1.5">' + esc(d.description) + '</div>' : ''))}
+    ${row('Cena', `${rsd(d.unit_price)} × ${d.qty} = <span style="color:#fcd34d">${rsd(d.total)}</span>`)}
+  </div>`;
+}
+
+function showScanOutcome(html){
+  document.getElementById('scan-result').innerHTML = html;
+}
+
 async function onScanDecoded(decodedText){
   if(scanLock) return;
   const m = /^STAYVB:([0-9a-f-]{20,})$/i.exec((decodedText || '').trim());
@@ -84,30 +105,55 @@ async function onScanDecoded(decodedText){
 
   scanLock = true;
   if(qrScanner) qrScanner.pause(true);
-  const bookingId = m[1];
-  const resultEl = document.getElementById('scan-result');
-  resultEl.innerHTML = '<p style="color:rgba(255,255,255,0.5);font-weight:700;font-size:13px">Provera...</p>';
+  currentBookingId = m[1];
+  showScanOutcome('<p style="color:rgba(255,255,255,0.5);font-weight:700;font-size:13px">Učitavam rezervaciju...</p>');
 
-  try{
-    const { data, error } = await sb.rpc('redeem_booking', { p_scanner_token: scannerToken, p_booking_id: bookingId });
-    const r = Array.isArray(data) ? data[0] : null;
+  const { data, error } = await sb.rpc('booking_preview', { p_scanner_token: scannerToken, p_booking_id: currentBookingId });
+  const d = Array.isArray(data) ? data[0] : null;
 
-    if(error || !r){
-      resultEl.innerHTML = '<p style="color:#fca5a5;font-weight:900;font-size:14px">⚠️ Greška, pokušaj ponovo.</p>';
-    } else if(!r.ok){
-      resultEl.innerHTML = `<p style="color:#fcd34d;font-weight:900;font-size:14px">⚠️ ${esc(r.msg)}</p>`;
-    } else {
-      resultEl.innerHTML = `<div><div style="font-size:2.5rem;margin-bottom:8px">✅</div><p style="color:#6ee7b7;font-weight:900;font-size:15px;margin:0 0 4px">${esc(r.guest_name)}</p><p style="color:rgba(255,255,255,0.6);font-weight:700;font-size:12px">${esc(r.resource_name||'')} — realizovano</p></div>`;
-    }
-  } catch(e){
-    resultEl.innerHTML = '<p style="color:#fca5a5;font-weight:900;font-size:14px">⚠️ Greška, pokušaj ponovo.</p>';
+  if(error || !d){
+    showScanOutcome(`<p style="color:#fca5a5;font-weight:900;font-size:14px">⚠️ Greška, pokušaj ponovo.</p>${closeBtn()}`);
+    return;
+  }
+  if(!d.ok){
+    showScanOutcome(`<p style="color:#fcd34d;font-weight:900;font-size:14px">⚠️ ${esc(d.msg)}</p>${closeBtn()}`);
+    return;
   }
 
-  setTimeout(() => {
-    scanLock = false;
-    if(qrScanner){ try{ qrScanner.resume(); }catch(e){} }
-    resultEl.innerHTML = '';
-  }, 2500);
+  showScanOutcome(`${scanCardHtml(d)}
+    <div style="display:flex;gap:10px;margin-top:18px;width:100%;max-width:400px">
+      <button onclick="realizeCurrent()" style="flex:1;padding:16px;border-radius:14px;border:none;background:linear-gradient(135deg,#059669,#10b981);color:white;font-weight:900;font-size:13px;cursor:pointer;font-family:inherit">✅ Realizuj</button>
+      <button onclick="closeScanResult()" style="padding:16px 18px;border-radius:14px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.7);font-weight:900;font-size:13px;cursor:pointer;font-family:inherit">Odustani</button>
+    </div>`);
+}
+
+function closeBtn(){
+  return `<button onclick="closeScanResult()" style="margin-top:18px;padding:14px 26px;border-radius:14px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:white;font-weight:900;font-size:13px;cursor:pointer;font-family:inherit">Zatvori</button>`;
+}
+
+async function realizeCurrent(){
+  if(!currentBookingId) return;
+  showScanOutcome('<p style="color:rgba(255,255,255,0.5);font-weight:700;font-size:13px">Realizujem...</p>');
+  const { data, error } = await sb.rpc('redeem_booking', { p_scanner_token: scannerToken, p_booking_id: currentBookingId });
+  const r = Array.isArray(data) ? data[0] : null;
+  if(error || !r){
+    showScanOutcome(`<p style="color:#fca5a5;font-weight:900;font-size:14px">⚠️ Greška, pokušaj ponovo.</p>${closeBtn()}`);
+    return;
+  }
+  if(!r.ok){
+    showScanOutcome(`<p style="color:#fcd34d;font-weight:900;font-size:14px">⚠️ ${esc(r.msg)}</p>${closeBtn()}`);
+    return;
+  }
+  showScanOutcome(`<div style="text-align:center"><div style="font-size:2.5rem;margin-bottom:8px">✅</div>
+    <p style="color:#6ee7b7;font-weight:900;font-size:16px;margin:0 0 4px">${esc(r.guest_name)}</p>
+    <p style="color:rgba(255,255,255,0.6);font-weight:700;font-size:12px">${esc(r.resource_name||'')} — realizovano</p>${closeBtn()}</div>`);
+}
+
+function closeScanResult(){
+  currentBookingId = null;
+  document.getElementById('scan-result').innerHTML = '';
+  scanLock = false;
+  if(qrScanner){ try{ qrScanner.resume(); }catch(e){} }
 }
 
 init();

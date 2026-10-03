@@ -975,6 +975,8 @@ async function renderBookings(){
       <p class="panel-card-title" style="color:#93c5fd">Podešavanje termina</p>
       <div class="field-group"><label class="field-label">Naziv termina</label><input class="field-input" id="res-name" value="${esc(r?.name||'Termin')}" placeholder="npr. Vožnja, Obilazak, Sto"></div>
       <div class="field-group"><label class="field-label">Kapacitet po terminu</label><input type="number" class="field-input" id="res-qty" value="${r?.total_qty||10}" min="1" max="999"></div>
+      <div class="field-group"><label class="field-label">Cena po osobi (RSD)</label><input type="number" class="field-input" id="res-price" value="${r?.price_rsd||0}" min="0" max="999999"></div>
+      <div class="field-group"><label class="field-label">Šta rezervacija obuhvata</label><textarea class="field-input" id="res-desc" rows="3" placeholder="npr. Vožnja čamcem 30 min, uključen prsluk i fotografije">${esc(r?.description||'')}</textarea></div>
       <button class="btn-primary" onclick="saveResource('${r?.id||''}')">💾 Sačuvaj podešavanje</button>
       <p class="save-msg" id="res-msg"></p>
     </div>
@@ -1007,6 +1009,13 @@ async function renderBookings(){
   const in7 = new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0];
   const { data:bookings } = await sb.from('bookings').select('*').in('resource_id', resources.map(r=>r.id)).gte('booking_date', today).lte('booking_date', in7).eq('status','confirmed').order('booking_date').order('slot_time');
 
+  const accIds = [...new Set((bookings||[]).map(b => b.accommodation_id).filter(Boolean))];
+  const accNames = {};
+  if(accIds.length){
+    const { data:accs } = await sb.from('partners').select('id,name').in('id', accIds);
+    (accs||[]).forEach(a => accNames[a.id] = a.name);
+  }
+
   // Grupiši po datumu + resursu
   let html = resourceEditor + `<div style="display:flex;gap:8px;margin:14px 0;flex-wrap:wrap">
     ${resources.map(r => `<span style="padding:6px 12px;border-radius:999px;background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.25);font-size:10px;font-weight:900;color:#fcd34d">${esc(r.name)} (${r.total_qty} kom)</span>`).join('')}
@@ -1030,6 +1039,7 @@ async function renderBookings(){
           <div class="booking-info">
             <div style="font-weight:900;color:white">${esc(b.guest_name)} ${b.redeemed_at ? '<span style="color:#6ee7b7;font-size:10px">✓ Realizovano</span>' : ''}</div>
             <div style="color:rgba(255,255,255,0.5)">${esc(b.guest_phone)} · ${esc(res?.name||'')}</div>
+            <div style="font-size:10px;color:#6ee7b7;font-weight:800;margin-top:3px">${accNames[b.accommodation_id] ? '🏠 Iz: ' + esc(accNames[b.accommodation_id]) : 'Bez smeštaja'}${res?.price_rsd ? ' · ' + (res.price_rsd*b.qty).toLocaleString('sr-RS') + ' RSD' : ''}</div>
           </div>
           <span class="booking-qty">${b.qty}</span>
           <button class="cancel-btn" onclick="cancelBooking('${b.id}', this)">✕</button>
@@ -1116,12 +1126,14 @@ async function saveCommissionSettings(){
 async function saveResource(resId){
   const name = document.getElementById('res-name').value.trim() || 'Termin';
   const qty  = parseInt(document.getElementById('res-qty').value) || 10;
+  const price = Math.max(0, parseInt(document.getElementById('res-price').value) || 0);
+  const description = document.getElementById('res-desc').value.trim() || null;
   const msgEl = document.getElementById('res-msg');
 
   if(resId){
-    await sb.from('bookable_resources').update({name, total_qty:qty}).eq('id', resId);
+    await sb.from('bookable_resources').update({name, total_qty:qty, price_rsd:price, description}).eq('id', resId);
   } else {
-    await sb.from('bookable_resources').insert({partner_id:partner.id, name, total_qty:qty, is_active:true});
+    await sb.from('bookable_resources').insert({partner_id:partner.id, name, total_qty:qty, price_rsd:price, description, is_active:true});
   }
 
   msgEl.style.color = '#6ee7b7';
@@ -1341,7 +1353,7 @@ async function renderAttractionDebts(){
 
   if(!rows?.length){
     return `<div class="panel-card">
-      <p class="panel-card-title">Dugovanja apartmanima</p>
+      <p class="panel-card-title">Dugovanja smeštaju</p>
       <p style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:700">Trenutno nema neisplaćenih provizija.</p>
     </div>`;
   }
@@ -1350,7 +1362,7 @@ async function renderAttractionDebts(){
   const list = rows.map(c => `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
       <div>
-        <div style="font-weight:800;color:white;font-size:12px">${esc(c.apartment?.name||'Apartman')}</div>
+        <div style="font-weight:800;color:white;font-size:12px">${esc(c.apartment?.name||'Smeštaj')}</div>
         <div style="font-size:10px;color:rgba(255,255,255,0.4)">${new Date(c.created_at).toLocaleDateString('sr-RS')} · ${c.amount_rsd.toLocaleString('sr-RS')} RSD</div>
       </div>
       <label style="display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.6);cursor:pointer;white-space:nowrap">
@@ -1361,7 +1373,7 @@ async function renderAttractionDebts(){
 
   return `<div class="panel-card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-      <p class="panel-card-title" style="margin:0">Dugovanja apartmanima</p>
+      <p class="panel-card-title" style="margin:0">Dugovanja smeštaju</p>
       <span style="font-weight:900;color:#fcd34d;font-size:13px">${total.toLocaleString('sr-RS')} RSD</span>
     </div>
     ${list}

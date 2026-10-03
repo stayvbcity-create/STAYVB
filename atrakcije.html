@@ -133,6 +133,7 @@ body{top:0!important}
     <div class="modal-body">
       <!-- Resource tabs (ako ima više resursa) -->
       <div class="res-tabs" id="res-tabs"></div>
+      <div id="res-info" style="margin:0 0 16px"></div>
 
       <!-- Datum -->
       <div class="form-group">
@@ -143,7 +144,7 @@ body{top:0!important}
       <!-- Broj osoba -->
       <div class="form-group">
         <label class="form-label" id="lbl-qty">Broj osoba / vozila</label>
-        <select class="form-input form-select" id="book-qty" onchange="loadSlots()">
+        <select class="form-input form-select" id="book-qty" onchange="renderResInfo();loadSlots()">
           <option value="1">1</option>
           <option value="2">2</option>
           <option value="3">3</option>
@@ -243,7 +244,7 @@ function renderList(){
         <div class="attr-meta">
           ${pc.working_hours ? `<span class="attr-tag">🕐 ${C.escapeHtml(pc.working_hours)}</span>` : ''}
           ${p.loyalty_enabled ? '<span class="attr-tag">⭐ Pečat</span>' : ''}
-          ${p.has_booking ? '<span class="attr-tag" style="background:#ecfdf5;border-color:#10b981;color:#065f46">📅 Rezervacija</span>' : ''}
+          ${p.has_booking ? `<button class="attr-tag" onclick="openMyCodeModal('${p.id}')" style="background:#ecfdf5;border:1px solid #10b981;color:#065f46;cursor:pointer;font-family:inherit">📅 Moja rezervacija · QR</button>` : ''}
         </div>
         <div class="attr-btns">
           ${p.has_booking ? `<button class="btn-sm btn-book" onclick="openBooking('${p.id}','${C.escapeHtml(p.name)}')">📅 Rezerviši</button>` : ''}
@@ -279,6 +280,7 @@ async function openBooking(partnerId, partnerName){
 
   currentResources = resources || [];
   selectedResource = currentResources[0] || null;
+  renderResInfo();
 
   // Render resource tabs
   const tabsEl = document.getElementById('res-tabs');
@@ -294,11 +296,25 @@ async function openBooking(partnerId, partnerName){
   await loadSlots();
 }
 
+function renderResInfo(){
+  const el = document.getElementById('res-info');
+  if(!el) return;
+  if(!selectedResource){ el.innerHTML = ''; return; }
+  const qty = parseInt(document.getElementById('book-qty').value) || 1;
+  const unit = selectedResource.price_rsd || 0;
+  el.innerHTML = `<div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:1.2rem;padding:14px 16px">
+    <p style="font-size:12px;font-weight:900;color:#0f172a;margin:0 0 4px">${C.escapeHtml(selectedResource.name)}</p>
+    ${selectedResource.description ? `<p style="font-size:11px;color:#475569;font-weight:600;line-height:1.5;margin:0 0 8px">${C.escapeHtml(selectedResource.description)}</p>` : ''}
+    ${unit ? `<p style="font-size:12px;font-weight:900;color:#065f46;margin:0">${unit.toLocaleString('sr-RS')} RSD po osobi · ukupno <span style="color:#0f172a">${(unit*qty).toLocaleString('sr-RS')} RSD</span></p>` : ''}
+  </div>`;
+}
+
 function selectResource(resId){
   selectedResource = currentResources.find(r => r.id === resId) || null;
   selectedSlot = null;
   document.getElementById('btn-confirm').disabled = true;
   document.querySelectorAll('.res-tab').forEach(t => t.classList.toggle('active', t.textContent === (selectedResource?.name||'')));
+  renderResInfo();
   loadSlots();
 }
 
@@ -380,7 +396,9 @@ async function confirmBooking(){
         <div style="font-size:3rem;margin-bottom:16px">✅</div>
         <h2 style="font-size:1.3rem;font-weight:900;color:#065f46;margin:0 0 8px">Rezervacija potvrđena!</h2>
         <p style="font-size:13px;color:#475569;font-weight:600;margin:0 0 6px">${C.escapeHtml(currentPartner.name)}</p>
-        <p style="font-size:13px;color:#10b981;font-weight:900;margin:0 0 20px">📅 ${date} u ${selectedSlot.slice(0,5)} · ${qty} ${qty===1?'osoba':'osoba'}</p>
+        <p style="font-size:13px;color:#10b981;font-weight:900;margin:0 0 ${selectedResource?.price_rsd ? '6' : '20'}px">📅 ${date} u ${selectedSlot.slice(0,5)} · ${qty} ${qty===1?'osoba':'osoba'}</p>
+        ${selectedResource?.description ? `<p style="font-size:12px;color:#475569;font-weight:600;line-height:1.5;margin:0 0 6px">${C.escapeHtml(selectedResource.description)}</p>` : ''}
+        ${selectedResource?.price_rsd ? `<p style="font-size:13px;color:#065f46;font-weight:900;margin:0 0 20px">Ukupno: ${(selectedResource.price_rsd*qty).toLocaleString('sr-RS')} RSD</p>` : ''}
         <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:1.5rem;padding:18px;margin-bottom:20px">
           <canvas id="booking-qr-canvas" style="margin:0 auto 10px;display:block"></canvas>
           <p style="font-size:11px;color:#64748b;font-weight:700;line-height:1.5;margin:0">Pokaži ovaj kod na licu mesta — osoblje ga skenira kad dođeš.</p>
@@ -409,7 +427,7 @@ async function fetchMyActiveBookings(){
   const { data:g } = await sb.from('guests').select('id').eq('token', guestToken).maybeSingle();
   if(!g) return [];
   const { data:bookings } = await sb.from('bookings')
-    .select('id, booking_date, slot_time, qty, resource_id, bookable_resources(name, partners(name))')
+    .select('id, booking_date, slot_time, qty, resource_id, bookable_resources(name, description, price_rsd, partner_id, partners(name))')
     .eq('guest_id', g.id)
     .eq('status', 'confirmed')
     .is('redeemed_at', null)
@@ -422,26 +440,33 @@ async function refreshMyCodeButton(){
   document.getElementById('my-code-btn').style.display = bookings.length ? 'flex' : 'none';
 }
 
-async function openMyCodeModal(){
+async function openMyCodeModal(partnerId){
   const modal = document.getElementById('my-code-modal');
   const list = document.getElementById('my-code-list');
   list.innerHTML = '<p style="text-align:center;padding:20px;font-size:13px;color:#64748b;font-weight:700">Učitavanje...</p>';
   modal.style.display = 'flex';
 
-  const bookings = await fetchMyActiveBookings();
+  const all = await fetchMyActiveBookings();
+  if(!partnerId) document.getElementById('my-code-btn').style.display = all.length ? 'flex' : 'none';
+  const bookings = partnerId ? all.filter(b => b.bookable_resources?.partner_id === partnerId) : all;
   if(!bookings.length){
-    list.innerHTML = '<p style="text-align:center;padding:20px;font-size:13px;color:#64748b;font-weight:700">Nemaš aktivnih kodova.</p>';
-    document.getElementById('my-code-btn').style.display = 'none';
+    list.innerHTML = '<p style="text-align:center;padding:20px;font-size:13px;color:#64748b;font-weight:700">Nemaš aktivnih kodova za ovu atrakciju.</p>';
     return;
   }
 
-  list.innerHTML = bookings.map((b,i) => `
+  list.innerHTML = bookings.map((b,i) => {
+    const unit = b.bookable_resources?.price_rsd || 0;
+    const desc = b.bookable_resources?.description;
+    return `
     <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:1.5rem;padding:18px;margin-bottom:14px;text-align:center">
       <p style="font-size:13px;font-weight:900;color:#065f46;margin:0 0 2px">${C.escapeHtml(b.bookable_resources?.partners?.name||'')}</p>
-      <p style="font-size:11px;color:#64748b;font-weight:700;margin:0 0 12px">${C.escapeHtml(b.bookable_resources?.name||'')} · 📅 ${b.booking_date} u ${(b.slot_time||'').slice(0,5)} · ${b.qty} ${b.qty===1?'osoba':'osoba'}</p>
+      <p style="font-size:11px;color:#64748b;font-weight:700;margin:0 0 6px">${C.escapeHtml(b.bookable_resources?.name||'')} · 📅 ${b.booking_date} u ${(b.slot_time||'').slice(0,5)} · ${b.qty} ${b.qty===1?'osoba':'osoba'}</p>
+      ${desc ? `<p style="font-size:11px;color:#475569;font-weight:600;line-height:1.5;margin:0 0 6px">${C.escapeHtml(desc)}</p>` : ''}
+      ${unit ? `<p style="font-size:12px;color:#065f46;font-weight:900;margin:0 0 12px">${(unit*b.qty).toLocaleString('sr-RS')} RSD <span style="font-weight:700;color:#64748b">(${unit.toLocaleString('sr-RS')} RSD × ${b.qty})</span></p>` : '<div style="margin-bottom:12px"></div>'}
       <canvas id="my-code-qr-${i}" style="margin:0 auto 10px;display:block"></canvas>
       <p style="font-size:11px;color:#64748b;font-weight:700;line-height:1.5;margin:0">Pokaži ovaj kod na licu mesta — osoblje ga skenira kad dođeš.</p>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   bookings.forEach((b,i) => {
     if(window.QRCode) QRCode.toCanvas(document.getElementById('my-code-qr-'+i), 'STAYVB:' + b.id, { width:170, margin:1 }, () => {});
