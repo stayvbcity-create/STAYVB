@@ -3257,7 +3257,8 @@ const ST = { running:false, ok:0, fail:0, samples:[], chart:[], particles:[], fx
 const stToday = () => new Date().toLocaleDateString('sv-SE');
 const stRnd = () => crypto.randomUUID().replace(/-/g,'');
 const stPct = (arr,p) => { if(!arr.length) return 0; const s=[...arr].sort((a,b)=>a-b); return s[Math.min(s.length-1, Math.ceil(p/100*s.length)-1)]; };
-const stCount = q => q.then(r => { if(r.error) throw new Error(r.error.message); return r.count ?? 0; });
+const stCount = q => q.then(r => { if(r.error) throw new Error(r.error.message || r.error.code || r.error.hint || 'HTTP greška'); return r.count ?? 0; });
+const stIds = q => q.then(r => { if(r.error) throw new Error(r.error.message || r.error.code || 'HTTP greška'); return (r.data||[]).map(x => x.id); });
 
 function stNodePos(i,w,h){
   const R = Math.min(w,h)*0.34, n = ST_NODES[i];
@@ -3565,7 +3566,7 @@ async function runStressTest(){
     return { pass: n===3000, actual: n };
   });
   await stRun(3, async()=>{
-    const n = await stCount(sb.from('partner_content').select('partner_id, partners!inner(partner_code)',{count:'exact',head:true}).like('partners.partner_code','TST_%'));
+    const n = await stCount(sb.from('partner_content').select('partner_id',{count:'exact',head:true}).like('wifi_name','Test-WiFi-TST_%'));
     return { pass: n===530, actual: n };
   });
   await stRun(4, async()=>{
@@ -3573,11 +3574,14 @@ async function runStressTest(){
     return { pass: n===230, actual: n };
   });
   await stRun(5, async()=>{
-    const n = await stCount(sb.from('partner_content').select('partner_id, partners!inner(partner_code)',{count:'exact',head:true}).not('current_offer','is',null).like('partners.partner_code','TST_%'));
+    const n = await stCount(sb.from('partner_content').select('partner_id',{count:'exact',head:true})
+      .or('wifi_name.like.Test-WiFi-TST_HOTEL_*,wifi_name.like.Test-WiFi-TST_REST_*')
+      .not('current_offer','is',null));
     return { pass: n===230, actual: n };
   });
   await stRun(6, async()=>{
-    const n = await stCount(sb.from('stamps').select('id, guests!inner(token)',{count:'exact',head:true}).like('guests.token','TESTGUEST_%'));
+    const locs = await stIds(sb.from('stamp_locations').select('id').like('location_code','TST_LOC_%'));
+    const n = await stCount(sb.from('stamps').select('id',{count:'exact',head:true}).in('location_id', locs));
     return { pass: n>=1200 && n<=1800, actual: n };
   });
   await stRun(7, async()=>{
