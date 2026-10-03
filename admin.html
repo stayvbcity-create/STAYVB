@@ -3257,8 +3257,9 @@ const ST = { running:false, ok:0, fail:0, samples:[], chart:[], particles:[], fx
 const stToday = () => new Date().toLocaleDateString('sv-SE');
 const stRnd = () => crypto.randomUUID().replace(/-/g,'');
 const stPct = (arr,p) => { if(!arr.length) return 0; const s=[...arr].sort((a,b)=>a-b); return s[Math.min(s.length-1, Math.ceil(p/100*s.length)-1)]; };
-const stCount = q => q.then(r => { if(r.error) throw new Error(r.error.message || r.error.code || r.error.hint || 'HTTP greška'); return r.count ?? 0; });
-const stIds = q => q.then(r => { if(r.error) throw new Error(r.error.message || r.error.code || 'HTTP greška'); return (r.data||[]).map(x => x.id); });
+const stErr = e => { console.error('STRESS TEST greška:', e); return new Error(e.message || e.code || e.hint || JSON.stringify(e) || 'nepoznata greška'); };
+const stCount = q => q.then(r => { if(r.error) throw stErr(r.error); return r.count ?? 0; });
+const stIds = q => q.then(r => { if(r.error) throw stErr(r.error); return (r.data||[]).map(x => x.id); });
 
 function stNodePos(i,w,h){
   const R = Math.min(w,h)*0.34, n = ST_NODES[i];
