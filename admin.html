@@ -628,7 +628,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- ═══ PROVIZIJE (apartman ↔ atrakcija) ═══ -->
     <div id="page-commissions" class="page">
       <div class="sec-header">
-        <div><div class="sec-title">Provizije</div><div class="sec-sub">Ko kome duguje — apartman ↔ atrakcija, posle realizovanih rezervacija</div></div>
+        <div><div class="sec-title">Provizije</div><div class="sec-sub">Ko kome duguje — smeštaj (hotel ili apartman) ↔ atrakcija, posle realizovanih rezervacija</div></div>
         <button class="btn btn-ghost btn-sm" onclick="loadCommissions()">🔄 Osveži</button>
       </div>
       <div class="billing-summary" style="margin-bottom:16px">
@@ -640,7 +640,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <div class="tbl-header"><div class="tbl-title">Knjižene provizije</div></div>
         <div class="tbl-wrap">
           <table class="tbl">
-            <thead><tr><th>Datum</th><th>Apartman</th><th>Atrakcija</th><th>Gost</th><th>%</th><th>Iznos</th><th>Apartman potvrdio</th><th>Atrakcija potvrdila</th><th>Status</th></tr></thead>
+            <thead><tr><th>Datum</th><th>Smeštaj</th><th>Atrakcija</th><th>Gost</th><th>%</th><th>Iznos</th><th>Smeštaj potvrdio</th><th>Atrakcija potvrdila</th><th>Status</th></tr></thead>
             <tbody id="comm-tbody"></tbody>
           </table>
         </div>
@@ -1163,7 +1163,7 @@ const PAGE_META = {
   events:['Gradski događaji','Javni kalendar'],
   billing:['Naplata','Mesečna pretplata po partneru'],
   revenue:['Prihodi','Istorija naplate'],
-  commissions:['Provizije','Apartman ↔ atrakcija — ko kome duguje'],
+  commissions:['Provizije','Smeštaj ↔ atrakcija — ko kome duguje'],
   qr:['QR Generator','QR kodovi i partner URL-ovi'],
   leads:['Prijave partnera','Zainteresovani vlasnici objekata'],
   landingviews:['Landing posete','Posete join.html po danima'],

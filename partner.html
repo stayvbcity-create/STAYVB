@@ -364,7 +364,7 @@ function buildTabs(){
   // Apartman/Hotel - Smeštaj
   if(type === 'apartment' || type === 'hotel') tabs.push({id:'stay',     icon:'🏠', label:'Smeštaj',    render: renderStay});
   if((type === 'apartment' || type === 'hotel') && partner.is_premium) tabs.push({id:'accommodation', icon:'🛎️', label:'Rezervacije', render: renderAccommodation});
-  if(type === 'apartment' && partner.is_premium) tabs.push({id:'earnings', icon:'💰', label:'Zarada', render: renderEarnings});
+  if((type === 'apartment' || type === 'hotel') && partner.is_premium) tabs.push({id:'earnings', icon:'💰', label:'Zarada', render: renderEarnings});
   if(type === 'hotel' || type === 'restaurant' || type === 'attraction') tabs.push({id:'hh', icon:'🍹', label:'Happy Hour', render: renderHH});
   if(type === 'business') tabs.push({id:'promo',    icon:'📢', label:'Promocije',  render: renderPromo});
   if(type === 'hotel' || type === 'attraction') tabs.push({id:'info', icon:'ℹ️',  label:'Info',        render: renderInfo});
@@ -979,13 +979,13 @@ async function renderBookings(){
       <p class="save-msg" id="res-msg"></p>
     </div>
     <div class="panel-card" style="border-color:rgba(16,185,129,0.18);background:rgba(16,185,129,0.04)">
-      <p class="panel-card-title" style="color:#6ee7b7">Provizija za apartmane</p>
-      <p style="font-size:11px;color:rgba(255,255,255,0.45);font-weight:600;line-height:1.5;margin:-8px 0 12px">Kad gost Premium apartmana kod vas realizuje rezervaciju, apartmanu se knjiži procenat koji ovde odredite.</p>
+      <p class="panel-card-title" style="color:#6ee7b7">Provizija za smeštaj</p>
+      <p style="font-size:11px;color:rgba(255,255,255,0.45);font-weight:600;line-height:1.5;margin:-8px 0 12px">Kad gost Premium hotela ili apartmana kod vas realizuje rezervaciju, tom smeštaju se knjiži procenat koji ovde odredite.</p>
       <label style="display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;cursor:pointer;padding:12px;background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.18);border-radius:1.2rem;margin-bottom:10px">
         <input type="checkbox" id="comm-active" ${partner.commission_sharing_active?'checked':''} onchange="document.getElementById('comm-pct-wrap').style.display=this.checked?'block':'none'" style="width:18px;height:18px;accent-color:#10b981;flex-shrink:0">
         <div>
-          <div style="font-weight:900;color:#6ee7b7">Delim proviziju sa apartmanima</div>
-          <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:2px">Isključeno — apartmani ne vide ponudu kao izvor zarade</div>
+          <div style="font-weight:900;color:#6ee7b7">Delim proviziju sa smeštajem</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:2px">Isključeno — hoteli i apartmani ne vide ponudu kao izvor zarade</div>
         </div>
       </label>
       <div id="comm-pct-wrap" style="display:${partner.commission_sharing_active?'block':'none'}">
