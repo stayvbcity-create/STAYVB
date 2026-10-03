@@ -365,6 +365,7 @@ function buildTabs(){
   if(type === 'apartment' || type === 'hotel') tabs.push({id:'stay',     icon:'🏠', label:'Smeštaj',    render: renderStay});
   if((type === 'apartment' || type === 'hotel') && partner.is_premium) tabs.push({id:'accommodation', icon:'🛎️', label:'Rezervacije', render: renderAccommodation});
   if((type === 'apartment' || type === 'hotel') && partner.is_premium) tabs.push({id:'earnings', icon:'💰', label:'Zarada', render: renderEarnings});
+  if(type === 'hotel') tabs.push({id:'finance', icon:'📒', label:'Finansije', render: renderFinance});
   if(type === 'hotel' || type === 'restaurant' || type === 'attraction') tabs.push({id:'hh', icon:'🍹', label:'Happy Hour', render: renderHH});
   if(type === 'business') tabs.push({id:'promo',    icon:'📢', label:'Promocije',  render: renderPromo});
   if(type === 'hotel' || type === 'attraction') tabs.push({id:'info', icon:'ℹ️',  label:'Info',        render: renderInfo});
@@ -1383,6 +1384,142 @@ async function renderAttractionDebts(){
 async function toggleAttractionPaidConfirm(commissionId, checked){
   await sb.from('apartment_commissions').update({ attraction_paid_confirmed: checked }).eq('id', commissionId);
   renderBookings();
+}
+
+// ── Finansije (hotel): realizovane rezervacije gostiju i provizije ──
+let finRows = [], finFiltered = [];
+const finRsd = n => (Number(n) || 0).toLocaleString('sr-RS') + ' RSD';
+const finMonthStart = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1).toLocaleDateString('sv-SE'); };
+const finToday = () => new Date().toLocaleDateString('sv-SE');
+const finStatusLabel = s => s === 'paid' ? 'Isplaćeno' : s === 'pending' ? 'Čeka isplatu' : '—';
+
+async function renderFinance(){
+  const el = document.getElementById('tab-finance');
+  el.innerHTML = '<p style="font-size:12px;color:rgba(255,255,255,0.4);font-weight:700">Učitavanje...</p>';
+
+  const [{ data:bks }, { data:coms }] = await Promise.all([
+    sb.from('bookings')
+      .select('id, booking_date, slot_time, qty, guest_name, redeemed_at, bookable_resources(name, price_rsd, partners(name))')
+      .eq('accommodation_id', partner.id).not('redeemed_at', 'is', null)
+      .order('booking_date', {ascending:false}).limit(5000),
+    sb.from('apartment_commissions').select('booking_id, amount_rsd, commission_pct_applied, paid_at')
+      .eq('apartment_partner_id', partner.id)
+  ]);
+
+  const cmap = {};
+  (coms || []).forEach(c => cmap[c.booking_id] = c);
+  finRows = (bks || []).map(b => {
+    const res = b.bookable_resources || {};
+    const c = cmap[b.id];
+    return {
+      date: b.booking_date, time: (b.slot_time || '').slice(0,5), guest: b.guest_name || '',
+      qty: b.qty || 1, attraction: res.partners?.name || '—', resource: res.name || '',
+      value: (res.price_rsd || 0) * (b.qty || 1),
+      commission: c ? c.amount_rsd : 0, pct: c ? c.commission_pct_applied : null,
+      status: !c ? 'nema' : (c.paid_at ? 'paid' : 'pending')
+    };
+  });
+
+  const atts = [...new Set(finRows.map(r => r.attraction))].sort((a,b) => a.localeCompare(b, 'sr'));
+  el.innerHTML = `
+    <div class="panel-card" style="margin-bottom:12px">
+      <p class="panel-card-title">Filteri</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field-group"><label class="field-label">Od</label><input type="date" class="field-input" id="fin-from" value="${finMonthStart()}" onchange="finApply()"></div>
+        <div class="field-group"><label class="field-label">Do</label><input type="date" class="field-input" id="fin-to" value="${finToday()}" onchange="finApply()"></div>
+      </div>
+      <div class="field-group"><label class="field-label">Atrakcija</label>
+        <select class="field-input" id="fin-att" onchange="finApply()"><option value="">Sve atrakcije</option>${atts.map(a => `<option value="${esc(a)}">${esc(a)}</option>`).join('')}</select></div>
+      <div class="field-group"><label class="field-label">Prikaz</label>
+        <select class="field-input" id="fin-status" onchange="finApply()">
+          <option value="">Sve realizovane rezervacije</option>
+          <option value="prov">Samo sa proviziom</option>
+          <option value="pending">Provizija čeka isplatu</option>
+          <option value="paid">Isplaćeno</option>
+        </select></div>
+    </div>
+    <div id="fin-summary"></div>
+    <div class="panel-card" id="fin-list" style="padding:8px 14px"></div>
+    <button class="btn-primary" style="margin-top:12px" onclick="finPrint()">🖨️ Štampaj specifikaciju</button>`;
+  finApply();
+}
+
+function finApply(){
+  const from = document.getElementById('fin-from')?.value || '';
+  const to = document.getElementById('fin-to')?.value || '';
+  const att = document.getElementById('fin-att')?.value || '';
+  const st = document.getElementById('fin-status')?.value || '';
+  finFiltered = finRows.filter(r =>
+    (!from || r.date >= from) && (!to || r.date <= to) &&
+    (!att || r.attraction === att) &&
+    (!st || (st === 'prov' ? r.commission > 0 : r.status === st)));
+
+  const sum = f => finFiltered.reduce((s, r) => s + f(r), 0);
+  const value = sum(r => r.value), com = sum(r => r.commission);
+  const paid = sum(r => r.status === 'paid' ? r.commission : 0);
+  const pending = sum(r => r.status === 'pending' ? r.commission : 0);
+  const card = (v, l, c) => `<div class="panel-card" style="text-align:center;padding:12px"><div style="font-size:1.1rem;font-weight:900;color:${c}">${v}</div><div style="font-size:9px;font-weight:800;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-top:2px">${l}</div></div>`;
+  document.getElementById('fin-summary').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      ${card(finFiltered.length, 'Realizovanih rezervacija', '#e2e8f0')}
+      ${card(finRsd(value), 'Vrednost rezervacija', '#93c5fd')}
+      ${card(finRsd(com), 'Provizija ukupno', '#fcd34d')}
+      ${card(finRsd(paid) + ' / ' + finRsd(pending), 'Isplaćeno / na čekanju', '#6ee7b7')}
+    </div>`;
+
+  const rows = finFiltered.map(r => `
+    <div style="display:grid;grid-template-columns:1fr 1.4fr 1.6fr 0.6fr 1fr 1fr;gap:8px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:11px;align-items:start">
+      <div style="color:rgba(255,255,255,0.6)">${esc(r.date)}<br>${esc(r.time)}</div>
+      <div style="font-weight:800;color:white">${esc(r.guest)}</div>
+      <div style="color:rgba(255,255,255,0.75)">${esc(r.attraction)}<br><span style="color:rgba(255,255,255,0.4)">${esc(r.resource)}</span></div>
+      <div style="color:rgba(255,255,255,0.75);text-align:center">${r.qty}</div>
+      <div style="text-align:right;color:white;font-weight:800">${finRsd(r.value)}</div>
+      <div style="text-align:right;color:${r.status==='paid'?'#6ee7b7':r.commission?'#fcd34d':'rgba(255,255,255,0.35)'};font-weight:800">
+        ${r.commission ? finRsd(r.commission) + ' (' + r.pct + '%)' : '—'}<br><span style="font-size:9px">${finStatusLabel(r.status)}</span></div>
+    </div>`).join('');
+  document.getElementById('fin-list').innerHTML = (finFiltered.length
+    ? `<div style="display:grid;grid-template-columns:1fr 1.4fr 1.6fr 0.6fr 1fr 1fr;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.15);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.4)"><div>Datum</div><div>Gost</div><div>Atrakcija / stavka</div><div style="text-align:center">Kol.</div><div style="text-align:right">Vrednost</div><div style="text-align:right">Provizija</div></div>${rows}`
+    : '<p style="font-size:12px;color:rgba(255,255,255,0.35);font-weight:700;padding:12px 0">Nema realizovanih rezervacija za izabrane filtere.</p>');
+}
+
+function finPrint(){
+  const from = document.getElementById('fin-from')?.value || '—';
+  const to = document.getElementById('fin-to')?.value || '—';
+  const att = document.getElementById('fin-att')?.value || 'Sve atrakcije';
+  const value = finFiltered.reduce((s,r) => s + r.value, 0);
+  const com = finFiltered.reduce((s,r) => s + r.commission, 0);
+  const paid = finFiltered.reduce((s,r) => s + (r.status === 'paid' ? r.commission : 0), 0);
+  const pending = finFiltered.reduce((s,r) => s + (r.status === 'pending' ? r.commission : 0), 0);
+  const body = finFiltered.map(r => `<tr>
+      <td>${esc(r.date)} ${esc(r.time)}</td><td>${esc(r.guest)}</td>
+      <td>${esc(r.attraction)}<br><small>${esc(r.resource)}</small></td>
+      <td style="text-align:center">${r.qty}</td>
+      <td style="text-align:right">${finRsd(r.value)}</td>
+      <td style="text-align:right">${r.commission ? finRsd(r.commission) + ' (' + r.pct + '%)' : '—'}</td>
+      <td>${finStatusLabel(r.status)}</td></tr>`).join('');
+
+  const w = window.open('', '_blank');
+  if(!w){ alert('Dozvoli pop-up prozore za štampu.'); return; }
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Specifikacija — ${esc(partner.name)}</title>
+    <style>body{font-family:Arial,sans-serif;font-size:12px;color:#111;margin:24px}
+    h1{font-size:18px;margin:0 0 4px}.meta{color:#555;margin-bottom:14px;line-height:1.6}
+    table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border-bottom:1px solid #ddd;padding:6px;text-align:left;vertical-align:top}
+    th{background:#f3f4f6;font-size:11px}.tot{margin-top:14px;font-size:13px;font-weight:bold}
+    .sig{margin-top:60px;display:flex;justify-content:space-between}.sig div{width:42%;border-top:1px solid #111;padding-top:6px;font-size:11px}
+    @media print{body{margin:10mm}}</style></head><body>
+    <h1>Specifikacija realizovanih rezervacija</h1>
+    <div class="meta"><strong>${esc(partner.name)}</strong><br>
+      Period: ${esc(from)} – ${esc(to)} · Atrakcija: ${esc(att)}<br>
+      Izdato: ${new Date().toLocaleString('sr-RS')}</div>
+    <table><thead><tr><th>Datum i vreme</th><th>Gost</th><th>Atrakcija / stavka</th><th style="text-align:center">Kol.</th><th style="text-align:right">Vrednost</th><th style="text-align:right">Provizija</th><th>Status</th></tr></thead>
+    <tbody>${body || '<tr><td colspan="7">Nema realizovanih rezervacija za izabrane filtere.</td></tr>'}</tbody></table>
+    <div class="tot">Ukupno rezervacija: ${finFiltered.length} · Vrednost: ${finRsd(value)} · Provizija: ${finRsd(com)}<br>
+      Isplaćeno: ${finRsd(paid)} · Na čekanju: ${finRsd(pending)}</div>
+    <div class="sig"><div>Potpis i pečat hotela</div><div>Datum</div></div>
+    </body></html>`);
+  w.document.close();
+  w.focus();
+  w.print();
 }
 
 // ── Stats Tab ─────────────────────────────────────────────────────
