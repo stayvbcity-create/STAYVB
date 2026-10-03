@@ -371,17 +371,17 @@ async function confirmBooking(){
   const { data:g } = await sb.from('guests').select('id').eq('token', guestToken).maybeSingle();
   if(g) guestId = g.id;
 
-  const { data:inserted, error } = await sb.from('bookings').insert({
-    resource_id:  selectedResource.id,
-    guest_id:     guestId,
-    accommodation_id: currentAccommodationId,
-    booking_date: date,
-    slot_time:    selectedSlot,
-    qty,
-    guest_name:   name,
-    guest_phone:  phone,
-    status:       'confirmed'
-  }).select('id').single();
+  const { data:newId, error } = await sb.rpc('create_guest_booking', {
+    p_resource_id: selectedResource.id,
+    p_guest_token: guestToken,
+    p_accommodation_id: currentAccommodationId,
+    p_date: date,
+    p_slot: selectedSlot,
+    p_qty: qty,
+    p_name: name,
+    p_phone: phone
+  });
+  const inserted = newId ? { id: newId } : null;
 
   if(error){
     document.getElementById('booking-msg').textContent = error.code === '23505' ? '⚠️ Taj termin je već zauzet.' : '⚠️ Greška. Pokušaj ponovo.';
@@ -424,15 +424,12 @@ function closeBooking(){
 // može ponovo da otvori kod, sve dok ga atrakcija ne skenira.
 async function fetchMyActiveBookings(){
   const guestToken = C.getOrCreateGuestToken();
-  const { data:g } = await sb.from('guests').select('id').eq('token', guestToken).maybeSingle();
-  if(!g) return [];
-  const { data:bookings } = await sb.from('bookings')
-    .select('id, booking_date, slot_time, qty, resource_id, bookable_resources(name, description, price_rsd, partner_id, partners(name))')
-    .eq('guest_id', g.id)
-    .eq('status', 'confirmed')
-    .is('redeemed_at', null)
-    .order('created_at', { ascending:false });
-  return bookings || [];
+  const { data, error } = await sb.rpc('guest_active_bookings', { p_guest_token: guestToken });
+  if(error) return [];
+  return (data || []).map(r => ({
+    id: r.id, booking_date: r.booking_date, slot_time: r.slot_time, qty: r.qty,
+    bookable_resources: { name: r.resource_name, description: r.description, price_rsd: r.price_rsd, partner_id: r.partner_id, partners: { name: r.partner_name } }
+  }));
 }
 
 async function refreshMyCodeButton(){
