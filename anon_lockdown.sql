@@ -65,7 +65,7 @@ BEGIN
 END $$;
 
 -- 3. RLS uključen na svim tabelama; ako RLS nije bio uključen, sačuvaj čitanje
-DO $
+DO $$
 DECLARE
     t text;
     had_rls boolean;
