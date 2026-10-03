@@ -26,7 +26,7 @@ DECLARE
     v_cnt        int;
     v_amt        int;
     v_pct        int;
-    v_apt        uuid;
+    v_apt        text;
     v_paid       timestamptz;
 BEGIN
     SELECT id INTO v_hot FROM public.partners
@@ -57,14 +57,14 @@ BEGIN
     SELECT * INTO v_r FROM public.redeem_booking(v_token, v_book);
     INSERT INTO st_results VALUES (1, 'Realizacija rezervacije preko skenera (premium hotel)', v_r.ok, v_r.msg);
 
-    SELECT count(*), coalesce(max(amount_rsd), 0), coalesce(max(commission_pct_applied), 0), max(apartment_partner_id)
+    SELECT count(*), coalesce(max(amount_rsd), 0), coalesce(max(commission_pct_applied), 0), max(apartment_partner_id::text)
     INTO v_cnt, v_amt, v_pct, v_apt
     FROM public.apartment_commissions WHERE booking_id = v_book;
 
     INSERT INTO st_results VALUES (2, 'Provizija upisana tačno jednom', v_cnt = 1, 'redova: ' || v_cnt);
     INSERT INTO st_results VALUES (3, 'Iznos = 2 × 1000 × 10 % = 200 RSD', v_amt = 200, 'iznos: ' || v_amt || ' RSD, % = ' || v_pct);
-    INSERT INTO st_results VALUES (4, 'Provizija pripada HOTELU (ne atrakciji)', v_apt = v_hot,
-        CASE WHEN v_apt = v_hot THEN 'ok' ELSE 'pogrešan partner' END);
+    INSERT INTO st_results VALUES (4, 'Provizija pripada HOTELU (ne atrakciji)', v_apt = v_hot::text,
+        CASE WHEN v_apt = v_hot::text THEN 'ok' ELSE 'pogrešan partner' END);
 
     -- Ponovna realizacija istog koda ne sme da napravi drugu proviziju
     SELECT * INTO v_r FROM public.redeem_booking(v_token, v_book);
