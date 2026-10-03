@@ -60,6 +60,10 @@ window.STAYVB_CONFIG = (function () {
         try { getClient()?.auth.signOut(); } catch (e) { /* noop */ }
     }
 
+    function guestDb() {
+        return supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+    }
+
     function getPartnerToken() {
         return new URLSearchParams(window.location.search).get('t') || '';
     }
@@ -116,7 +120,7 @@ window.STAYVB_CONFIG = (function () {
     }
 
     return {
-        db: getClient,
+        db: getClient, guestDb,
         APP_URL, PARTNER_APP_URL, LOYALTY_GOAL, GUEST_EXPIRY_DAYS, SAFE_PARTNER_COLUMNS,
         verifyAdmin,
         setAdminSession, checkAdminSession, clearAdminSession,

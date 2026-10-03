@@ -6,7 +6,7 @@
 <title>StayVB — God Mode Admin</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=3"></script>
+<script src="config.js?v=4"></script>
 <script src="security-guard.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
@@ -771,46 +771,68 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- ═══ STRESS TEST ═══ -->
     <div id="page-stresstest" class="page">
       <style>
-        .st-hero{position:relative;overflow:hidden;border-radius:24px;padding:28px 30px;background:radial-gradient(circle at 12% 0%,rgba(34,211,238,.28),transparent 45%),radial-gradient(circle at 92% 100%,rgba(244,63,94,.20),transparent 42%),linear-gradient(135deg,#0b1220,#111827);border:1px solid rgba(34,211,238,.28);display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;box-shadow:0 20px 60px rgba(34,211,238,.12)}
-        .st-kicker{font-size:10px;font-weight:900;letter-spacing:.3em;color:#22d3ee}
-        .st-title{font-size:46px;font-weight:900;letter-spacing:-.03em;line-height:1;background:linear-gradient(90deg,#fff,#22d3ee,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent;margin-top:6px}
-        .st-sub{font-size:12px;color:rgba(255,255,255,.55);font-weight:700;margin-top:10px;max-width:520px;line-height:1.5}
-        .st-run{padding:18px 30px;border-radius:999px;border:none;font-weight:900;font-size:13px;letter-spacing:.12em;color:#06121a;background:linear-gradient(135deg,#22d3ee,#4ade80);cursor:pointer;animation:stPulse 2.2s infinite;font-family:inherit}
-        .st-run:disabled{opacity:.5;cursor:not-allowed;animation:none}
-        @keyframes stPulse{0%{box-shadow:0 0 0 0 rgba(34,211,238,.55)}70%{box-shadow:0 0 0 18px rgba(34,211,238,0)}100%{box-shadow:0 0 0 0 rgba(34,211,238,0)}}
-        .st-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin:18px 0}
-        @media(max-width:900px){.st-kpis{grid-template-columns:repeat(2,1fr)}.st-grid{grid-template-columns:1fr!important}}
-        .st-kpi{position:relative;overflow:hidden;background:rgba(15,23,42,.85);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:16px}
-        .st-kpi::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--c,#22d3ee);box-shadow:0 0 12px var(--c,#22d3ee)}
-        .st-kpi-v{font-size:26px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums}
-        .st-kpi-l{font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:4px}
-        .st-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
-        .st-card{background:rgba(15,23,42,.85);border:1px solid rgba(255,255,255,.07);border-radius:22px;padding:16px}
-        .st-card-title{font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:10px}
-        .st-canvas{width:100%;height:300px;display:block}
-        .st-step{display:grid;grid-template-columns:14px 1fr auto auto;gap:12px;align-items:center;padding:12px 6px;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px}
-        .st-dot{width:12px;height:12px;border-radius:50%;background:#334155}
-        .st-step.running .st-dot{background:#fbbf24;box-shadow:0 0 12px #fbbf24;animation:stBlink 1s infinite}
-        .st-step.pass .st-dot{background:#4ade80;box-shadow:0 0 10px #4ade80}
-        .st-step.fail .st-dot{background:#f43f5e;box-shadow:0 0 10px #f43f5e}
+        #page-stresstest .st-hero{position:relative;overflow:hidden;border-radius:26px;padding:30px 32px 34px;background:linear-gradient(135deg,#070d1b,#111827 60%,#0b1220);border:1px solid rgba(34,211,238,.25);display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;box-shadow:0 24px 70px rgba(34,211,238,.14)}
+        #page-stresstest .st-hero::before{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,rgba(34,211,238,.0),rgba(34,211,238,.35),rgba(167,139,250,.35),rgba(244,63,94,.25),rgba(34,211,238,.0));animation:stSpin 9s linear infinite;z-index:0;filter:blur(30px)}
+        #page-stresstest .st-hero > *{position:relative;z-index:1}
+        #page-stresstest .st-hero.pass{box-shadow:0 0 90px rgba(74,222,128,.45);border-color:rgba(74,222,128,.5)}
+        #page-stresstest .st-hero.fail{animation:stShake .5s;box-shadow:0 0 90px rgba(244,63,94,.4);border-color:rgba(244,63,94,.5)}
+        @keyframes stSpin{to{transform:rotate(360deg)}}
+        @keyframes stShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(4px)}}
+        #page-stresstest .st-kicker{font-size:10px;font-weight:900;letter-spacing:.32em;color:#22d3ee}
+        #page-stresstest .st-title{font-size:52px;font-weight:900;letter-spacing:-.035em;line-height:1;background:linear-gradient(90deg,#fff,#22d3ee 40%,#a78bfa 75%,#fb7185);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;margin-top:8px;animation:stGrad 6s ease infinite}
+        @keyframes stGrad{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+        #page-stresstest .st-sub{font-size:12px;color:rgba(255,255,255,.6);font-weight:700;margin-top:12px;max-width:560px;line-height:1.6}
+        #page-stresstest .st-run{padding:20px 34px;border-radius:999px;border:none;font-weight:900;font-size:13px;letter-spacing:.14em;color:#06121a;background:linear-gradient(135deg,#22d3ee,#4ade80);cursor:pointer;animation:stPulse 2.2s infinite;font-family:inherit;transition:transform .2s}
+        #page-stresstest .st-run:hover{transform:scale(1.05)}
+        #page-stresstest .st-run:disabled{opacity:.5;cursor:not-allowed;animation:none;transform:none}
+        @keyframes stPulse{0%{box-shadow:0 0 0 0 rgba(34,211,238,.6)}70%{box-shadow:0 0 0 22px rgba(34,211,238,0)}100%{box-shadow:0 0 0 0 rgba(34,211,238,0)}}
+        #page-stresstest .st-progress{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(255,255,255,.06)}
+        #page-stresstest #st-bar{height:100%;width:0;background:linear-gradient(90deg,#22d3ee,#4ade80,#a78bfa);box-shadow:0 0 18px #22d3ee;transition:width .35s ease}
+        #page-stresstest .st-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin:18px 0}
+        @media(max-width:900px){#page-stresstest .st-kpis{grid-template-columns:repeat(2,1fr)}}
+        #page-stresstest .st-kpi{position:relative;overflow:hidden;background:rgba(15,23,42,.85);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:16px}
+        #page-stresstest .st-kpi::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--c,#22d3ee);box-shadow:0 0 14px var(--c,#22d3ee)}
+        #page-stresstest .st-kpi-v{font-size:26px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums;display:inline-block}
+        #page-stresstest .st-kpi-l{font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:4px}
+        #page-stresstest .st-bump{animation:stBump .4s ease}
+        @keyframes stBump{0%{transform:scale(1)}35%{transform:scale(1.18);text-shadow:0 0 16px currentColor}100%{transform:scale(1)}}
+        #page-stresstest .st-card{background:rgba(15,23,42,.85);border:1px solid rgba(255,255,255,.07);border-radius:22px;padding:16px;margin-bottom:14px}
+        #page-stresstest .st-card-title{font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:10px}
+        #page-stresstest .st-canvas-big{width:100%;height:380px;display:block;border-radius:16px;background:radial-gradient(circle at 50% 50%,rgba(34,211,238,.05),transparent 70%)}
+        #page-stresstest .st-canvas-chart{width:100%;height:200px;display:block}
+        #page-stresstest .st-step{display:grid;grid-template-columns:14px 1fr auto auto;gap:12px;align-items:center;padding:12px 6px;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px;animation:stSlide .5s ease both;animation-delay:calc(var(--i,0) * 45ms)}
+        @keyframes stSlide{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+        #page-stresstest .st-name{font-weight:900;color:#fff}
+        #page-stresstest .st-exp{font-size:10px;color:rgba(255,255,255,.4);font-weight:700;margin-top:2px}
+        #page-stresstest .st-actual{font-weight:800;color:rgba(255,255,255,.85);font-variant-numeric:tabular-nums;text-align:right}
+        #page-stresstest .st-ms{font-size:10px;color:rgba(255,255,255,.4)}
+        #page-stresstest .st-dot{width:12px;height:12px;border-radius:50%;background:#334155}
+        #page-stresstest .st-step.running .st-dot{background:#fbbf24;box-shadow:0 0 14px #fbbf24;animation:stBlink .8s infinite}
+        #page-stresstest .st-step.pass .st-dot{background:#4ade80;box-shadow:0 0 12px #4ade80}
+        #page-stresstest .st-step.fail .st-dot{background:#f43f5e;box-shadow:0 0 12px #f43f5e}
         @keyframes stBlink{50%{opacity:.25}}
-        .st-badge{font-size:10px;font-weight:900;padding:4px 10px;border-radius:999px;letter-spacing:.08em;white-space:nowrap}
-        .st-report{animation:stFade .6s ease}
-        @keyframes stFade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-        .st-verdict{font-size:22px;font-weight:900;letter-spacing:.04em;padding:18px 20px;border-radius:18px;text-align:center;margin-bottom:14px}
+        #page-stresstest .st-badge{font-size:10px;font-weight:900;padding:4px 10px;border-radius:999px;letter-spacing:.08em;white-space:nowrap}
+        #page-stresstest .st-badge.ok{background:rgba(74,222,128,.15);color:#4ade80}
+        #page-stresstest .st-badge.bad{background:rgba(244,63,94,.15);color:#f43f5e}
+        #page-stresstest .st-badge.run{background:rgba(251,191,36,.15);color:#fbbf24}
+        #page-stresstest .st-badge.wait{background:rgba(255,255,255,.06);color:rgba(255,255,255,.4)}
+        #page-stresstest .st-report{animation:stFade .7s ease}
+        @keyframes stFade{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+        #page-stresstest .st-verdict{font-size:22px;font-weight:900;letter-spacing:.04em;padding:18px 20px;border-radius:18px;text-align:center;margin-bottom:14px}
       </style>
 
-      <div class="st-hero">
+      <div class="st-hero" id="st-hero">
         <div>
-          <div class="st-kicker">● LIVE · SUPABASE · OPTEREĆENJE</div>
+          <div class="st-kicker">● LIVE · STAYVB · OPTEREĆENJE</div>
           <div class="st-title">STRESS TEST</div>
-          <div class="st-sub" id="st-sub">Spreman. Simulacija: 530 partnera (30 hotela, 200 restorana, 300 apartmana) i 3000 gostiju. Test je samo za čitanje.</div>
+          <div class="st-sub" id="st-sub">Spreman. 530 partnera (30 hotela, 200 restorana, 300 apartmana) i 3000 gostiju. Test prolazi kroz gost perspektivu (javni ključ), bezbednosne provere i integritet relacija.</div>
         </div>
         <button class="st-run" id="st-run-btn" onclick="runStressTest()">▶ POKRENI TEST</button>
+        <div class="st-progress"><div id="st-bar"></div></div>
       </div>
 
       <div class="st-kpis">
-        <div class="st-kpi" style="--c:#22d3ee"><div class="st-kpi-v" id="st-k-req">0</div><div class="st-kpi-l">Zahteva poslato</div></div>
+        <div class="st-kpi" style="--c:#22d3ee"><div class="st-kpi-v" id="st-k-req">0</div><div class="st-kpi-l">Gost zahteva</div></div>
         <div class="st-kpi" style="--c:#4ade80"><div class="st-kpi-v" id="st-k-ok">0</div><div class="st-kpi-l">Uspešno</div></div>
         <div class="st-kpi" style="--c:#f43f5e"><div class="st-kpi-v" id="st-k-fail">0</div><div class="st-kpi-l">Neuspešno</div></div>
         <div class="st-kpi" style="--c:#fbbf24"><div class="st-kpi-v" id="st-k-avg">—</div><div class="st-kpi-l">Prosek (ms)</div></div>
@@ -818,23 +840,19 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <div class="st-kpi" style="--c:#fb7185"><div class="st-kpi-v" id="st-k-rps">—</div><div class="st-kpi-l">Zahteva / s</div></div>
       </div>
 
-      <div class="st-grid">
-        <div class="st-card">
-          <div class="st-card-title">Živi tok zahteva</div>
-          <canvas id="st-canvas" class="st-canvas"></canvas>
-        </div>
-        <div class="st-card">
-          <div class="st-card-title">Latencija uživo (crvena linija = 1500 ms)</div>
-          <canvas id="st-chart" class="st-canvas"></canvas>
-        </div>
-      </div>
-
       <div class="st-card">
-        <div class="st-card-title">Koraci testa</div>
+        <div class="st-card-title">Živi tok zahteva · STAYVB jezgro</div>
+        <canvas id="st-canvas" class="st-canvas-big"></canvas>
+      </div>
+      <div class="st-card">
+        <div class="st-card-title">Latencija uživo · crvena linija = 1500 ms</div>
+        <canvas id="st-chart" class="st-canvas-chart"></canvas>
+      </div>
+      <div class="st-card">
+        <div class="st-card-title">Testovi</div>
         <div id="st-steps"></div>
       </div>
-
-      <div class="st-card st-report" id="st-report" style="display:none;margin-top:14px"></div>
+      <div class="st-card st-report" id="st-report" style="display:none"></div>
     </div>
 
     <!-- ═══ QR ═══ -->
@@ -3211,33 +3229,40 @@ async function sendPushNotification(){
   loadNotifications();
 }
 
-// ── STRESS TEST — live dashboard + izveštaj (samo čitanje) ─────────
+// ── STRESS TEST — live dashboard, perspektiva gosta + integritet podataka ──
 const ST_NODES = [
-  {label:'Hoteli', icon:'🏨', color:'#fbbf24', ang:-Math.PI/2},
-  {label:'Restorani', icon:'🍽️', color:'#fb7185', ang:0},
-  {label:'Apartmani', icon:'🏡', color:'#a78bfa', ang:Math.PI/2},
-  {label:'Gosti', icon:'👥', color:'#22d3ee', ang:Math.PI},
+  {label:'Hoteli', icon:'🏨', color:'#fbbf24', ang:-Math.PI/2, hits:0, flash:0},
+  {label:'Restorani', icon:'🍽️', color:'#fb7185', ang:0, hits:0, flash:0},
+  {label:'Apartmani', icon:'🏡', color:'#a78bfa', ang:Math.PI/2, hits:0, flash:0},
+  {label:'Gosti', icon:'👥', color:'#22d3ee', ang:Math.PI, hits:0, flash:0},
 ];
-const ST_STEP_DEFS = [
-  'Test partneri po tipu', 'Test gosti', 'Relacija gost → smeštaj', 'Relacija partner → sadržaj',
-  'Happy Hour aktivan danas', 'Aktivne promocije', 'Pečati gostiju',
-  'Opterećenje: 400 paralelnih upita', 'Pun prolaz kroz 3000 gostiju'
+const ST_STEPS = [
+  {name:'Partneri po tipu (admin)', exp:'30 / 200 / 300'},
+  {name:'Gosti u bazi', exp:'3000'},
+  {name:'Relacija gost → smeštaj', exp:'3000 sa objektom'},
+  {name:'Relacija partner → sadržaj', exp:'530 profila'},
+  {name:'Happy Hour aktivan danas', exp:'230'},
+  {name:'Aktivne promocije', exp:'230'},
+  {name:'Pečati gostiju', exp:'1200–1800'},
+  {name:'Gost (anon): čitanje partnera i gostiju', exp:'30 / 200 / 300 · 3000'},
+  {name:'Gost (anon): opterećenje 400 upita', exp:'≥ 99 % · p95 ≤ 1500 ms'},
+  {name:'Bezbednost: zaštićene kolone', exp:'sve blokirano'},
+  {name:'Bezbednost: zabranjeni upisi', exp:'sve blokirano'},
+  {name:'Skener: lažni tokeni', exp:'prazno / null / ok:false'},
+  {name:'Pun prolaz kroz 3000 gostiju (admin)', exp:'3000 redova'},
 ];
-const ST_STEP_EXPECT = [
-  '30 / 200 / 300', '3000', 'svaki gost ima objekat', '530 profila', '230', '230', '1200–1800',
-  '≥ 99% uspešno, p95 ≤ 1500 ms', '3000 redova'
-];
-const ST = { running:false, ok:0, fail:0, samples:[], chart:[], particles:[], steps:[], cur:-1, t0:0, start:0, end:0, raf:null, load:null, reportText:'' };
+const ST_FAKE_ID = '00000000-0000-0000-0000-000000000000';
+const ST = { running:false, ok:0, fail:0, samples:[], chart:[], particles:[], fx:[], confetti:[], stars:[], steps:[], live:{}, cur:-1, done:0, start:0, t0:0, end:0, raf:null, load:null, reportText:'', kpiQueued:false, prev:{} };
 
 const stToday = () => new Date().toLocaleDateString('sv-SE');
+const stRnd = () => crypto.randomUUID().replace(/-/g,'');
 const stPct = (arr,p) => { if(!arr.length) return 0; const s=[...arr].sort((a,b)=>a-b); return s[Math.min(s.length-1, Math.ceil(p/100*s.length)-1)]; };
 const stCount = q => q.then(r => { if(r.error) throw new Error(r.error.message); return r.count ?? 0; });
 
 function stNodePos(i,w,h){
-  const R = Math.min(w,h)*0.36, n = ST_NODES[i];
-  return { x: w/2 + Math.cos(n.ang)*R, y: h/2 + Math.sin(n.ang)*R };
+  const R = Math.min(w,h)*0.34, n = ST_NODES[i];
+  return { x: w/2 + Math.cos(n.ang)*R*(i%2? 1.45 : 1), y: h/2 + Math.sin(n.ang)*R };
 }
-
 function stFit(c){
   const dpr = window.devicePixelRatio||1, w = c.clientWidth, h = c.clientHeight;
   if(c.width !== Math.round(w*dpr) || c.height !== Math.round(h*dpr)){ c.width = Math.round(w*dpr); c.height = Math.round(h*dpr); }
@@ -3245,66 +3270,148 @@ function stFit(c){
   return { x, w, h };
 }
 
+function stArrive(q){
+  const c = document.getElementById('st-canvas'); if(!c) return;
+  const {w,h} = {w:c.clientWidth, h:c.clientHeight};
+  const p = stNodePos(q.node,w,h), n = ST_NODES[q.node];
+  n.flash = 1; n.hits++;
+  const col = q.ok ? '#4ade80' : '#f43f5e';
+  const parts = Array.from({length:12},(_,k)=>({a:(k/12)*Math.PI*2+Math.random()*0.3, v:1.2+Math.random()*1.8}));
+  ST.fx.push({x:p.x, y:p.y, t:0, color:col, parts});
+}
+
 function stDraw(ts){
   const c = document.getElementById('st-canvas'); if(!c) return;
-  const {x,w,h} = stFit(c), cx = w/2, cy = h/2;
-  for(let k=0;k<3;k++){
-    x.beginPath(); x.arc(cx,cy,34+k*24+Math.sin(ts/500+k)*5,0,Math.PI*2);
-    x.strokeStyle = `rgba(34,211,238,${0.28-k*0.08})`; x.lineWidth = 1.2; x.stroke();
-  }
-  ST_NODES.forEach((n,i)=>{
+  const {x,w,h} = stFit(c), cx = w/2, cy = h/2, maxR = Math.hypot(w,h)/2;
+  const running = ST.running;
+
+  const bg = x.createRadialGradient(cx,cy,0,cx,cy,maxR);
+  bg.addColorStop(0, running ? 'rgba(34,211,238,0.14)' : 'rgba(34,211,238,0.06)');
+  bg.addColorStop(1, 'rgba(2,6,23,0)');
+  x.fillStyle = bg; x.fillRect(0,0,w,h);
+
+  if(!ST.stars.length) ST.stars = Array.from({length:160},()=>({a:Math.random()*Math.PI*2, r:Math.random(), s:0.001+Math.random()*0.003}));
+  ST.stars.forEach(s => {
+    s.r += s.s * (running ? 4 : 1);
+    if(s.r > 1){ s.r = 0.02; s.a = Math.random()*Math.PI*2; }
+    const px = cx + Math.cos(s.a)*s.r*maxR, py = cy + Math.sin(s.a)*s.r*maxR;
+    x.fillStyle = `rgba(255,255,255,${Math.min(1,s.r*0.9)})`;
+    x.beginPath(); x.arc(px,py,0.3+s.r*1.8,0,Math.PI*2); x.fill();
+  });
+
+  [58,88].forEach((R,k) => {
+    x.save(); x.translate(cx,cy); x.rotate(ts/(3000+k*2500)*(k?-1:1));
+    x.setLineDash([5,9]); x.beginPath(); x.arc(0,0,R + Math.sin(ts/400+k)*3,0,Math.PI*2);
+    x.strokeStyle = `rgba(34,211,238,${0.45-k*0.15})`; x.lineWidth = 1.2; x.stroke(); x.restore();
+  });
+
+  ST_NODES.forEach((n,i) => {
     const p = stNodePos(i,w,h);
-    x.beginPath(); x.moveTo(cx,cy); x.lineTo(p.x,p.y); x.strokeStyle='rgba(255,255,255,0.08)'; x.lineWidth=1; x.stroke();
+    const grad = x.createLinearGradient(cx,cy,p.x,p.y);
+    grad.addColorStop(0,'rgba(34,211,238,0.5)'); grad.addColorStop(1, n.color+'55');
+    x.beginPath(); x.moveTo(cx,cy); x.lineTo(p.x,p.y);
+    x.strokeStyle = grad; x.lineWidth = 1 + n.flash*2; x.stroke();
+    const e = ((ts/1400) + i*0.25) % 1;
+    const ex = cx + (p.x-cx)*e, ey = cy + (p.y-cy)*e;
+    x.beginPath(); x.arc(ex,ey,2.2,0,Math.PI*2); x.fillStyle = n.color; x.shadowColor = n.color; x.shadowBlur = 10; x.fill(); x.shadowBlur = 0;
   });
-  const g = x.createRadialGradient(cx,cy,0,cx,cy,46);
-  g.addColorStop(0,'rgba(34,211,238,0.9)'); g.addColorStop(1,'rgba(34,211,238,0)');
-  x.fillStyle = g; x.beginPath(); x.arc(cx,cy,46,0,Math.PI*2); x.fill();
-  x.fillStyle = '#e0f2fe'; x.font = '900 10px Inter, sans-serif'; x.textAlign='center'; x.textBaseline='middle';
-  x.fillText('SUPABASE', cx, cy);
-  ST_NODES.forEach((n,i)=>{
-    const p = stNodePos(i,w,h), pr = 13 + Math.sin(ts/380 + i*1.7)*2.5;
-    x.beginPath(); x.arc(p.x,p.y,pr+8,0,Math.PI*2); x.fillStyle = n.color+'26'; x.fill();
-    x.beginPath(); x.arc(p.x,p.y,pr,0,Math.PI*2); x.fillStyle='#0b1220'; x.fill();
+
+  const core = 36 + Math.sin(ts/300)*3 + (running ? 4 : 0);
+  const cg = x.createRadialGradient(cx,cy,0,cx,cy,core*2.6);
+  cg.addColorStop(0,'rgba(34,211,238,0.95)'); cg.addColorStop(0.45,'rgba(167,139,250,0.35)'); cg.addColorStop(1,'rgba(34,211,238,0)');
+  x.fillStyle = cg; x.beginPath(); x.arc(cx,cy,core*2.6,0,Math.PI*2); x.fill();
+  x.beginPath(); x.arc(cx,cy,core,0,Math.PI*2); x.fillStyle = '#0b1220'; x.fill();
+  x.strokeStyle = '#22d3ee'; x.lineWidth = 2; x.shadowColor = '#22d3ee'; x.shadowBlur = 16; x.stroke(); x.shadowBlur = 0;
+  for(let k=0;k<3;k++){
+    const a = ts/700 + k*(Math.PI*2/3), sx = cx + Math.cos(a)*(core+14), sy = cy + Math.sin(a)*(core+14);
+    x.beginPath(); x.arc(sx,sy,2.6,0,Math.PI*2); x.fillStyle = ['#22d3ee','#a78bfa','#4ade80'][k]; x.fill();
+  }
+  x.fillStyle = '#ffffff'; x.font = '900 14px Inter, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.shadowColor = '#22d3ee'; x.shadowBlur = 10; x.fillText('STAYVB', cx, cy); x.shadowBlur = 0;
+
+  ST_NODES.forEach((n,i) => {
+    const p = stNodePos(i,w,h), pr = 14 + Math.sin(ts/380 + i*1.7)*2.2 + n.flash*4;
+    x.beginPath(); x.arc(p.x,p.y,pr+10+n.flash*10,0,Math.PI*2); x.fillStyle = n.color + '1f'; x.fill();
+    if(n.flash > 0.02){
+      x.beginPath(); x.arc(p.x,p.y,pr+(1-n.flash)*32,0,Math.PI*2); x.strokeStyle = n.color; x.globalAlpha = n.flash; x.lineWidth = 2; x.stroke(); x.globalAlpha = 1;
+    }
+    x.beginPath(); x.arc(p.x,p.y,pr,0,Math.PI*2); x.fillStyle = '#0b1220'; x.fill();
     x.strokeStyle = n.color; x.lineWidth = 2; x.stroke();
-    x.font = '15px sans-serif'; x.fillStyle='#fff'; x.fillText(n.icon, p.x, p.y+1);
-    x.font = '800 10px Inter, sans-serif'; x.fillStyle='rgba(255,255,255,0.75)';
-    x.fillText(n.label, p.x, p.y + (p.y > cy ? 30 : -30));
+    x.font = '16px sans-serif'; x.fillStyle = '#fff'; x.fillText(n.icon, p.x, p.y+1);
+    const below = p.y > cy;
+    x.font = '800 11px Inter, sans-serif'; x.fillStyle = 'rgba(255,255,255,0.85)';
+    x.fillText(n.label, p.x, p.y + (below ? 32 : -32));
+    const badge = String(n.hits);
+    x.font = '900 10px Inter, sans-serif';
+    const bw = x.measureText(badge).width + 12;
+    x.beginPath(); x.roundRect(p.x + pr + 2, p.y - 9, bw, 16, 8); x.fillStyle = n.color; x.fill();
+    x.fillStyle = '#06121a'; x.fillText(badge, p.x + pr + 2 + bw/2, p.y - 1);
+    n.flash *= 0.93;
   });
+
   ST.particles = ST.particles.filter(q => q.t < 1);
   ST.particles.forEach(q => {
-    q.t = Math.min(1, q.t + 0.022*q.speed);
-    const p = stNodePos(q.node,w,h), px = cx + (p.x-cx)*q.t, py = cy + (p.y-cy)*q.t;
+    q.t = Math.min(1, q.t + 0.02*q.speed);
+    const p = stNodePos(q.node,w,h);
+    const bend = Math.sin(q.t*Math.PI)*22;
+    const dx = p.x-cx, dy = p.y-cy, len = Math.hypot(dx,dy) || 1;
+    const px = cx + dx*q.t + (-dy/len)*bend, py = cy + dy*q.t + (dx/len)*bend;
+    q.trail.push([px,py]); if(q.trail.length > 12) q.trail.shift();
     const col = q.ok ? '#4ade80' : '#f43f5e';
-    x.beginPath(); x.arc(px,py,3.2,0,Math.PI*2); x.fillStyle = col;
-    x.shadowColor = col; x.shadowBlur = 12; x.fill(); x.shadowBlur = 0;
+    x.beginPath(); q.trail.forEach((pt,k)=> k ? x.lineTo(pt[0],pt[1]) : x.moveTo(pt[0],pt[1]));
+    x.strokeStyle = col; x.globalAlpha = 0.5; x.lineWidth = 2; x.stroke(); x.globalAlpha = 1;
+    x.beginPath(); x.arc(px,py,3.6,0,Math.PI*2); x.fillStyle = col; x.shadowColor = col; x.shadowBlur = 14; x.fill(); x.shadowBlur = 0;
+    if(q.t >= 1 && !q.arrived){ q.arrived = true; stArrive(q); }
   });
+
+  ST.fx = ST.fx.filter(f => f.t < 1);
+  ST.fx.forEach(f => {
+    f.t = Math.min(1, f.t + 0.035);
+    x.beginPath(); x.arc(f.x,f.y,10+f.t*40,0,Math.PI*2); x.strokeStyle = f.color; x.globalAlpha = 1-f.t; x.lineWidth = 2.5; x.stroke();
+    f.parts.forEach(pt => {
+      const d = f.t*40*pt.v;
+      x.beginPath(); x.arc(f.x+Math.cos(pt.a)*d, f.y+Math.sin(pt.a)*d, 2*(1-f.t)+0.5, 0, Math.PI*2);
+      x.fillStyle = f.color; x.fill();
+    });
+    x.globalAlpha = 1;
+  });
+
+  if(ST.confetti.length){
+    ST.confetti = ST.confetti.filter(k => k.y < h+20);
+    ST.confetti.forEach(k => {
+      k.vy += 0.12; k.vx *= 0.99; k.x += k.vx; k.y += k.vy; k.rot += k.vr;
+      x.save(); x.translate(k.x,k.y); x.rotate(k.rot); x.fillStyle = k.c; x.fillRect(-k.w/2,-k.h/2,k.w,k.h); x.restore();
+    });
+  }
 }
 
 function stDrawChart(){
   const c = document.getElementById('st-chart'); if(!c) return;
   const {x,w,h} = stFit(c);
-  const data = ST.chart.slice(-160);
-  const padL = 48, padR = 12, padT = 12, padB = 18;
+  const data = ST.chart.slice(-220);
+  const padL = 50, padR = 16, padT = 14, padB = 20;
   const W = w-padL-padR, H = h-padT-padB;
   const max = Math.max(2000, ...data, 1);
-  x.font = '700 9px Inter, sans-serif'; x.textAlign='left'; x.textBaseline='middle';
+  x.font = '700 9px Inter, sans-serif'; x.textAlign = 'left'; x.textBaseline = 'middle';
   for(let g=0; g<=4; g++){
     const yy = padT + H*g/4;
-    x.beginPath(); x.moveTo(padL,yy); x.lineTo(padL+W,yy); x.strokeStyle='rgba(255,255,255,0.06)'; x.lineWidth=1; x.stroke();
-    x.fillStyle='rgba(255,255,255,0.35)'; x.fillText(Math.round(max*(1-g/4))+' ms', 4, yy);
+    x.beginPath(); x.moveTo(padL,yy); x.lineTo(padL+W,yy); x.strokeStyle = 'rgba(255,255,255,0.06)'; x.lineWidth = 1; x.stroke();
+    x.fillStyle = 'rgba(255,255,255,0.35)'; x.fillText(Math.round(max*(1-g/4))+' ms', 4, yy);
   }
   const ty = padT + H*(1-1500/max);
-  x.beginPath(); x.moveTo(padL,ty); x.lineTo(padL+W,ty); x.setLineDash([5,4]);
-  x.strokeStyle='rgba(244,63,94,0.7)'; x.lineWidth=1; x.stroke(); x.setLineDash([]);
+  x.beginPath(); x.moveTo(padL,ty); x.lineTo(padL+W,ty); x.setLineDash([6,4]);
+  x.strokeStyle = 'rgba(244,63,94,0.8)'; x.lineWidth = 1.2; x.stroke(); x.setLineDash([]);
+  x.fillStyle = 'rgba(244,63,94,0.9)'; x.fillText('1500 ms', padL+W-56, ty-8);
   if(data.length < 2) return;
   const pts = data.map((v,i) => [padL + i*(W/(data.length-1)), padT + H*(1 - v/max)]);
   const grad = x.createLinearGradient(0,padT,0,padT+H);
-  grad.addColorStop(0,'rgba(34,211,238,0.35)'); grad.addColorStop(1,'rgba(34,211,238,0)');
-  x.beginPath(); x.moveTo(pts[0][0], padT+H);
-  pts.forEach(p => x.lineTo(p[0],p[1]));
+  grad.addColorStop(0,'rgba(34,211,238,0.40)'); grad.addColorStop(1,'rgba(34,211,238,0)');
+  x.beginPath(); x.moveTo(pts[0][0], padT+H); pts.forEach(p => x.lineTo(p[0],p[1]));
   x.lineTo(pts[pts.length-1][0], padT+H); x.closePath(); x.fillStyle = grad; x.fill();
-  x.beginPath(); pts.forEach((p,i)=> i ? x.lineTo(p[0],p[1]) : x.moveTo(p[0],p[1]));
-  x.strokeStyle='#22d3ee'; x.lineWidth=2; x.shadowColor='#22d3ee'; x.shadowBlur=8; x.stroke(); x.shadowBlur=0;
+  x.beginPath(); pts.forEach((p,i) => i ? x.lineTo(p[0],p[1]) : x.moveTo(p[0],p[1]));
+  x.strokeStyle = '#22d3ee'; x.lineWidth = 2; x.shadowColor = '#22d3ee'; x.shadowBlur = 10; x.stroke(); x.shadowBlur = 0;
+  const last = pts[pts.length-1], pulse = 4 + Math.sin(performance.now()/200)*1.5;
+  x.beginPath(); x.arc(last[0],last[1],pulse,0,Math.PI*2); x.fillStyle = '#4ade80'; x.shadowColor = '#4ade80'; x.shadowBlur = 14; x.fill(); x.shadowBlur = 0;
 }
 
 function stLoop(ts){
@@ -3315,63 +3422,81 @@ function stLoop(ts){
 }
 function stEnsureLoop(){ if(!ST.raf) ST.raf = requestAnimationFrame(stLoop); }
 
-function loadStressTest(){ stRenderSteps(); stKpis(); stEnsureLoop(); }
+function loadStressTest(){ stRenderSteps(); stKpisNow(); stEnsureLoop(); }
 
-function stKpis(){
+function stBump(id, val){
+  const el = document.getElementById(id); if(!el) return;
+  if(String(el.textContent) === String(val)) return;
+  el.textContent = val;
+  el.classList.remove('st-bump'); void el.offsetWidth; el.classList.add('st-bump');
+}
+
+function stKpisNow(){
   const total = ST.ok + ST.fail, ms = ST.samples.map(s=>s.ms);
-  const set = (id,v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
-  set('st-k-req', total); set('st-k-ok', ST.ok); set('st-k-fail', ST.fail);
-  set('st-k-avg', ms.length ? Math.round(ms.reduce((a,b)=>a+b,0)/ms.length) : '—');
-  set('st-k-p95', ms.length ? Math.round(stPct(ms,95)) : '—');
+  stBump('st-k-req', total); stBump('st-k-ok', ST.ok); stBump('st-k-fail', ST.fail);
+  stBump('st-k-avg', ms.length ? Math.round(ms.reduce((a,b)=>a+b,0)/ms.length) : '—');
+  stBump('st-k-p95', ms.length ? Math.round(stPct(ms,95)) : '—');
   const secs = (performance.now()-ST.t0)/1000;
-  set('st-k-rps', total && secs>0 ? (total/secs).toFixed(1) : '—');
+  stBump('st-k-rps', total && secs>0 ? (total/secs).toFixed(1) : '—');
+  const bar = document.getElementById('st-bar');
+  if(bar){
+    const loadFrac = ST.cur === 8 ? Math.min(1, total/400) : 0;
+    bar.style.width = (((ST.done + loadFrac) / ST_STEPS.length) * 100).toFixed(1) + '%';
+  }
+}
+function stKpis(){
+  if(ST.kpiQueued) return;
+  ST.kpiQueued = true;
+  requestAnimationFrame(() => { ST.kpiQueued = false; stKpisNow(); });
 }
 
 function stRecord(ok, ms, node){
   ST.samples.push({ok, ms}); ok ? ST.ok++ : ST.fail++;
   ST.chart.push(ms);
-  ST.particles.push({node, ok, t:0, speed:0.8+Math.random()*0.6});
+  ST.particles.push({node, ok, t:0, speed:0.8+Math.random()*0.7, trail:[], arrived:false});
+  ST.live[8] = `${ST.ok}/${ST.ok+ST.fail} uspešno`;
+  if((ST.ok+ST.fail) % 8 === 0) stUpdateRow(8);
   stKpis();
 }
 
-function stStepRowsHtml(){
-  return ST_STEP_DEFS.map((name,i)=>{
-    const s = ST.steps[i];
-    const cls = s ? (s.pass ? 'pass' : 'fail') : (i===ST.cur ? 'running' : '');
-    const badge = s
-      ? (s.pass ? '<span class="st-badge" style="background:rgba(74,222,128,.15);color:#4ade80">PROŠLO</span>' : '<span class="st-badge" style="background:rgba(244,63,94,.15);color:#f43f5e">PALO</span>')
-      : (i===ST.cur ? '<span class="st-badge" style="background:rgba(251,191,36,.15);color:#fbbf24">U TOKU</span>' : '<span class="st-badge" style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.4)">ČEKA</span>');
-    const actual = s ? esc(String(s.actual)) : '—';
-    const ms = s && s.ms != null ? Math.round(s.ms)+' ms' : '';
-    return `<div class="st-step ${cls}"><span class="st-dot"></span>
-      <div><div style="font-weight:900;color:#fff">${i+1}. ${name}</div><div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:700;margin-top:2px">Očekivano: ${ST_STEP_EXPECT[i]}</div></div>
-      <div style="font-weight:800;color:rgba(255,255,255,.8);font-variant-numeric:tabular-nums;text-align:right">${actual}<div style="font-size:10px;color:rgba(255,255,255,.4)">${ms}</div></div>
-      ${badge}</div>`;
-  }).join('');
+function stRowHtml(i){
+  const d = ST_STEPS[i], s = ST.steps[i];
+  const cls = s ? (s.pass ? 'pass' : 'fail') : (i===ST.cur ? 'running' : '');
+  const badge = s
+    ? (s.pass ? '<span class="st-badge ok">PROŠLO</span>' : '<span class="st-badge bad">PALO</span>')
+    : (i===ST.cur ? '<span class="st-badge run">U TOKU</span>' : '<span class="st-badge wait">ČEKA</span>');
+  const actual = s ? esc(String(s.actual)) : (ST.live[i] ?? '—');
+  const ms = s && s.ms != null ? Math.round(s.ms)+' ms' : '';
+  return `<div class="st-step ${cls}" id="st-row-${i}" style="--i:${i}"><span class="st-dot"></span>
+    <div><div class="st-name">${i+1}. ${d.name}</div><div class="st-exp">Očekivano: ${d.exp}</div></div>
+    <div class="st-actual">${actual}<div class="st-ms">${ms}</div></div>${badge}</div>`;
 }
-
 function stRenderSteps(){
-  const el = document.getElementById('st-steps'); if(el) el.innerHTML = stStepRowsHtml();
+  const el = document.getElementById('st-steps');
+  if(el) el.innerHTML = ST_STEPS.map((_,i)=>stRowHtml(i)).join('');
+}
+function stUpdateRow(i){
+  const old = document.getElementById('st-row-'+i); if(old) old.outerHTML = stRowHtml(i);
 }
 
 async function stRun(i, fn){
-  ST.cur = i; stRenderSteps();
+  ST.cur = i; stUpdateRow(i);
   const t0 = performance.now(); let r;
   try{ r = await fn(); } catch(e){ r = { pass:false, actual:'greška: '+e.message }; }
   ST.steps[i] = { pass:!!r.pass, actual:r.actual, ms: performance.now()-t0 };
-  ST.cur = -1; stRenderSteps();
+  ST.done++; ST.cur = -1; stUpdateRow(i); stKpis();
   return ST.steps[i];
 }
 
-async function stLoadPhase(){
+async function stLoadPhase(gdb){
   const today = stToday();
   const KINDS = [
-    {w:30, node:1, name:'Lista partnera', mk:()=>sb.from('partners').select('id,name,type,hh_active,hh_date,lat,lng').in('type',['restaurant','hotel']).like('partner_code','TST_%').eq('is_active',true)},
-    {w:20, node:0, name:'Ponude', mk:()=>sb.from('partner_content').select('partner_id,current_offer,offer_expires_at').not('current_offer','is',null).limit(500)},
-    {w:15, node:1, name:'Geofence (VBradar)', mk:()=>sb.from('partners').select('id,lat,lng,hh_active').gte('lat',43.59).lte('lat',43.65).gte('lng',20.86).lte('lng',20.93).like('partner_code','TST_%')},
-    {w:10, node:3, name:'Događaji', mk:()=>sb.from('events').select('id,title,event_date').like('title','TEST%').gte('event_date',today).limit(200)},
-    {w:10, node:2, name:'Smeštaj', mk:()=>sb.from('accommodation_listings').select('id,partner_id,title,price_per_night').eq('is_active',true).limit(400)},
-    {w:15, node:3, name:'Gosti online', mk:()=>sb.from('guests').select('id,accommodation_id').like('token','TESTGUEST_%').eq('checkin_date',today).limit(1000)},
+    {w:30, node:1, mk:()=>gdb.from('partners').select('id,name,type,hh_active,hh_date,lat,lng').in('type',['restaurant','hotel']).like('partner_code','TST_%').eq('is_active',true)},
+    {w:20, node:0, mk:()=>gdb.from('partner_content').select('partner_id,current_offer,offer_expires_at').not('current_offer','is',null).limit(500)},
+    {w:15, node:1, mk:()=>gdb.from('partners').select('id,lat,lng,hh_active').gte('lat',43.59).lte('lat',43.65).gte('lng',20.86).lte('lng',20.93).like('partner_code','TST_%')},
+    {w:10, node:3, mk:()=>gdb.from('events').select('id,title,event_date').like('title','TEST%').gte('event_date',today).limit(200)},
+    {w:10, node:2, mk:()=>gdb.from('accommodation_listings').select('id,partner_id,title,price_per_night').eq('is_active',true).limit(400)},
+    {w:15, node:3, mk:()=>gdb.from('guests').select('id,accommodation_id').like('token','TESTGUEST_%').eq('checkin_date',today).limit(1000)},
   ];
   const TOTAL = 400, CONC = 25, queue = [];
   for(let i=0;i<TOTAL;i++){
@@ -3397,34 +3522,46 @@ async function stLoadPhase(){
     rps: (total/secs).toFixed(1), secs: secs.toFixed(1)
   };
   const okRate = total ? ST.ok/total : 0;
-  return { pass: okRate >= 0.99 && ST.load.p95 <= 1500, actual: `${ST.ok}/${total} uspešno · p95 ${ST.load.p95} ms` };
+  return { pass: okRate >= 0.99 && ST.load.p95 <= 1500, actual: `${ST.ok}/${total} · p95 ${ST.load.p95} ms` };
+}
+
+function stFire(kind){
+  const c = document.getElementById('st-canvas'); if(!c) return;
+  const colors = ['#22d3ee','#4ade80','#a78bfa','#fbbf24','#fb7185','#ffffff'];
+  for(let k=0;k<(kind==='pass'?170:0);k++){
+    ST.confetti.push({x:Math.random()*c.clientWidth, y:-20-Math.random()*120, vx:(Math.random()-0.5)*4, vy:1+Math.random()*3, rot:Math.random()*6, vr:(Math.random()-0.5)*0.3, w:6+Math.random()*6, h:4+Math.random()*4, c:colors[k%colors.length]});
+  }
 }
 
 async function runStressTest(){
   if(ST.running) return;
-  Object.assign(ST, { running:true, ok:0, fail:0, samples:[], chart:[], particles:[], steps:[], cur:-1, load:null });
+  Object.assign(ST, { running:true, ok:0, fail:0, samples:[], chart:[], particles:[], fx:[], confetti:[], steps:[], live:{}, cur:-1, done:0, load:null, kpiQueued:false });
+  ST_NODES.forEach(n => { n.hits = 0; n.flash = 0; });
   document.getElementById('st-report').style.display = 'none';
+  const hero = document.getElementById('st-hero'); hero.classList.remove('pass','fail');
   const btn = document.getElementById('st-run-btn');
   btn.disabled = true; btn.textContent = '⏳ TEST U TOKU…';
-  document.getElementById('st-sub').textContent = 'Test je u toku. Svi upiti su samo za čitanje — ništa se ne menja u bazi.';
-  stEnsureLoop(); stKpis(); stRenderSteps();
+  document.getElementById('st-sub').textContent = 'Test je u toku. Gost deo koristi javni ključ (kao na telefonu), a sve provere su samo za čitanje ili upisi na nepostojeći ID.';
+  stEnsureLoop(); stRenderSteps(); stKpisNow();
   ST.start = performance.now();
   const today = stToday();
+  const gdb = C.guestDb();
+  const cnt = (client, table, build) => stCount(build(client.from(table).select('id',{count:'exact',head:true})));
 
   await stRun(0, async()=>{
     const [h,r,a] = await Promise.all([
-      stCount(sb.from('partners').select('id',{count:'exact',head:true}).eq('type','hotel').like('partner_code','TST_%')),
-      stCount(sb.from('partners').select('id',{count:'exact',head:true}).eq('type','restaurant').like('partner_code','TST_%')),
-      stCount(sb.from('partners').select('id',{count:'exact',head:true}).eq('type','apartment').like('partner_code','TST_%')),
+      cnt(sb,'partners', q=>q.eq('type','hotel').like('partner_code','TST_%')),
+      cnt(sb,'partners', q=>q.eq('type','restaurant').like('partner_code','TST_%')),
+      cnt(sb,'partners', q=>q.eq('type','apartment').like('partner_code','TST_%')),
     ]);
     return { pass: h===30 && r===200 && a===300, actual: `${h} / ${r} / ${a}` };
   });
   await stRun(1, async()=>{
-    const n = await stCount(sb.from('guests').select('id',{count:'exact',head:true}).like('token','TESTGUEST_%'));
+    const n = await cnt(sb,'guests', q=>q.like('token','TESTGUEST_%'));
     return { pass: n===3000, actual: n };
   });
   await stRun(2, async()=>{
-    const n = await stCount(sb.from('guests').select('id',{count:'exact',head:true}).like('token','TESTGUEST_%').not('accommodation_id','is',null));
+    const n = await cnt(sb,'guests', q=>q.like('token','TESTGUEST_%').not('accommodation_id','is',null));
     return { pass: n===3000, actual: n };
   });
   await stRun(3, async()=>{
@@ -3432,7 +3569,7 @@ async function runStressTest(){
     return { pass: n===530, actual: n };
   });
   await stRun(4, async()=>{
-    const n = await stCount(sb.from('partners').select('id',{count:'exact',head:true}).like('partner_code','TST_%').eq('hh_active',true).eq('hh_date',today));
+    const n = await cnt(sb,'partners', q=>q.like('partner_code','TST_%').eq('hh_active',true).eq('hh_date',today));
     return { pass: n===230, actual: n };
   });
   await stRun(5, async()=>{
@@ -3443,8 +3580,43 @@ async function runStressTest(){
     const n = await stCount(sb.from('stamps').select('id, guests!inner(token)',{count:'exact',head:true}).like('guests.token','TESTGUEST_%'));
     return { pass: n>=1200 && n<=1800, actual: n };
   });
-  await stRun(7, stLoadPhase);
-  await stRun(8, async()=>{
+  await stRun(7, async()=>{
+    const [h,r,a,g] = await Promise.all([
+      cnt(gdb,'partners', q=>q.eq('type','hotel').like('partner_code','TST_%')),
+      cnt(gdb,'partners', q=>q.eq('type','restaurant').like('partner_code','TST_%')),
+      cnt(gdb,'partners', q=>q.eq('type','apartment').like('partner_code','TST_%')),
+      cnt(gdb,'guests', q=>q.like('token','TESTGUEST_%')),
+    ]);
+    return { pass: h===30 && r===200 && a===300 && g===3000, actual: `${h} / ${r} / ${a} · ${g}` };
+  });
+  await stRun(8, () => stLoadPhase(gdb));
+  await stRun(9, async()=>{
+    const res = await Promise.all(['pin','access_token','scanner_token'].map(c => gdb.from('partners').select(c).limit(1)));
+    const blocked = res.filter(r => r.error).length;
+    return { pass: blocked===3, actual: `${blocked}/3 blokirano` };
+  });
+  await stRun(10, async()=>{
+    const res = await Promise.all([
+      gdb.from('bookings').update({redeemed_at:new Date().toISOString()}).eq('id',ST_FAKE_ID),
+      gdb.from('bookings').update({accommodation_id:ST_FAKE_ID}).eq('id',ST_FAKE_ID),
+      gdb.from('partners').update({pin:'0000'}).eq('id',ST_FAKE_ID),
+      gdb.from('partners').update({scanner_token:'x'}).eq('id',ST_FAKE_ID),
+    ]);
+    const blocked = res.filter(r => r.error).length;
+    return { pass: blocked===4, actual: `${blocked}/4 blokirano` };
+  });
+  await stRun(11, async()=>{
+    const [a,b,c] = await Promise.all([
+      gdb.rpc('scanner_login',{p_scanner_token:stRnd()}),
+      gdb.rpc('get_scanner_token',{p_access_token:stRnd()}),
+      gdb.rpc('redeem_booking',{p_scanner_token:stRnd(), p_booking_id:ST_FAKE_ID}),
+    ]);
+    const okA = !a.error && Array.isArray(a.data) && a.data.length===0;
+    const okB = !b.error && b.data===null;
+    const okC = !c.error && Array.isArray(c.data) && c.data[0]?.ok===false;
+    return { pass: okA && okB && okC, actual: `${okA?'✓':'✗'} login · ${okB?'✓':'✗'} get · ${okC?'✓':'✗'} redeem` };
+  });
+  await stRun(12, async()=>{
     let got = 0, withAcc = 0;
     for(let from=0; ; from+=1000){
       const { data, error } = await sb.from('guests').select('id,accommodation_id').like('token','TESTGUEST_%').order('id').range(from, from+999);
@@ -3458,10 +3630,13 @@ async function runStressTest(){
   ST.end = performance.now();
   ST.running = false;
   btn.disabled = false; btn.textContent = '▶ POKRENI PONOVO';
-  const allPass = ST.steps.length===ST_STEP_DEFS.length && ST.steps.every(s => s.pass);
+  const allPass = ST.steps.length===ST_STEPS.length && ST.steps.every(s => s.pass);
+  document.getElementById('st-bar').style.width = '100%';
+  hero.classList.add(allPass ? 'pass' : 'fail');
+  if(allPass) stFire('pass');
   document.getElementById('st-sub').textContent = allPass
-    ? 'Test završen — svi koraci su prošli.'
-    : 'Test završen — neki koraci nisu prošli. Pogledaj izveštaj ispod.';
+    ? 'Test završen — svih 13 provera je prošlo.'
+    : 'Test završen — neke provere nisu prošle. Pogledaj izveštaj ispod.';
   stBuildReport(allPass);
 }
 
@@ -3469,24 +3644,25 @@ function stBuildReport(allPass){
   const el = document.getElementById('st-report'), L = ST.load || {};
   const dur = ((ST.end-ST.start)/1000).toFixed(1);
   const v = allPass
-    ? { t:'✅ SISTEM PROŠAO TEST', c:'#4ade80', bg:'rgba(74,222,128,.12)', b:'rgba(74,222,128,.35)' }
+    ? { t:'✅ STAYVB JE PROŠAO TEST', c:'#4ade80', bg:'rgba(74,222,128,.12)', b:'rgba(74,222,128,.35)' }
     : { t:'⚠️ POTREBNA PROVERA', c:'#f43f5e', bg:'rgba(244,63,94,.12)', b:'rgba(244,63,94,.35)' };
   const kpi = (val,label,c) => `<div class="st-kpi" style="--c:${c}"><div class="st-kpi-v">${val}</div><div class="st-kpi-l">${label}</div></div>`;
   const rate = L.total ? ((L.ok/L.total)*100).toFixed(2) : '0';
+  const passed = ST.steps.filter(s => s && s.pass).length;
   el.innerHTML = `
     <div class="st-verdict" style="color:${v.c};background:${v.bg};border:1px solid ${v.b}">${v.t}</div>
     <div class="st-kpis" style="margin-top:0">
       ${kpi(dur+' s','Trajanje testa','#22d3ee')}
-      ${kpi(L.total??0,'Ukupno upita','#a78bfa')}
-      ${kpi(rate+' %','Uspešnost','#4ade80')}
+      ${kpi(passed+' / '+ST_STEPS.length,'Provera prošlo','#4ade80')}
+      ${kpi(rate+' %','Uspešnost gost upita','#a78bfa')}
       ${kpi((L.avg??'—')+' ms','Prosek','#fbbf24')}
       ${kpi((L.p95??'—')+' ms','p95','#fb7185')}
       ${kpi((L.max??'—')+' ms','Najsporiji upit','#f43f5e')}
     </div>
-    <div style="margin-bottom:12px">${stStepRowsHtml()}</div>
+    <div style="margin-bottom:12px">${ST_STEPS.map((_,i)=>stRowHtml(i)).join('')}</div>
     <p style="font-size:11px;color:rgba(255,255,255,.5);font-weight:700;line-height:1.6">
-      Vreme: ${new Date().toLocaleString('sr-RS')} · Opterećenje: 25 paralelnih konekcija · Propusnost: ${L.rps ?? '—'} zahteva/s · Pravila: uspeh ≥ 99 % i p95 ≤ 1500 ms.<br>
-      Test je samo za čitanje — nijedan red u bazi nije izmenjen.
+      Vreme: ${new Date().toLocaleString('sr-RS')} · Gost opterećenje: ${L.total ?? 0} upita u 25 paralelnih konekcija · Propusnost: ${L.rps ?? '—'} zahteva/s · Pravilo: uspeh ≥ 99 % i p95 ≤ 1500 ms.<br>
+      Upisi u testu gade nepostojeći ID (00000000-…) i ništa u bazi se ne menja.
     </p>
     <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm" onclick="stCopyReport()">📋 Kopiraj izveštaj</button>
@@ -3495,10 +3671,10 @@ function stBuildReport(allPass){
   el.style.display = 'block';
   ST.reportText = [
     `STAYVB STRESS TEST — ${new Date().toLocaleString('sr-RS')}`,
-    `Rezultat: ${allPass ? 'PROŠAO' : 'POTREBNA PROVERA'}`,
-    `Trajanje: ${dur} s · Upita: ${L.total ?? 0} · Uspešnost: ${rate}% · Prosek: ${L.avg ?? '—'} ms · p95: ${L.p95 ?? '—'} ms · Najsporiji: ${L.max ?? '—'} ms`,
+    `Rezultat: ${allPass ? 'PROŠAO' : 'POTREBNA PROVERA'} (${passed}/${ST_STEPS.length} provera)`,
+    `Trajanje: ${dur} s · Gost upita: ${L.total ?? 0} · Uspešnost: ${rate}% · Prosek: ${L.avg ?? '—'} ms · p95: ${L.p95 ?? '—'} ms · Najsporiji: ${L.max ?? '—'} ms`,
     '',
-    ...ST_STEP_DEFS.map((name,i)=>{ const s = ST.steps[i]; return `${i+1}. ${name} — ${s ? (s.pass?'PROŠLO':'PALO') : 'NIJE POKRENUTO'} (${s ? s.actual : '—'}; očekivano ${ST_STEP_EXPECT[i]})`; })
+    ...ST_STEPS.map((d,i)=>{ const s = ST.steps[i]; return `${i+1}. ${d.name} — ${s ? (s.pass?'PROŠLO':'PALO') : 'NIJE POKRENUTO'} (${s ? s.actual : '—'}; očekivano ${d.exp})`; })
   ].join('\n');
   el.scrollIntoView({behavior:'smooth', block:'start'});
 }
