@@ -60,6 +60,15 @@ window.STAYVB_CONFIG = (function () {
         try { getClient()?.auth.signOut(); } catch (e) { /* noop */ }
     }
 
+    // Klijent za panel partnera: šalje token vlasnika u zaglavlju, a baza
+    // (RLS + owns_partner) dozvoljava upis samo na redove tog partnera.
+    function partnerDb(token) {
+        return supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: { persistSession: false, autoRefreshToken: false },
+            global: { headers: { 'x-partner-token': token || '' } }
+        });
+    }
+
     function guestDb() {
         return supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
     }
@@ -120,7 +129,7 @@ window.STAYVB_CONFIG = (function () {
     }
 
     return {
-        db: getClient, guestDb,
+        db: getClient, guestDb, partnerDb,
         APP_URL, PARTNER_APP_URL, LOYALTY_GOAL, GUEST_EXPIRY_DAYS, SAFE_PARTNER_COLUMNS,
         verifyAdmin,
         setAdminSession, checkAdminSession, clearAdminSession,

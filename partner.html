@@ -200,8 +200,8 @@ select.field-input option{background:#1e293b;color:white}
 </div>
 
 <script>
-const sb = C.db();
 const token = C.getPartnerToken();
+const sb = C.partnerDb(token);
 let partner = null, partnerContent = null;
 
 // ── Instalacija partnerske aplikacije (posebna od gostinske) ───────
