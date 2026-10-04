@@ -299,7 +299,7 @@ async function doLogin(){
   // Sigurnosna mera: RPC ponekad ne vraća sve kolone (npr. nove kolone dodate posle RPC definicije)
   // Dovuci svez red direktno iz partners tabele da budemo sigurni da imamo najnovije podatke
   try {
-    const { data: freshPartner } = await sb.from('partners').select('id, name, type, partner_code, is_active, is_premium, loyalty_enabled, has_booking, hh_active, hh_date, hh_start, hh_end, lat, lng, phone, whatsapp, created_at, updated_at, plan, city_category_id, show_in_city_info, referral_active, referral_discount, referral_code, hh_visibility, google_review_url, hide_competitors, commission_sharing_active, apartment_commission_pct').eq('id', partner.id).maybeSingle();
+    const { data: freshPartner } = await sb.from('partners').select('id, name, type, partner_code, is_active, is_premium, loyalty_enabled, has_booking, hh_active, hh_date, hh_start, hh_end, lat, lng, phone, whatsapp, created_at, updated_at, plan, city_category_id, show_in_city_info, referral_active, referral_discount, referral_code, hh_visibility, google_review_url, hide_competitors, commission_sharing_active, apartment_commission_pct, ext_active, ext_night_price').eq('id', partner.id).maybeSingle();
     if(freshPartner) partner = { ...partner, ...freshPartner };
   } catch(e){ console.log('fresh partner fetch skip:', e.message); }
 
@@ -443,7 +443,113 @@ function renderStay(){
       <p style="font-size:12px;color:#fbbf24;font-weight:800">Kontaktiraj administratora za aktivaciju.</p>
     </div>`}
     <button class="btn-primary" onclick="saveStay()">💾 Sačuvaj izmene</button>
-    <p class="save-msg" id="stay-msg"></p>`;
+    <p class="save-msg" id="stay-msg"></p>
+
+    <div class="panel-card" style="border-color:rgba(34,211,238,0.20);background:rgba(34,211,238,0.04);margin-top:14px">
+      <p class="panel-card-title" style="color:#67e8f9">Produženje boravka</p>
+      <p style="font-size:11px;color:rgba(255,255,255,0.45);font-weight:600;line-height:1.5;margin:-8px 0 12px">Gost na poslednji dan boravka dobija ponudu da ostane još jednu noć po ceni koju vi odredite, uz aktivnost po sniženoj ceni. Ponuda nije javna — vidi je samo gost koji je već kod vas, pa vam ne kvari redovni cenovnik.</p>
+      <label style="display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;cursor:pointer;padding:12px;background:rgba(34,211,238,0.05);border:1px solid rgba(34,211,238,0.18);border-radius:1.2rem;margin-bottom:10px">
+        <input type="checkbox" id="ext-night-active" ${partner.ext_active?'checked':''} onchange="document.getElementById('ext-night-wrap').style.display=this.checked?'block':'none'" style="width:18px;height:18px;accent-color:#22d3ee;flex-shrink:0">
+        <div>
+          <div style="font-weight:900;color:#67e8f9">Nudim produženje boravka</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:2px">Isključeno — gostima se ne prikazuje ponuda</div>
+        </div>
+      </label>
+      <div id="ext-night-wrap" style="display:${partner.ext_active?'block':'none'}">
+        <div class="field-group"><label class="field-label">Cena dodatne noći (RSD)</label><input type="number" class="field-input" id="ext-night-price" value="${partner.ext_night_price||0}" min="0" max="999999" oninput="updateExtNightDiscount()"></div>
+        <p id="ext-night-discount" style="font-size:11px;font-weight:800;color:#6ee7b7;margin:-6px 0 12px"></p>
+      </div>
+      <button class="btn-primary" onclick="saveExtNight()">💾 Sačuvaj produženje</button>
+      <p class="save-msg" id="ext-night-msg"></p>
+      <div id="ext-offers" style="margin-top:14px"></div>
+    </div>`;
+  loadExtOffers();
+}
+
+// ── Produženje boravka: ponude koje čekaju potvrdu domaćina ────────
+let extRegularNight = 0;
+
+async function loadExtOffers(){
+  const box = document.getElementById('ext-offers');
+  if(!box) return;
+
+  const { data:listings } = await sb.from('accommodation_listings')
+    .select('price_per_night').eq('partner_id', partner.id).eq('is_active', true).limit(1);
+  extRegularNight = listings?.[0]?.price_per_night || 0;
+  updateExtNightDiscount();
+
+  const { data } = await sb.rpc('owner_extension_offers', { p_access_token: token });
+  const rows = Array.isArray(data) ? data : [];
+  const waiting = rows.filter(o => o.status === 'accepted');
+  const rest = rows.filter(o => o.status !== 'accepted').slice(0, 10);
+
+  const label = s => ({offered:'Poslato gostu', accepted:'Čeka vašu potvrdu', confirmed:'Potvrđeno',
+    declined:'Gost odbio', rejected:'Vi ste odbili', expired:'Isteklo'}[s] || s);
+  const color = s => ({accepted:'#fcd34d', confirmed:'#6ee7b7', offered:'#93c5fd'}[s] || 'rgba(255,255,255,0.4)');
+
+  box.innerHTML = `
+    ${waiting.length ? `<p class="panel-card-title" style="color:#fcd34d">Čeka potvrdu (${waiting.length})</p>
+    ${waiting.map(o => `
+      <div style="padding:12px;border:1px solid rgba(251,191,36,0.3);background:rgba(251,191,36,0.06);border-radius:1.2rem;margin-bottom:10px">
+        <div style="font-weight:900;color:white;font-size:13px">${esc(o.guest_name||'Gost')}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.6);font-weight:700;margin-top:2px">${esc(o.guest_phone||'')}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.75);font-weight:700;margin-top:6px">
+          Noć ${(o.night_price||0).toLocaleString('sr-RS')} RSD · odjava se pomera na ${esc(o.checkout_date||'')}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);font-weight:700;margin-top:2px">
+          Aktivnost: ${esc(o.attraction_name||'—')}${o.resource_name ? ' · ' + esc(o.resource_name) : ''} · ${o.activity_qty||1} os. × ${(o.activity_price||0).toLocaleString('sr-RS')} RSD</div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn-primary" style="flex:1;background:linear-gradient(135deg,#059669,#10b981)" onclick="decideExt('${o.id}', true)">✅ Potvrdi</button>
+          <button class="btn-primary" style="flex:1;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3)" onclick="decideExt('${o.id}', false)">Odbij</button>
+        </div>
+      </div>`).join('')}` : ''}
+    ${rest.length ? `<p class="panel-card-title" style="margin-top:12px">Istorija ponuda</p>
+    ${rest.map(o => `<div style="display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:11px">
+        <span style="color:rgba(255,255,255,0.7);font-weight:700">${esc(o.guest_name||'Gost')} · ${esc(o.checkout_date||'')}</span>
+        <span style="color:${color(o.status)};font-weight:900;white-space:nowrap">${label(o.status)}</span>
+      </div>`).join('')}` : ''}
+    ${!rows.length ? '<p style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:700">Još nema poslatih ponuda.</p>' : ''}`;
+}
+
+function updateExtNightDiscount(){
+  const el = document.getElementById('ext-night-discount');
+  if(!el) return;
+  const price = parseInt(document.getElementById('ext-night-price')?.value) || 0;
+  if(!extRegularNight){
+    el.style.color = 'rgba(255,255,255,0.4)';
+    el.textContent = 'Nemate upisanu redovnu cenu noćenja u ponudi smeštaja, pa se popust ne prikazuje gostu.';
+    return;
+  }
+  if(!price || price >= extRegularNight){
+    el.style.color = '#fca5a5';
+    el.textContent = price ? `Cena mora biti niža od redovne (${extRegularNight.toLocaleString('sr-RS')} RSD).` : '';
+    return;
+  }
+  el.style.color = '#6ee7b7';
+  el.textContent = `Gost vidi popust ${Math.round((1 - price/extRegularNight)*100)}% (redovno ${extRegularNight.toLocaleString('sr-RS')} RSD).`;
+}
+
+async function saveExtNight(){
+  const msg = document.getElementById('ext-night-msg');
+  const active = document.getElementById('ext-night-active').checked;
+  const price = Math.max(0, parseInt(document.getElementById('ext-night-price').value) || 0);
+  if(active && !price){ msg.style.color = '#fca5a5'; msg.textContent = '⚠️ Upiši cenu dodatne noći.'; return; }
+  const { error } = await sb.from('partners')
+    .update({ ext_active: active, ext_night_price: price || null }).eq('id', partner.id);
+  if(error){ msg.style.color = '#fca5a5'; msg.textContent = '⚠️ Greška pri čuvanju.'; return; }
+  partner.ext_active = active;
+  partner.ext_night_price = price;
+  msg.style.color = '#6ee7b7';
+  msg.textContent = '✓ Sačuvano!';
+  setTimeout(() => { msg.textContent = ''; }, 1500);
+}
+
+async function decideExt(offerId, confirm){
+  if(!confirm && !window.confirm('Odbiti ovu ponudu za produženje?')) return;
+  const { data, error } = await sb.rpc('owner_decide_extension',
+    { p_access_token: token, p_offer_id: offerId, p_confirm: confirm });
+  if(error || !data?.ok){ alert(data?.msg || 'Greška, pokušaj ponovo.'); return; }
+  alert(data.msg);
+  loadExtOffers();
 }
 
 async function saveMenuUrl(inputId, msgId){
@@ -981,6 +1087,27 @@ async function renderBookings(){
       <button class="btn-primary" onclick="saveResource('${r?.id||''}')">💾 Sačuvaj podešavanje</button>
       <p class="save-msg" id="res-msg"></p>
     </div>
+    <div class="panel-card" style="border-color:rgba(251,191,36,0.18);background:rgba(251,191,36,0.04)">
+      <p class="panel-card-title" style="color:#fcd34d">Cena za mrtve termine</p>
+      <p style="font-size:11px;color:rgba(255,255,255,0.45);font-weight:600;line-height:1.5;margin:-8px 0 12px">Niža cena koja važi samo u terminima koje sami izaberete, i samo u ponudi „Još jedan dan“ gostima smeštaja koji produžavaju boravak. Prazan termin tako postaje prihod, a redovna cena se ne menja.</p>
+      <label style="display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;cursor:pointer;padding:12px;background:rgba(251,191,36,0.05);border:1px solid rgba(251,191,36,0.18);border-radius:1.2rem;margin-bottom:10px">
+        <input type="checkbox" id="ext-active" ${r?.ext_active?'checked':''} onchange="document.getElementById('ext-wrap').style.display=this.checked?'block':'none'" style="width:18px;height:18px;accent-color:#fbbf24;flex-shrink:0">
+        <div>
+          <div style="font-weight:900;color:#fcd34d">Nudim sniženu cenu za prazne termine</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:2px">Isključeno — ne pojavljujete se u ponudi za produženje boravka</div>
+        </div>
+      </label>
+      <div id="ext-wrap" style="display:${r?.ext_active?'block':'none'}">
+        <div class="field-group"><label class="field-label">Snižena cena po osobi (RSD)</label><input type="number" class="field-input" id="ext-price" value="${r?.ext_price_rsd||0}" min="0" max="999999" oninput="updateExtDiscount()"></div>
+        <p id="ext-discount" style="font-size:11px;font-weight:800;color:#6ee7b7;margin:-6px 0 12px"></p>
+        <div style="display:flex;gap:10px">
+          <div class="field-group" style="flex:1"><label class="field-label">Termini od</label><input type="time" class="field-input" id="ext-from" value="${(r?.ext_time_from||'09:00').slice(0,5)}"></div>
+          <div class="field-group" style="flex:1"><label class="field-label">Termini do</label><input type="time" class="field-input" id="ext-to" value="${(r?.ext_time_to||'13:00').slice(0,5)}"></div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="saveExtSettings('${r?.id||''}')">💾 Sačuvaj sniženu cenu</button>
+      <p class="save-msg" id="ext-msg"></p>
+    </div>
     <div class="panel-card" style="border-color:rgba(16,185,129,0.18);background:rgba(16,185,129,0.04)">
       <p class="panel-card-title" style="color:#6ee7b7">Provizija za smeštaj</p>
       <p style="font-size:11px;color:rgba(255,255,255,0.45);font-weight:600;line-height:1.5;margin:-8px 0 12px">Kad gost Premium hotela ili apartmana kod vas realizuje rezervaciju, tom smeštaju se knjiži procenat koji ovde odredite.</p>
@@ -1002,7 +1129,7 @@ async function renderBookings(){
 
   if(!resources?.length){
     el.innerHTML = resourceEditor + '<p style="font-size:13px;color:rgba(255,255,255,0.4);font-weight:700;margin-top:12px">Nemate definisane resurse za booking. Kontaktirajte administratora.</p>';
-    if(partner.type === 'attraction') loadScannerLinkBox();
+    if(partner.type === 'attraction'){ loadScannerLinkBox(); updateExtDiscount(); }
     return;
   }
 
@@ -1050,7 +1177,7 @@ async function renderBookings(){
   }
 
   el.innerHTML = html;
-  if(partner.type === 'attraction') loadScannerLinkBox();
+  if(partner.type === 'attraction'){ loadScannerLinkBox(); updateExtDiscount(); }
 }
 
 async function cancelBooking(bookingId, btn){
@@ -1122,6 +1249,36 @@ async function saveCommissionSettings(){
   msg.style.color = '#6ee7b7';
   msg.textContent = '✓ Sačuvano!';
   setTimeout(() => { msg.textContent=''; }, 1500);
+}
+
+function updateExtDiscount(){
+  const el = document.getElementById('ext-discount');
+  if(!el) return;
+  const regular = parseInt(document.getElementById('res-price')?.value) || 0;
+  const ext = parseInt(document.getElementById('ext-price')?.value) || 0;
+  if(!regular || !ext || ext >= regular){ el.textContent = ext && regular && ext >= regular ? 'Snižena cena nije niža od redovne.' : ''; el.style.color = '#fca5a5'; return; }
+  el.style.color = '#6ee7b7';
+  el.textContent = `Gost vidi popust ${Math.round((1 - ext/regular)*100)}% (redovno ${regular.toLocaleString('sr-RS')} RSD).`;
+}
+
+async function saveExtSettings(resId){
+  const msg = document.getElementById('ext-msg');
+  if(!resId){ msg.style.color = '#fca5a5'; msg.textContent = '⚠️ Prvo sačuvaj podešavanje termina.'; return; }
+  const active = document.getElementById('ext-active').checked;
+  const price = Math.max(0, parseInt(document.getElementById('ext-price').value) || 0);
+  const from = document.getElementById('ext-from').value || null;
+  const to = document.getElementById('ext-to').value || null;
+  const regular = parseInt(document.getElementById('res-price')?.value) || 0;
+  if(active && (!price || (regular && price >= regular))){
+    msg.style.color = '#fca5a5'; msg.textContent = '⚠️ Snižena cena mora biti manja od redovne.'; return;
+  }
+  const { error } = await sb.from('bookable_resources')
+    .update({ ext_active: active, ext_price_rsd: price || null, ext_time_from: from, ext_time_to: to })
+    .eq('id', resId);
+  if(error){ msg.style.color = '#fca5a5'; msg.textContent = '⚠️ Greška pri čuvanju.'; return; }
+  msg.style.color = '#6ee7b7';
+  msg.textContent = '✓ Sačuvano!';
+  setTimeout(() => { msg.textContent = ''; }, 1500);
 }
 
 async function saveResource(resId){
@@ -1816,7 +1973,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     // (is_active, is_premium, plan, hh_active...) da UI ne bi prikazivao pogrešno stanje
     let fresh = null;
     try {
-      const { data } = await sb.from('partners').select('id, name, type, partner_code, is_active, is_premium, loyalty_enabled, has_booking, hh_active, hh_date, hh_start, hh_end, lat, lng, phone, whatsapp, created_at, updated_at, plan, city_category_id, show_in_city_info, referral_active, referral_discount, referral_code, hh_visibility, google_review_url, hide_competitors, commission_sharing_active, apartment_commission_pct').eq('id', saved.id).maybeSingle();
+      const { data } = await sb.from('partners').select('id, name, type, partner_code, is_active, is_premium, loyalty_enabled, has_booking, hh_active, hh_date, hh_start, hh_end, lat, lng, phone, whatsapp, created_at, updated_at, plan, city_category_id, show_in_city_info, referral_active, referral_discount, referral_code, hh_visibility, google_review_url, hide_competitors, commission_sharing_active, apartment_commission_pct, ext_active, ext_night_price').eq('id', saved.id).maybeSingle();
       fresh = data;
     } catch(e){ console.log('auto-login fresh fetch skip:', e.message); }
 

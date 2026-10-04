@@ -453,6 +453,26 @@
         <div class="content-wrap">
             <div class="stack">
 
+                <!-- Produženje boravka: pitanje o odjavi i ponuda -->
+                <div id="ext-nights-card" class="hidden" style="background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.3);border-radius:1.5rem;padding:18px">
+                    <p style="font-size:13px;font-weight:900;color:#67e8f9;margin:0 0 4px">Do kad ostajete?</p>
+                    <p style="font-size:11px;color:rgba(255,255,255,0.55);font-weight:700;margin:0 0 12px;line-height:1.5">Da bismo znali šta da vam preporučimo za svaki dan boravka.</p>
+                    <div id="ext-nights-btns" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+                </div>
+
+                <div id="ext-banner" class="hidden" onclick="openExtSheet()" style="cursor:pointer;border-radius:1.5rem;padding:16px 18px;background:linear-gradient(135deg,rgba(34,211,238,0.18),rgba(16,185,129,0.14));border:1px solid rgba(34,211,238,0.45);display:flex;align-items:center;gap:12px">
+                    <span id="ext-banner-icon" style="font-size:1.6rem">🌙</span>
+                    <div style="flex:1;min-width:0">
+                        <p id="ext-banner-title" style="font-size:13px;font-weight:900;color:#a5f3fc;margin:0 0 2px">Ostanite još jednu noć</p>
+                        <p id="ext-banner-sub" style="font-size:11px;color:rgba(255,255,255,0.65);font-weight:700;margin:0;line-height:1.45"></p>
+                    </div>
+                    <span style="font-size:1.1rem;color:#67e8f9">›</span>
+                </div>
+
+                <div id="ext-banner-mini" class="hidden" onclick="openExtSheet()" style="cursor:pointer;text-align:center;font-size:11px;font-weight:800;color:rgba(103,232,249,0.85);padding:8px">
+                    Ponuda za produženje boravka · otvori
+                </div>
+
                 <!-- WiFi + VIP -->
                 <div class="glass-card top-panel fade-in">
                     <div class="wifi-main">
@@ -786,6 +806,22 @@
         </div>
         <button onclick="toggleVIP(false)" class="mt-8 w-full bg-gradient-to-r from-amber-600 to-amber-400 text-slate-950 py-4 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95">Zatvori nazad</button>
     </div>
+</div>
+
+<!-- PRODUŽENJE BORAVKA -->
+<style>
+#ext-banner:not(.hidden){animation:extPulse 3s ease-in-out infinite}
+@keyframes extPulse{0%,100%{box-shadow:0 0 0 0 rgba(34,211,238,0)}50%{box-shadow:0 0 0 10px rgba(34,211,238,0.10)}}
+#ext-sheet{display:none;position:fixed;inset:0;z-index:999;background:rgba(15,23,42,0.92);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center}
+#ext-sheet.open{display:flex}
+.ext-sheet-inner{background:white;border-top-left-radius:2.5rem;border-top-right-radius:2.5rem;width:100%;max-width:430px;max-height:92vh;overflow-y:auto;padding:28px 24px 36px;color:#0f172a}
+.ext-opt{border:1.5px solid #e2e8f0;border-radius:1.2rem;padding:14px;margin-bottom:10px;cursor:pointer;background:#f8fafc}
+.ext-opt.sel{border-color:#10b981;background:#ecfdf5}
+.ext-inp{width:100%;padding:13px 14px;border:1.5px solid #e2e8f0;border-radius:1rem;font-size:14px;font-weight:600;font-family:inherit;margin-bottom:10px;color:#0f172a;background:white}
+.ext-btn{width:100%;padding:16px;border:none;border-radius:1.2rem;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit}
+</style>
+<div id="ext-sheet">
+  <div class="ext-sheet-inner" id="ext-sheet-inner"></div>
 </div>
 
 <!-- PWA INSTALL -->
@@ -1654,6 +1690,199 @@ window.addEventListener('beforeinstallprompt', async e => {
 });
 window.addEventListener('appinstalled', () => { deferredPrompt = null; closeInstallPrompt(); });
 
+// ── Produženje boravka ────────────────────────────────────────────
+// Gost na poslednji ceo dan boravka dobija ponudu: još jedna noć po
+// ceni domaćina plus aktivnost po ceni mrtvog termina. Prihvatanje
+// čeka potvrdu domaćina, da se ne proda soba koje nema.
+let extState = null, extSelected = 0;
+const extRsd = n => (Number(n) || 0).toLocaleString('sr-RS') + ' RSD';
+
+async function loadExtOffer(){
+    const banner = document.getElementById('ext-banner');
+    const mini = document.getElementById('ext-banner-mini');
+    const card = document.getElementById('ext-nights-card');
+    if(!banner) return;
+    banner.classList.add('hidden'); mini.classList.add('hidden'); card.classList.add('hidden');
+
+    try{
+        const { data, error } = await sb.rpc('guest_extension_offer', { p_guest_token: C.getOrCreateGuestToken() });
+        if(error || !data) return;
+        extState = data;
+
+        if(data.state === 'need_checkout_date'){ renderNightsCard(); return; }
+        if(data.state === 'none' || data.state === 'expired' || data.state === 'rejected') return;
+
+        const dismissed = sessionStorage.getItem('stayvb_ext_dismissed') === (data.offer_id || '');
+        const t = document.getElementById('ext-banner-title');
+        const s = document.getElementById('ext-banner-sub');
+        const ic = document.getElementById('ext-banner-icon');
+
+        if(data.state === 'offered'){
+            const save = data.night_regular_price ? data.night_regular_price - data.night_price : 0;
+            ic.textContent = '🌙';
+            t.textContent = 'Ostanite još jednu noć';
+            s.textContent = save > 0
+                ? `${extRsd(data.night_price)} umesto ${extRsd(data.night_regular_price)} + aktivnost po sniženoj ceni`
+                : `${extRsd(data.night_price)} + aktivnost po sniženoj ceni`;
+        } else if(data.state === 'accepted'){
+            ic.textContent = '⏳';
+            t.textContent = 'Čeka se potvrda domaćina';
+            s.textContent = 'Obavestićemo vas čim domaćin potvrdi produženje.';
+        } else if(data.state === 'confirmed'){
+            ic.textContent = '✅';
+            t.textContent = 'Produženje je potvrđeno';
+            s.textContent = `Ostajete do ${data.new_checkout || ''}. Vaš kod za aktivnost je u Atrakcijama.`;
+        }
+
+        if(dismissed && data.state === 'offered') mini.classList.remove('hidden');
+        else banner.classList.remove('hidden');
+    } catch(e){ /* tiho, ponuda nije ključna za rad aplikacije */ }
+}
+
+function renderNightsCard(){
+    const btns = document.getElementById('ext-nights-btns');
+    if(!btns) return;
+    btns.innerHTML = [1,2,3,4,5,6,7].map(n => `<button onclick="setExtNights(${n})" style="flex:1 1 auto;min-width:52px;padding:12px 8px;border-radius:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(34,211,238,0.3);color:white;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit">${n}</button>`).join('')
+        + '<span style="flex:1 1 100%;font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;margin-top:4px">noći</span>';
+    document.getElementById('ext-nights-card').classList.remove('hidden');
+}
+
+async function setExtNights(n){
+    try{
+        await sb.rpc('set_guest_checkout', { p_guest_token: C.getOrCreateGuestToken(), p_nights: n });
+        document.getElementById('ext-nights-card').classList.add('hidden');
+        loadExtOffer();
+    } catch(e){ /* noop */ }
+}
+
+function closeExtSheet(){ document.getElementById('ext-sheet').classList.remove('open'); }
+
+function openExtSheet(){
+    if(!extState) return;
+    const el = document.getElementById('ext-sheet-inner');
+    const d = extState;
+
+    if(d.state === 'accepted'){
+        el.innerHTML = `<div style="text-align:center">
+            <div style="font-size:2.5rem;margin-bottom:10px">⏳</div>
+            <h2 style="font-size:1.2rem;font-weight:900;margin:0 0 8px">Čeka se potvrda domaćina</h2>
+            <p style="font-size:13px;color:#475569;font-weight:600;line-height:1.6;margin:0 0 20px">Poslali smo zahtev domaćinu. Kad potvrdi, dobićete kod za aktivnost u delu Atrakcije.</p>
+            <button class="ext-btn" style="background:#0f172a;color:white" onclick="closeExtSheet()">Zatvori</button></div>`;
+    } else if(d.state === 'confirmed'){
+        el.innerHTML = `<div style="text-align:center">
+            <div style="font-size:2.5rem;margin-bottom:10px">✅</div>
+            <h2 style="font-size:1.2rem;font-weight:900;margin:0 0 8px">Produženje je potvrđeno</h2>
+            <p style="font-size:13px;color:#475569;font-weight:600;line-height:1.6;margin:0 0 20px">Ostajete do ${C.escapeHtml(d.new_checkout||'')}. Kod za aktivnost pokažite na licu mesta.</p>
+            <a href="atrakcije.html" class="ext-btn" style="display:block;background:linear-gradient(135deg,#10b981,#059669);color:white;text-decoration:none;box-sizing:border-box">🎫 Otvori moj kod</a>
+            <button class="ext-btn" style="background:#f1f5f9;color:#0f172a;margin-top:10px" onclick="closeExtSheet()">Zatvori</button></div>`;
+    } else {
+        const opts = Array.isArray(d.options) ? d.options : [];
+        const exp = d.expires_at ? new Date(d.expires_at).toLocaleTimeString('sr-RS', {hour:'2-digit', minute:'2-digit'}) : '';
+        const nightSave = d.night_regular_price ? d.night_regular_price - d.night_price : 0;
+        el.innerHTML = `
+            <h2 style="font-size:1.35rem;font-weight:900;margin:0 0 6px">Ostanite još jednu noć</h2>
+            <p style="font-size:12px;color:#64748b;font-weight:700;margin:0 0 18px;line-height:1.5">
+                ${C.escapeHtml(d.accommodation_name||'')}${exp ? ' · ponuda važi do ' + exp : ''}</p>
+
+            <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:1.2rem;padding:14px;margin-bottom:16px">
+                <div style="display:flex;justify-content:space-between;align-items:baseline">
+                    <span style="font-size:12px;font-weight:800;color:#475569">Dodatna noć</span>
+                    <span style="font-size:15px;font-weight:900;color:#065f46">${extRsd(d.night_price)}</span>
+                </div>
+                ${nightSave > 0 ? `<p style="font-size:11px;color:#059669;font-weight:800;margin:4px 0 0">Umesto ${extRsd(d.night_regular_price)} — ušteda ${extRsd(nightSave)}</p>` : ''}
+            </div>
+
+            ${opts.length ? `<p style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;margin:0 0 8px">Izaberite aktivnost</p>
+            ${opts.map((o,i) => `
+                <div class="ext-opt${i===extSelected?' sel':''}" onclick="extSelect(${i})">
+                    <div style="display:flex;justify-content:space-between;gap:10px">
+                        <div style="min-width:0">
+                            <p style="font-size:13px;font-weight:900;margin:0 0 2px">${C.escapeHtml(o.attraction_name||'')}</p>
+                            <p style="font-size:11px;color:#64748b;font-weight:700;margin:0">${C.escapeHtml(o.resource_name||'')}${o.time_from ? ' · termini ' + C.escapeHtml(o.time_from) + '–' + C.escapeHtml(o.time_to||'') : ''}</p>
+                        </div>
+                        <div style="text-align:right;white-space:nowrap">
+                            <p style="font-size:13px;font-weight:900;color:#065f46;margin:0">${extRsd(o.price)}</p>
+                            ${o.regular_price && o.regular_price > o.price ? `<p style="font-size:10px;color:#94a3b8;font-weight:700;margin:0;text-decoration:line-through">${extRsd(o.regular_price)}</p>` : ''}
+                        </div>
+                    </div>
+                </div>`).join('')}` : '<p style="font-size:12px;color:#64748b;font-weight:700">Trenutno nema aktivnosti sa sniženom cenom, ali noć možete produžiti.</p>'}
+
+            <div style="display:flex;gap:10px;margin:14px 0 4px">
+                <select class="ext-inp" id="ext-qty" style="flex:0 0 90px;margin:0" onchange="extRenderTotal()">
+                    ${[1,2,3,4,5,6].map(n => `<option value="${n}">${n} os.</option>`).join('')}
+                </select>
+                <input class="ext-inp" id="ext-name" placeholder="Ime i prezime" style="margin:0">
+            </div>
+            <input class="ext-inp" id="ext-phone" placeholder="Telefon" inputmode="tel" style="margin:10px 0 14px">
+
+            <div id="ext-total" style="background:#0f172a;color:white;border-radius:1.2rem;padding:14px;margin-bottom:14px"></div>
+            <p id="ext-msg" style="font-size:12px;font-weight:800;color:#be123c;min-height:16px;margin:0 0 8px"></p>
+
+            <button class="ext-btn" style="background:linear-gradient(135deg,#10b981,#059669);color:white" onclick="acceptExt()">Prihvatam, ostajem još jednu noć</button>
+            <button class="ext-btn" style="background:#f1f5f9;color:#0f172a;margin-top:10px" onclick="dismissExt()">Ne, hvala</button>`;
+        extRenderTotal();
+    }
+    document.getElementById('ext-sheet').classList.add('open');
+}
+
+function extSelect(i){
+    extSelected = i;
+    document.querySelectorAll('.ext-opt').forEach((el,k) => el.classList.toggle('sel', k === i));
+    extRenderTotal();
+}
+
+function extRenderTotal(){
+    const box = document.getElementById('ext-total');
+    if(!box || !extState) return;
+    const opts = Array.isArray(extState.options) ? extState.options : [];
+    const o = opts[extSelected];
+    const qty = parseInt(document.getElementById('ext-qty')?.value) || 1;
+    const activity = o ? (o.price || 0) * qty : 0;
+    const total = (extState.night_price || 0) + activity;
+    const regular = (extState.night_regular_price || extState.night_price || 0) + (o && o.regular_price ? o.regular_price * qty : activity);
+    const save = regular - total;
+    box.innerHTML = `
+        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:rgba(255,255,255,0.7)">
+            <span>Noć</span><span>${extRsd(extState.night_price)}</span></div>
+        ${o ? `<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:rgba(255,255,255,0.7);margin-top:4px">
+            <span>${C.escapeHtml(o.resource_name||'Aktivnost')} × ${qty}</span><span>${extRsd(activity)}</span></div>` : ''}
+        <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:900;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.15)">
+            <span>Ukupno</span><span>${extRsd(total)}</span></div>
+        ${save > 0 ? `<p style="font-size:11px;color:#6ee7b7;font-weight:800;margin:6px 0 0">Ušteda ${extRsd(save)} u odnosu na redovne cene</p>` : ''}`;
+}
+
+async function acceptExt(){
+    const msg = document.getElementById('ext-msg');
+    const name = (document.getElementById('ext-name')?.value || '').trim();
+    const phone = (document.getElementById('ext-phone')?.value || '').trim();
+    const qty = parseInt(document.getElementById('ext-qty')?.value) || 1;
+    const opts = Array.isArray(extState?.options) ? extState.options : [];
+    const o = opts[extSelected];
+    if(!name || !phone){ msg.textContent = 'Unesite ime i telefon.'; return; }
+    if(!o){ msg.textContent = 'Trenutno nema dostupne aktivnosti za ponudu.'; return; }
+
+    msg.style.color = '#64748b';
+    msg.textContent = 'Šaljem zahtev...';
+    const { data, error } = await sb.rpc('guest_accept_extension', {
+        p_guest_token: C.getOrCreateGuestToken(), p_resource_id: o.resource_id,
+        p_qty: qty, p_name: name, p_phone: phone });
+    if(error || !data?.ok){
+        msg.style.color = '#be123c';
+        msg.textContent = data?.msg || 'Greška, pokušajte ponovo.';
+        return;
+    }
+    closeExtSheet();
+    await loadExtOffer();
+    openExtSheet();
+}
+
+function dismissExt(){
+    if(extState?.offer_id) sessionStorage.setItem('stayvb_ext_dismissed', extState.offer_id);
+    closeExtSheet();
+    document.getElementById('ext-banner').classList.add('hidden');
+    document.getElementById('ext-banner-mini').classList.remove('hidden');
+}
+
 async function startApp(lang){
     const params = new URLSearchParams(window.location.search);
     const urlUnitId = (params.get('id') || '').toUpperCase();
@@ -1724,6 +1953,7 @@ async function startApp(lang){
     } catch(e){ console.error('Load error:', e); }
 
     renderHistory();
+    loadExtOffer();
 
     document.getElementById('loader').style.display = 'none';
     document.getElementById('content').style.display = 'block';
