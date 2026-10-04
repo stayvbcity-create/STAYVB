@@ -447,7 +447,7 @@ function renderStay(){
 
     <div class="panel-card" style="border-color:rgba(34,211,238,0.20);background:rgba(34,211,238,0.04);margin-top:14px">
       <p class="panel-card-title" style="color:#67e8f9">Produženje boravka</p>
-      <p style="font-size:11px;color:rgba(255,255,255,0.45);font-weight:600;line-height:1.5;margin:-8px 0 12px">Gost na poslednji dan boravka dobija ponudu da ostane još jednu noć po ceni koju vi odredite, uz aktivnost po sniženoj ceni. Ponuda nije javna — vidi je samo gost koji je već kod vas, pa vam ne kvari redovni cenovnik.</p>
+      <p style="font-size:11px;color:rgba(255,255,255,0.45);font-weight:600;line-height:1.5;margin:-8px 0 12px">Gost na poslednji dan boravka dobija ponudu da ostane još jednu noć po ceni koju vi odredite, uz aktivnost po sniženoj ceni. Ponuda nije javna — vidi je samo gost koji je već kod vas, pa vam ne kvari redovni cenovnik. <strong style="color:#67e8f9">Vama ostaje cela noć, atrakciji cela aktivnost</strong> — na produženje se ne obračunava provizija.</p>
       <label style="display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;cursor:pointer;padding:12px;background:rgba(34,211,238,0.05);border:1px solid rgba(34,211,238,0.18);border-radius:1.2rem;margin-bottom:10px">
         <input type="checkbox" id="ext-night-active" ${partner.ext_active?'checked':''} onchange="document.getElementById('ext-night-wrap').style.display=this.checked?'block':'none'" style="width:18px;height:18px;accent-color:#22d3ee;flex-shrink:0">
         <div>
@@ -1089,7 +1089,7 @@ async function renderBookings(){
     </div>
     <div class="panel-card" style="border-color:rgba(251,191,36,0.18);background:rgba(251,191,36,0.04)">
       <p class="panel-card-title" style="color:#fcd34d">Cena za mrtve termine</p>
-      <p style="font-size:11px;color:rgba(255,255,255,0.45);font-weight:600;line-height:1.5;margin:-8px 0 12px">Niža cena koja važi samo u terminima koje sami izaberete, i samo u ponudi „Još jedan dan“ gostima smeštaja koji produžavaju boravak. Prazan termin tako postaje prihod, a redovna cena se ne menja.</p>
+      <p style="font-size:11px;color:rgba(255,255,255,0.45);font-weight:600;line-height:1.5;margin:-8px 0 12px">Niža cena koja važi samo u terminima koje sami izaberete, i samo u ponudi gostima smeštaja koji produžavaju boravak. Prazan termin tako postaje prihod, a redovna cena se ne menja. <strong style="color:#fcd34d">Na ove rezervacije ne plaćate proviziju smeštaju</strong> — ceo iznos ostaje vama.</p>
       <label style="display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;cursor:pointer;padding:12px;background:rgba(251,191,36,0.05);border:1px solid rgba(251,191,36,0.18);border-radius:1.2rem;margin-bottom:10px">
         <input type="checkbox" id="ext-active" ${r?.ext_active?'checked':''} onchange="document.getElementById('ext-wrap').style.display=this.checked?'block':'none'" style="width:18px;height:18px;accent-color:#fbbf24;flex-shrink:0">
         <div>
@@ -1548,7 +1548,7 @@ let finRows = [], finFiltered = [], finSharing = [];
 const finRsd = n => (Number(n) || 0).toLocaleString('sr-RS') + ' RSD';
 const finMonthStart = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1).toLocaleDateString('sv-SE'); };
 const finToday = () => new Date().toLocaleDateString('sv-SE');
-const finStatusLabel = s => s === 'paid' ? 'Isplaćeno' : s === 'pending' ? 'Čeka isplatu' : '—';
+const finStatusLabel = (s, isExt) => isExt ? 'Produženje · bez provizije' : (s === 'paid' ? 'Isplaćeno' : s === 'pending' ? 'Čeka isplatu' : '—');
 
 async function renderFinance(){
   const el = document.getElementById('tab-finance');
@@ -1568,6 +1568,9 @@ async function renderFinance(){
     .order('apartment_commission_pct', {ascending:false});
   finSharing = sharing || [];
 
+  const { data:extRows } = await sb.rpc('owner_extension_offers', { p_access_token: token });
+  const extBookings = new Set((Array.isArray(extRows) ? extRows : []).map(o => o.booking_id).filter(Boolean));
+
   const cmap = {};
   (coms || []).forEach(c => cmap[c.booking_id] = c);
   finRows = (bks || []).map(b => {
@@ -1579,6 +1582,7 @@ async function renderFinance(){
       value: (res.price_rsd || 0) * (b.qty || 1),
       commission: c ? c.amount_rsd : 0, pct: c ? c.commission_pct_applied : null,
       cid: c ? c.id : null, apartmentConfirmed: c ? !!c.apartment_paid_confirmed : false,
+      isExt: extBookings.has(b.id),
       status: !c ? 'nema' : (c.paid_at ? 'paid' : 'pending')
     };
   });
@@ -1642,7 +1646,7 @@ function finApply(){
       <div style="color:rgba(255,255,255,0.75);text-align:center">${r.qty}</div>
       <div style="text-align:right;color:white;font-weight:800">${finRsd(r.value)}</div>
       <div style="text-align:right;color:${r.status==='paid'?'#6ee7b7':r.commission?'#fcd34d':'rgba(255,255,255,0.35)'};font-weight:800">
-        ${r.commission ? finRsd(r.commission) + ' (' + r.pct + '%)' : '—'}<br><span style="font-size:9px">${finStatusLabel(r.status)}</span>
+        ${r.commission ? finRsd(r.commission) + ' (' + r.pct + '%)' : '—'}<br><span style="font-size:9px">${finStatusLabel(r.status, r.isExt)}</span>
         ${r.cid && r.status !== 'paid' ? `<label style="display:flex;justify-content:flex-end;align-items:center;gap:5px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.6);margin-top:4px;cursor:pointer;white-space:nowrap">
           <input type="checkbox" ${r.apartmentConfirmed?'checked':''} onchange="toggleApartmentPaidConfirm('${r.cid}', this.checked)" style="width:14px;height:14px;accent-color:#10b981">Primio/la sam isplatu</label>` : ''}
       </div>
@@ -1666,7 +1670,7 @@ function finPrint(){
       <td style="text-align:center">${r.qty}</td>
       <td style="text-align:right">${finRsd(r.value)}</td>
       <td style="text-align:right">${r.commission ? finRsd(r.commission) + ' (' + r.pct + '%)' : '—'}</td>
-      <td>${finStatusLabel(r.status)}</td></tr>`).join('');
+      <td>${finStatusLabel(r.status, r.isExt)}</td></tr>`).join('');
 
   const w = window.open('', '_blank');
   if(!w){ alert('Dozvoli pop-up prozore za štampu.'); return; }
