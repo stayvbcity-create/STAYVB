@@ -955,15 +955,7 @@
                             </div>
                             <p id="share-gift-note" class="share-note">Podeli reel u story i osvoji mali poklon.</p>
                         </div>
-                        <button onclick="confirmCheckout()" class="cta-btn cta-checkout">🗝️ Check-out</button>
                     </div>
-                </section>
-
-                <!-- Istorija poseta + deljenje -->
-                <section id="history-section" class="soft-card fade-in" style="padding:18px;display:none">
-                    <p class="section-label text-center">Gde ste bili</p>
-                    <div id="history-list" style="display:flex;flex-direction:column;gap:8px;margin:12px 0"></div>
-                    <button onclick="shareApp()" class="cta-btn cta-checkout" style="margin-top:4px">🔗 Podeli sa prijateljem</button>
                 </section>
 
                 <div class="footer-note">StayVB Digital System</div>
@@ -1106,13 +1098,6 @@ async function shareStayVB(){
     window.location.href = 'share.html?session='+gs+'&unit='+encodeURIComponent(currentUnitId)+'&target='+encodeURIComponent(currentReelUrl);
 }
 
-function confirmCheckout(){
-    if(!ownerPhone){ alert('Kontakt domaćina nije podešen.'); return; }
-    if(confirm('Potvrđujete napuštanje?')){
-        const name = document.getElementById('unit-name')?.innerText || 'StayVB';
-        window.location.href = 'https://wa.me/' + ownerPhone.replace(/\D/g,'') + '?text=' + encodeURIComponent('Odjavili smo se iz apartmana '+name+'. Srdačan pozdrav!');
-    }
-}
 
 async function loadLoyalty(isPremium){
     if(!isPremium){
@@ -1189,48 +1174,8 @@ async function trackVisit(){
 }
 
 // ── Istorija poseta (samo lokalno u browseru, bez naloga) ─────────
-function recordVisitHistory(partner){
-    if(!partner || !partner.id || !currentUnitId) return;
-    try{
-        let hist = JSON.parse(localStorage.getItem('stayvb_history') || '[]');
-        hist = hist.filter(h => h.code !== currentUnitId);
-        hist.unshift({ code: currentUnitId, name: partner.name, type: partner.type, date: new Date().toISOString() });
-        localStorage.setItem('stayvb_history', JSON.stringify(hist.slice(0, 8)));
-    }catch(e){ /* localStorage nedostupan - preskoci tiho */ }
-}
 
-function renderHistory(){
-    let hist = [];
-    try{ hist = JSON.parse(localStorage.getItem('stayvb_history') || '[]'); }catch(e){}
-    const section = document.getElementById('history-section');
-    const list = document.getElementById('history-list');
-    if(!section || !list) return;
-    if(!hist.length){ section.style.display = 'none'; return; }
 
-    const typeLabel = {apartment:'Apartman', hotel:'Hotel', restaurant:'Restoran', attraction:'Atrakcija', business:'Biznis'};
-    list.innerHTML = hist.map(h => {
-        const d = new Date(h.date);
-        const dateStr = isNaN(d) ? '' : d.toLocaleDateString('sr-RS', {day:'2-digit', month:'2-digit', year:'numeric'});
-        return `<a href="index.html?id=${encodeURIComponent(h.code)}" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#f8fafc;border:1px solid #eef2f7;border-radius:1rem;text-decoration:none;color:inherit">
-            <span style="font-size:12.5px;font-weight:800;color:#0f172a">${esc(h.name)}</span>
-            <span style="font-size:10px;font-weight:700;color:#94a3b8">${esc(typeLabel[h.type]||'')} · ${esc(dateStr)}</span>
-        </a>`;
-    }).join('');
-    section.style.display = 'block';
-}
-
-async function shareApp(){
-    const url = location.origin + location.pathname + (currentUnitId ? ('?id=' + encodeURIComponent(currentUnitId)) : '');
-    const text = 'Otkrij Vrnjačku Banju uz StayVB — smeštaj, popusti, događaji i još mnogo toga na jednom mestu.';
-    try{
-        if(navigator.share){
-            await navigator.share({ title: 'StayVB', text, url });
-        } else {
-            await navigator.clipboard.writeText(url);
-            alert('Link je kopiran! Pošaljite ga prijatelju.');
-        }
-    }catch(e){ /* korisnik otkazao deljenje - ignorisi */ }
-}
 
 // ── Prelazak u "gradski" režim posle isteka boravka ───────────────
 // Gost se i dalje vraca na svoj stari link (localStorage stayvb_unit_id),
@@ -1284,7 +1229,6 @@ async function loadPartnerData(){
         return;
     }
 
-    recordVisitHistory(partner);
 
     const { data: pcData } = await sb
         .from('partner_content')
@@ -2159,7 +2103,6 @@ async function startApp(lang){
         await Promise.race([corePromise, new Promise(resolve => setTimeout(resolve, 4000))]);
     } catch(e){ console.error('Load error:', e); }
 
-    renderHistory();
     loadExtOffer();
 
     document.getElementById('loader').style.display = 'none';
