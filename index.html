@@ -472,7 +472,7 @@
                     <div id="ext-nights-btns" style="display:flex;gap:8px;flex-wrap:wrap"></div>
                 </div>
 
-                <div id="ext-banner" class="hidden" onclick="openExtSheet()" style="cursor:pointer;border-radius:1.5rem;padding:16px 18px;background:linear-gradient(135deg,rgba(34,211,238,0.18),rgba(16,185,129,0.14));border:1px solid rgba(34,211,238,0.45);display:flex;align-items:center;gap:12px">
+                <div id="ext-banner" class="hidden" onclick="openExtSheet()" style="cursor:pointer;border-radius:1.5rem;padding:16px 18px;background:linear-gradient(135deg,rgba(34,211,238,0.18),rgba(16,185,129,0.14));border:1px solid rgba(34,211,238,0.45);align-items:center;gap:12px">
                     <span id="ext-banner-icon" style="font-size:1.6rem">🌙</span>
                     <div style="flex:1;min-width:0">
                         <p id="ext-banner-title" style="font-size:13px;font-weight:900;color:#a5f3fc;margin:0 0 2px">Ostanite još jednu noć</p>
@@ -796,7 +796,7 @@
 
 <!-- PRODUŽENJE BORAVKA -->
 <style>
-#ext-banner:not(.hidden){animation:extPulse 3s ease-in-out infinite}
+#ext-banner:not(.hidden){display:flex;animation:extPulse 3s ease-in-out infinite}
 @keyframes extPulse{0%,100%{box-shadow:0 0 0 0 rgba(34,211,238,0)}50%{box-shadow:0 0 0 10px rgba(34,211,238,0.10)}}
 #ext-sheet{display:none;position:fixed;inset:0;z-index:999;background:rgba(15,23,42,0.92);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center}
 #ext-sheet.open{display:flex}
