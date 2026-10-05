@@ -183,12 +183,7 @@
         .wifi-main{flex:1;min-width:0;}
         .wifi-name{font-size:1.05rem;font-weight:900;color:#0f172a;line-height:1.1;letter-spacing:-0.03em;word-break:break-word;}
         .wifi-pass{margin-top:8px;font-family:monospace;font-size:12px;color:#64748b;font-weight:700;}
-        .vip-gold-btn{background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 45%,#92400e 100%);border:1px solid rgba(251,191,36,0.5);color:white;width:78px;height:78px;border-radius:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 12px 24px rgba(245,158,11,0.30);transition:transform 0.18s;}
-        .vip-gold-btn:active{transform:scale(0.95);}
-        .vip-pointer-wrap{position:relative;display:flex;align-items:center;justify-content:center;width:92px;min-width:92px;}
-        .vip-pointer{position:absolute;right:82px;top:50%;transform:translateY(-50%);font-size:24px;opacity:0;pointer-events:none;z-index:5;}
-        @keyframes vipPoint{0%{transform:translateY(-50%) translateX(-2px);opacity:0;}12%{transform:translateY(-50%) translateX(0);opacity:1;}30%{transform:translateY(-50%) translateX(10px);opacity:1;}72%{transform:translateY(-50%) translateX(10px);opacity:1;}88%{transform:translateY(-50%) translateX(4px);opacity:1;}100%{transform:translateY(-50%) translateX(0);opacity:0;}}
-
+                                        
         /* Treasure strip */
         .treasure-strip{position:relative;display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:62px;padding:10px 14px 10px 18px;border-radius:1.6rem;overflow:hidden;cursor:pointer;color:#ffffff;background:linear-gradient(135deg,#7c5a10 0%,#d39c17 22%,#fbbf24 48%,#f59e0b 74%,#8a5a10 100%);border:1px solid rgba(251,191,36,0.55);box-shadow:0 12px 24px rgba(245,158,11,0.24),inset 0 1px 0 rgba(255,255,255,0.28);animation:goldBlink 1.25s ease-in-out infinite;}
         .treasure-strip::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.26),transparent);transform:translateX(-120%) skewX(-20deg);animation:goldSweep 2.8s ease-in-out infinite;pointer-events:none;}
@@ -294,10 +289,7 @@
         @keyframes sharePulse{0%,100%{transform:scale(1);}50%{transform:scale(1.02);}}
         .share-note{margin-top:10px;text-align:center;font-size:10px;font-weight:800;color:rgba(255,255,255,0.72);position:relative;z-index:2;}
 
-        /* VIP Modal */
-        #vipModal{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.96);backdrop-filter:blur(14px);z-index:999;align-items:center;justify-content:center;padding:20px;}
-        .vip-card-visual{background:linear-gradient(145deg,#172033 0%,#020617 100%);border:1px solid rgba(251,191,36,0.38);border-radius:2.5rem;position:relative;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);}
-        .gold-glow{box-shadow:0 0 40px rgba(251,191,36,0.10);}
+                        .gold-glow{box-shadow:0 0 40px rgba(251,191,36,0.10);}
         .card-shine{position:absolute;top:0;left:-100%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(251,191,36,0.08),transparent);transform:skewX(-25deg);animation:shine 4s infinite;}
         @keyframes shine{0%{left:-100%;}20%{left:200%;}100%{left:200%;}}
 
@@ -493,20 +485,12 @@
                     Ponuda za produženje boravka · otvori
                 </div>
 
-                <!-- WiFi + VIP -->
+                <!-- WiFi -->
                 <div class="glass-card top-panel fade-in">
                     <div class="wifi-main">
                         <p class="section-label">WiFi mreža</p>
                         <p id="wifi-name" class="wifi-name">...</p>
                         <p id="wifi-pass" class="wifi-pass">...</p>
-                    </div>
-                    <div class="vip-pointer-wrap" id="vip-btn-wrap">
-                        <span id="vipPointer" class="vip-pointer">👉</span>
-                        <button onclick="toggleVIP(true)" class="vip-gold-btn" type="button">
-                            <span class="text-lg">🏆</span>
-                            <span class="text-[11px] font-black leading-none">VIP</span>
-                            <span class="text-[8px] uppercase tracking-widest opacity-80">Karta</span>
-                        </button>
                     </div>
                 </div>
 
@@ -583,7 +567,7 @@
                                 </div>
                                 <div class="preview-list">
                                     <div class="preview-item bg-white/6 border border-white/8 text-white"><span>Skeniraj Banju i otkrij partnere</span><span class="text-yellow-300">OTVORI</span></div>
-                                    <div class="preview-item bg-white/6 border border-white/8 text-white"><span>Lokacije, popusti i VIP ponude</span><span class="text-yellow-300">MAPA</span></div>
+                                    <div class="preview-item bg-white/6 border border-white/8 text-white"><span>Lokacije, popusti i aktuelne ponude</span><span class="text-yellow-300">MAPA</span></div>
                                 </div>
                             </div>
                             <!-- Banja Live -->
@@ -809,24 +793,6 @@
     </div>
 </div>
 
-<!-- VIP MODAL -->
-<div id="vipModal" onclick="toggleVIP(false)">
-    <div class="vip-card-visual gold-glow w-full max-w-[340px] shadow-2xl p-8 text-center" onclick="event.stopPropagation()">
-        <div class="card-shine"></div>
-        <button onclick="toggleVIP(false)" class="absolute top-5 right-5 text-amber-500/50 font-black text-xl z-20">✕</button>
-        <div class="mb-6"><span class="text-6xl">🏆</span></div>
-        <h2 class="text-amber-500 font-black text-2xl uppercase tracking-tight mb-1">Ekskluzivna VIP Kartica</h2>
-        <p class="text-slate-500 text-[9px] uppercase tracking-[0.2em] font-black mb-8">StayVB Premium Privilege</p>
-        <div class="bg-gradient-to-b from-amber-500/[0.08] to-transparent border-y border-amber-500/20 py-6 px-4 mb-8">
-            <p class="text-white text-[13px] font-bold leading-relaxed">Ova kartica Vam omogućava <span class="text-amber-400">posebne privilegije i popuste</span> kod naših partnera u okviru <span class="text-amber-400">Happy Hours</span> i <span class="text-amber-400">VBradar</span>.</p>
-        </div>
-        <div class="relative z-10 py-4">
-            <p class="text-[9px] text-amber-500/60 uppercase font-black tracking-widest mb-2">Registrovan smeštaj:</p>
-            <p id="vip-unit-name" class="text-white font-black text-2xl uppercase">StayVB GOST</p>
-        </div>
-        <button onclick="toggleVIP(false)" class="mt-8 w-full bg-gradient-to-r from-amber-600 to-amber-400 text-slate-950 py-4 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95">Zatvori nazad</button>
-    </div>
-</div>
 
 <!-- PRODUŽENJE BORAVKA -->
 <style>
@@ -930,14 +896,6 @@ function getRemainingLabel(endTime, nowMins){
     return '⏱ još ' + Math.floor(diff/60) + 'h ' + (diff%60) + 'm';
 }
 
-function toggleVIP(show){
-    document.getElementById('vipModal').style.display = show ? 'flex' : 'none';
-    if(show){
-        const name = document.getElementById('unit-name')?.innerText || 'StayVB';
-        document.getElementById('vip-unit-name').innerText = name;
-    }
-}
-
 function orderService(type){
     if(!ownerPhone){ alert('Kontakt domaćina nije podešen.'); return; }
     const name = document.getElementById('unit-name')?.innerText || 'StayVB';
@@ -977,20 +935,11 @@ function confirmCheckout(){
 }
 
 async function loadLoyalty(isPremium){
-    const vipWrap = document.getElementById('vip-btn-wrap');
-    const vipPointer = document.getElementById('vipPointer');
-
     if(!isPremium){
         document.getElementById('loyalty-section').style.display = 'none';
         document.getElementById('treasure-strip-wrap').style.display = 'none';
-        if(vipWrap) vipWrap.style.display = 'none';
-        if(vipPointer) vipPointer.style.display = 'none';
         return;
     }
-
-    // Premium aktivan — prikaži VIP
-    if(vipWrap) vipWrap.style.display = '';
-    if(vipPointer) vipPointer.style.display = '';
 
     const token = C.getOrCreateGuestToken();
     const { data: guest } = await sb.from('guests').select('stamp_count, reward_status').eq('token', token).maybeSingle();
@@ -1203,7 +1152,7 @@ async function loadPartnerData(){
 
     console.log('isPremiumApplicable:', isPremiumApplicable, '| raw is_premium:', partner.is_premium, typeof partner.is_premium);
 
-    // Loyalty traka, nagradna igra i VIP kartica
+    // Loyalty traka i nagradna igra
     await loadLoyalty(isPremiumApplicable);
 
     // Auto stamp pri dolasku - ne čeka, ne blokira prikaz
@@ -2028,17 +1977,6 @@ async function startApp(lang){
         }, 2500);
     }
 
-    const pointer = document.getElementById('vipPointer');
-    if(pointer){
-        setTimeout(() => {
-            pointer.style.animation = 'vipPoint 2.8s ease';
-            setTimeout(() => {
-                pointer.style.animation = 'none';
-                void pointer.offsetWidth;
-                pointer.style.animation = 'vipPoint 2.8s ease';
-            }, 3400);
-        }, 2200);
-    }
 }
 
 window.addEventListener('load', async () => {
