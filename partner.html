@@ -462,8 +462,86 @@ function renderStay(){
       <button class="btn-primary" onclick="saveExtNight()">💾 Sačuvaj produženje</button>
       <p class="save-msg" id="ext-night-msg"></p>
       <div id="ext-offers" style="margin-top:14px"></div>
-    </div>`;
+    </div>
+
+    ${isPremium ? `
+    <div class="panel-card" style="border-color:rgba(251,191,36,0.22);background:rgba(251,191,36,0.05);margin-top:14px">
+      <p class="panel-card-title" style="color:#fcd34d">Pozovi prijatelja</p>
+      <p style="font-size:11px;color:rgba(255,255,255,0.5);font-weight:600;line-height:1.5;margin:-8px 0 12px">Vaši gosti šalju prijateljima popust za direktnu rezervaciju kod vas, preko WhatsApp-a i Vibera. Popust i poruku određujete vi, a kod, popust i link za rezervaciju sistem dodaje sam.</p>
+      <label style="display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;cursor:pointer;padding:12px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:1.2rem;margin-bottom:10px">
+        <input type="checkbox" id="ref-active" ${partner.referral_active?'checked':''} onchange="document.getElementById('ref-wrap').style.display=this.checked?'block':'none'" style="width:18px;height:18px;accent-color:#fbbf24;flex-shrink:0">
+        <div>
+          <div style="font-weight:900;color:#fcd34d">Gosti mogu da pozovu prijatelje</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:2px">Isključeno — gostima se ne prikazuje poziv</div>
+        </div>
+      </label>
+      <div id="ref-wrap" style="display:${partner.referral_active?'block':'none'}">
+        <div style="display:flex;gap:10px">
+          <div class="field-group" style="flex:1"><label class="field-label">Popust (%)</label><input type="number" class="field-input" id="ref-discount" min="1" max="50" value="${partner.referral_discount||10}" oninput="updateRefPreview()"></div>
+          <div class="field-group" style="flex:1.4"><label class="field-label">Kod za popust</label><input class="field-input" id="ref-code" maxlength="20" value="${esc(partner.referral_code||suggestRefCode())}" oninput="normRefCode(this)"></div>
+        </div>
+        <div class="field-group"><label class="field-label">Poruka koju gost šalje prijatelju</label><textarea class="field-input" id="ref-message" rows="4" maxlength="500" oninput="updateRefPreview()">${esc(pc.referral_message||defaultRefMessage())}</textarea></div>
+        <p class="field-label" style="margin:2px 0 6px">Ovako prijatelj dobija poruku</p>
+        <div id="ref-preview" style="white-space:pre-wrap;font-size:12px;line-height:1.55;color:rgba(255,255,255,0.85);background:rgba(37,211,102,0.08);border:1px solid rgba(37,211,102,0.22);border-radius:14px;padding:12px 14px;margin-bottom:12px"></div>
+      </div>
+      <button class="btn-primary" onclick="saveReferral()">💾 Sačuvaj poziv prijatelju</button>
+      <p class="save-msg" id="ref-msg"></p>
+    </div>` : ''}`;
   loadExtOffers();
+  updateRefPreview();
+}
+
+// ── Pozovi prijatelja: popust, kod i poruka koju gosti šalju ──────
+function defaultRefMessage(){
+  return 'Bio/la sam u ' + (partner.name || 'ovom objektu') + ' u Vrnjačkoj Banji i toplo preporučujem! Rezerviši direktno i dobićeš popust.';
+}
+
+function suggestRefCode(){
+  const base = (partner.name || 'POPUST').normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10) || 'POPUST';
+  return base + (partner.referral_discount || 10);
+}
+
+function normRefCode(el){
+  el.value = el.value.toUpperCase().replace(/\s+/g, '');
+  updateRefPreview();
+}
+
+function updateRefPreview(){
+  const el = document.getElementById('ref-preview');
+  if(!el) return;
+  const discount = Math.max(1, Math.min(50, parseInt(document.getElementById('ref-discount').value) || 10));
+  const code = document.getElementById('ref-code').value || '—';
+  const message = document.getElementById('ref-message').value.trim() || defaultRefMessage();
+  const lines = [message, '', '🎁 ' + discount + '% popusta uz kod: ' + code,
+    '🏨 ' + (partner.name || '') + ', Vrnjačka Banja', '🔗 Rezerviši direktno: (link ka vašoj ponudi)'];
+  const phone = partner.whatsapp || partner.phone;
+  if(phone) lines.push('📞 ' + phone);
+  el.textContent = lines.join('\n');
+}
+
+async function saveReferral(){
+  const msg = document.getElementById('ref-msg');
+  const active = document.getElementById('ref-active').checked;
+  const discount = Math.max(1, Math.min(50, parseInt(document.getElementById('ref-discount').value) || 10));
+  const code = document.getElementById('ref-code').value.toUpperCase().replace(/\s+/g, '');
+  const message = document.getElementById('ref-message').value.trim();
+  if(active && (code.length < 3 || code.length > 20)){
+    msg.style.color = '#fca5a5'; msg.textContent = '⚠️ Kod mora imati 3 do 20 znakova, bez razmaka.'; return;
+  }
+  const r1 = await sb.from('partners')
+    .update({ referral_active: active, referral_discount: discount, referral_code: code || null }).eq('id', partner.id);
+  if(r1.error){ msg.style.color = '#fca5a5'; msg.textContent = '⚠️ Greška pri čuvanju.'; return; }
+  const r2 = await sb.from('partner_content')
+    .upsert({ partner_id: partner.id, referral_message: message || null, updated_at: new Date().toISOString() }, { onConflict: 'partner_id' });
+  if(r2.error){ msg.style.color = '#fca5a5'; msg.textContent = '⚠️ Poruka nije sačuvana.'; return; }
+  partner.referral_active = active;
+  partner.referral_discount = discount;
+  partner.referral_code = code;
+  partnerContent.referral_message = message;
+  msg.style.color = '#6ee7b7';
+  msg.textContent = '✓ Sačuvano!';
+  setTimeout(() => { msg.textContent = ''; }, 1500);
 }
 
 // ── Produženje boravka: ponude koje čekaju potvrdu domaćina ────────

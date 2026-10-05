@@ -346,29 +346,6 @@
         @keyframes ctaArrowPulse{0%,100%{box-shadow:0 0 0 0 rgba(110,231,183,0.25)}50%{box-shadow:0 0 0 7px rgba(110,231,183,0)}}
         @keyframes ctaArrowNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
 
-        /* Referral kartica */
-        .referral-card{position:relative;overflow:hidden;padding:18px;border-radius:2rem;
-            background:linear-gradient(135deg,#064e3b 0%,#065f46 40%,#047857 100%);
-            border:1px solid rgba(16,185,129,0.30);color:white;
-            box-shadow:0 14px 28px rgba(5,150,105,0.20);}
-        .referral-card::before{content:"";position:absolute;inset:0;
-            background:radial-gradient(circle at top right,rgba(52,211,153,0.18),transparent 30%);
-            pointer-events:none;}
-        .referral-shine{position:absolute;top:-8%;left:-120%;width:55%;height:128%;
-            transform:skewX(-24deg);
-            background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);
-            animation:sweepShine 6s ease-in-out infinite;pointer-events:none;}
-        .referral-code-box{background:rgba(0,0,0,0.25);border:1px solid rgba(52,211,153,0.30);
-            border-radius:12px;padding:10px 16px;margin:12px 0;
-            font-family:monospace;font-size:1.2rem;font-weight:900;
-            letter-spacing:0.18em;color:#6ee7b7;text-align:center;}
-        .referral-btn{width:100%;min-height:52px;border-radius:1.4rem;
-            background:var(--sv-sage);color:white;
-            border:none;font-size:13px;font-weight:900;text-transform:uppercase;
-            letter-spacing:0.08em;cursor:pointer;font-family:inherit;
-            display:flex;align-items:center;justify-content:center;gap:8px;
-            box-shadow:0 8px 20px rgba(5,150,105,0.30);transition:transform 0.18s;}
-        .referral-btn:active{transform:scale(0.97);}
 
         /* Loyalty traka */
         .loyalty-combo{background:linear-gradient(135deg,#1e1b4b,#312e81);border:1px solid rgba(167,139,250,0.25);
@@ -426,7 +403,7 @@
         /* Bez stalnog pulsiranja, sjaja i lebdećih odsjaja */
         .action-card{animation:none!important}
         .action-card .action-glow,.action-card .action-shine,.action-card .action-ring,.action-open-badge,
-        .card-shine,.share-glow,.share-shine,.referral-shine,.property-cta-shine{display:none!important}
+        .card-shine,.share-glow,.share-shine,.property-cta-shine{display:none!important}
         .treasure-strip::before,.treasure-strip::after,.cta-review::before,.cta-review::after{display:none!important}
         .treasure-strip,.treasure-strip-icon,.share-btn,.property-cta-arrow-wrap,.property-cta-arrow{animation:none!important}
 
@@ -500,12 +477,9 @@
         .cta-checkout{background:var(--sv-surface)!important;color:var(--sv-ink-2)!important;border:1px solid var(--sv-line-2)!important}
 
         /* Tamne kartice: preporuka, Instagram, loyalty */
-        .referral-card,.share-card,.loyalty-combo{background:linear-gradient(160deg,var(--sv-night) 0%,var(--sv-night-2) 100%)!important;
+        .share-card,.loyalty-combo{background:linear-gradient(160deg,var(--sv-night) 0%,var(--sv-night-2) 100%)!important;
             border:1px solid var(--sv-night-line)!important;border-radius:var(--sv-radius)!important;box-shadow:0 10px 28px rgba(21,32,43,0.16)!important}
-        .referral-card::before{display:none!important}
-        .referral-code-box{background:rgba(255,255,255,0.04)!important;border:1px dashed rgba(226,191,124,0.5)!important;
-            color:var(--sv-gold-on-night)!important;font-size:1.1rem!important;letter-spacing:0.14em!important}
-        .referral-btn,.share-btn{background:var(--sv-gold)!important;box-shadow:none!important;text-transform:none!important;letter-spacing:0!important;
+        .share-btn{background:var(--sv-gold)!important;box-shadow:none!important;text-transform:none!important;letter-spacing:0!important;
             font-size:15px!important;font-weight:600!important;border-radius:var(--sv-radius-md)!important;min-height:52px!important}
         .share-badge{background:rgba(226,191,124,0.12)!important;border:1px solid rgba(226,191,124,0.28)!important;color:var(--sv-gold-on-night)!important;
             font-size:11.5px!important;font-weight:600!important;letter-spacing:0.02em!important;text-transform:none!important}
@@ -555,6 +529,33 @@
         .nights-btn .n{font-family:var(--sv-serif)!important;font-weight:600!important;color:var(--sv-on-night)!important}
         .nights-btn .l{color:var(--sv-gold-on-night)!important;font-weight:600!important;letter-spacing:0.02em!important;text-transform:none!important;font-size:11px!important}
         .nights-skip{color:rgba(244,241,234,0.55)!important;font-weight:500!important;font-size:13px!important}
+
+        /* Pozovi prijatelja */
+        .sv-ref{position:relative;overflow:hidden;padding:22px 20px 16px;border-radius:var(--sv-radius);color:var(--sv-on-night);
+            background:radial-gradient(110% 80% at 100% 0%,rgba(226,191,124,0.26),transparent 55%),linear-gradient(160deg,var(--sv-night) 0%,var(--sv-night-2) 100%);
+            border:1px solid rgba(226,191,124,0.30);box-shadow:0 14px 34px rgba(21,32,43,0.22)}
+        .sv-ref-top{display:flex;gap:14px;align-items:flex-start;justify-content:space-between}
+        .sv-ref-eyebrow{font-size:11.5px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--sv-gold-on-night);margin:0 0 6px}
+        .sv-ref-title{font-family:var(--sv-serif);font-size:1.5rem;font-weight:600;line-height:1.15;letter-spacing:-0.015em;margin:0 0 8px;color:var(--sv-on-night)}
+        .sv-ref-title span{color:var(--sv-gold-on-night)}
+        .sv-ref-sub{font-size:13.5px;line-height:1.5;color:var(--sv-on-night-2);font-weight:500;margin:0}
+        .sv-ref-badge{flex-shrink:0;width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+            background:var(--sv-gold);color:#fff;font-family:var(--sv-serif);font-size:1.3rem;font-weight:600;
+            box-shadow:0 0 0 6px rgba(226,191,124,0.14);animation:svRefRing 2.6s ease-in-out infinite}
+        @keyframes svRefRing{0%,100%{box-shadow:0 0 0 6px rgba(226,191,124,0.14)}50%{box-shadow:0 0 0 12px rgba(226,191,124,0.05)}}
+        .sv-ref-code{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:16px 0 14px;padding:12px 14px;border-radius:14px;
+            background:rgba(255,255,255,0.05);border:1px dashed rgba(226,191,124,0.45)}
+        .sv-ref-code span{font-size:12.5px;color:var(--sv-on-night-2);font-weight:500}
+        .sv-ref-code strong{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:15px;letter-spacing:0.12em;color:var(--sv-gold-on-night)}
+        .sv-ref-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .sv-ref-btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;border:none;border-radius:var(--sv-radius-md);
+            color:#fff;font:600 15px var(--sv-sans);cursor:pointer;transition:transform .15s}
+        .sv-ref-btn:active{transform:scale(0.97)}
+        .sv-ref-btn.wa{background:#1fa855}
+        .sv-ref-btn.vb{background:#7360f2}
+        .sv-ref-btn svg{width:19px;height:19px}
+        .sv-ref-more{display:block;width:100%;margin-top:8px;padding:10px;background:none;border:none;color:var(--sv-on-night-2);
+            font:500 13px var(--sv-sans);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
     </style>
 </head>
 <body class="sv flex flex-col items-center min-h-screen">
@@ -881,6 +882,28 @@
                     </div>
                 </div>
 
+                <!-- Pozovi prijatelja: popust i poruku određuje hotel u svom panelu -->
+                <div id="referral-card-wrap" class="hidden">
+                    <div class="sv-ref fade-in">
+                        <div class="sv-ref-top">
+                            <div style="min-width:0">
+                                <p class="sv-ref-eyebrow">Pozovite prijatelja</p>
+                                <h3 class="sv-ref-title">Poklonite prijatelju <span id="referral-pct">10%</span> popusta</h3>
+                                <p class="sv-ref-sub">Na direktnu rezervaciju u objektu <span id="referral-hotel"></span>. Poziv šaljete za par sekundi.</p>
+                            </div>
+                            <div class="sv-ref-badge" id="referral-pct-badge">−10%</div>
+                        </div>
+                        <div class="sv-ref-code"><span>Kod za popust</span><strong id="referral-code-display"></strong></div>
+                        <div class="sv-ref-actions">
+                            <button type="button" class="sv-ref-btn wa" onclick="shareReferral('whatsapp')">
+                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.66 15l-1.3 4.6 4.73-1.24A10 10 0 1 0 12 2z"/></svg>WhatsApp</button>
+                            <button type="button" class="sv-ref-btn vb" onclick="shareReferral('viber')">
+                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.5 2 3 5.4 3 10.4c0 2.8 1.1 5 3 6.5V22l3.6-2.4c.8.2 1.6.2 2.4.2 5.5 0 9-3.4 9-8.4S17.5 2 12 2z"/></svg>Viber</button>
+                        </div>
+                        <button type="button" class="sv-ref-more" onclick="shareReferral('other')">Pošalji na drugi način</button>
+                    </div>
+                </div>
+
                 <!-- Stay zona -->
                 <section class="stay-zone fade-in">
                     <div class="stay-zone-head">
@@ -912,27 +935,6 @@
                         <div id="review-link-wrap" class="hidden" style="position:relative">
                             <a id="review-link" href="javascript:void(0)" onclick="openReviewGate()" class="cta-link cta-review"><span class="stars">★★★★★</span><span class="cta-review-label">Ocenite nas</span></a>
                             <span class="cta-review-badge">Preporučeno</span>
-                        </div>
-
-                        <!-- Referral kartica - samo premium -->
-                        <div id="referral-card-wrap" class="hidden">
-                            <div class="referral-card">
-                                <div class="referral-shine"></div>
-                                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;position:relative;z-index:2">
-                                    <div style="width:44px;height:44px;border-radius:14px;background:rgba(52,211,153,0.20);border:1px solid rgba(52,211,153,0.30);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0">🎁</div>
-                                    <div>
-                                        <div style="font-size:14px;font-weight:900;letter-spacing:-0.02em">Pozovi prijatelja</div>
-                                        <div style="font-size:10px;color:rgba(255,255,255,0.60);font-weight:700;margin-top:1px">Obezbedi mu popust na direktnu rezervaciju</div>
-                                    </div>
-                                </div>
-                                <div style="position:relative;z-index:2;font-size:11px;color:rgba(255,255,255,0.70);font-weight:600;line-height:1.5;margin-bottom:4px">
-                                    Tvoj prijatelj dobija <strong id="referral-pct" style="color:#6ee7b7">10%</strong> popusta kada rezerviše direktno:
-                                </div>
-                                <div class="referral-code-box" id="referral-code-display">LOADING</div>
-                                <button class="referral-btn" onclick="shareReferral()">
-                                    🔗 Pošalji prijatelju
-                                </button>
-                            </div>
                         </div>
 
                         <div id="shareCampaignBox" class="share-card fade-in hidden">
@@ -1546,72 +1548,76 @@ let cityPartners = [];
 let cityContent = {};
 
 // ── Referral sistem ───────────────────────────────────────────────
-async function shareReferral(){
-    if(!referralData) return;
-
-    try{ await sb.from('referral_clicks').insert({
-        partner_id: referralData.partnerId,
-        referral_code: referralData.code
-    }); }catch(e){}
-
-    const partnerName = document.getElementById('unit-name')?.innerText || 'smeštaj';
-    const phone = ownerPhone.replace(/[^0-9+]/g,'');
-    const waUrl = phone ? 'https://wa.me/' + phone.replace('+','') : '';
-    // Generičan link ka app-u, BEZ ?id= — link koji dobija prijatelj ne sme
-    // da ga "prijavi" kao gosta u ovaj smeštaj (prepisalo bi mu njegov
-    // sopstveni boravak ako je i sam negde StayVB gost).
-    const discoverUrl = location.origin + location.pathname;
-
-    // Ako partner ima aktivnu ponudu u booking modulu, prijatelj dobija
-    // link DIREKTNO na tu ponudu u našem sistemu (Pošalji upit), umesto
-    // da mora da zove/piše vlasniku napolju.
-    let bookingUrl = '';
-    try{
-        const { data: listing } = await sb.from('accommodation_listings')
-            .select('id').eq('partner_id', referralData.partnerId).eq('is_active', true).maybeSingle();
-        if(listing) bookingUrl = location.origin + location.pathname.replace('index.html', 'smestaj.html') + '?id=' + listing.id;
-    }catch(e){}
-
-    const msg = '🏨 Tvoj prijatelj ti je obezbedio ' + referralData.discount + '% popusta u Vrnjačkoj Banji!\n\n'
-        + 'Ostani u ' + partnerName + ' i uštedi na direktnoj rezervaciji.\n\n'
-        + '🎟️ Kod za popust: ' + referralData.code + '\n\n'
-        + (bookingUrl
-            ? '🔗 Rezerviši direktno: ' + bookingUrl + '\n'
-              + (ownerPhone ? '📞 Ili pozovi: ' + ownerPhone + '\n' : '')
-            : 'Rezerviši direktno:\n'
-              + (ownerPhone ? '📞 ' + ownerPhone + '\n' : '')
-              + (waUrl ? '💬 ' + waUrl + '\n' : ''))
-        + '\n🗺️ Otkrij Vrnjačku Banju: ' + discoverUrl;
-
-    if(navigator.share){
-        try{ await navigator.share({ title: 'Popust u Vrnjačkoj Banji 🎁', text: msg }); }catch(e){}
-    } else {
-        try{ await navigator.clipboard.writeText(msg); }catch(e){}
-        const t = document.createElement('div');
-        t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:14px;font-size:12px;font-weight:900;z-index:9999;white-space:nowrap;background:rgba(16,185,129,0.95);color:white';
-        t.textContent = '✓ Kopirano! Zalepi u poruku prijatelju.';
-        document.body.appendChild(t);
-        setTimeout(()=>t.remove(), 3000);
-    }
+// Poruku piše hotel u svom panelu; kod, popust, naziv objekta i link za
+// direktnu rezervaciju dodaje sistem, da ih gost ne može izostaviti.
+function composeReferralMessage(d){
+    const lines = [d.message.trim(), '', '🎁 ' + d.discount + '% popusta uz kod: ' + d.code, '🏨 ' + d.hotel + ', Vrnjačka Banja'];
+    if(d.bookingUrl) lines.push('🔗 Rezerviši direktno: ' + d.bookingUrl);
+    if(d.phone) lines.push('📞 ' + d.phone);
+    return lines.join('\n');
 }
 
-function loadReferral(partner, isPremiumApplicable){
-    console.log('[loadReferral] isPremiumApplicable:', isPremiumApplicable, '| referral_active:', partner.referral_active, typeof partner.referral_active, '| referral_code:', partner.referral_code);
+function defaultReferralMessage(hotel){
+    return 'Bio/la sam u ' + hotel + ' u Vrnjačkoj Banji i toplo preporučujem! Rezerviši direktno i dobićeš popust.';
+}
+
+function showRefToast(text){
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 18px;border-radius:14px;font:600 13px var(--sv-sans);z-index:9999;background:var(--sv-ink);color:#fff;box-shadow:0 10px 24px rgba(21,32,43,0.3);max-width:90vw;text-align:center';
+    t.textContent = text;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+}
+
+async function shareReferral(channel){
+    if(!referralData) return;
+    sb.from('referral_clicks').insert({ partner_id: referralData.partnerId, referral_code: referralData.code })
+        .then(() => {}, () => {});
+
+    const text = composeReferralMessage({
+        message: referralData.message || defaultReferralMessage(referralData.hotel),
+        discount: referralData.discount, code: referralData.code, hotel: referralData.hotel,
+        bookingUrl: referralData.bookingUrl, phone: ownerPhone
+    });
+    const enc = encodeURIComponent(text);
+
+    if(channel === 'whatsapp'){ window.open('https://wa.me/?text=' + enc, '_blank'); return; }
+    if(channel === 'viber'){ window.location.href = 'viber://forward?text=' + enc; return; }
+
+    if(navigator.share){
+        try{ await navigator.share({ title: 'Popust u Vrnjačkoj Banji', text }); }catch(e){}
+        return;
+    }
+    try{ await navigator.clipboard.writeText(text); showRefToast('Poruka je kopirana. Zalepite je prijatelju.'); }
+    catch(e){ showRefToast('Kopiranje nije uspelo.'); }
+}
+
+async function loadReferral(partner, isPremiumApplicable){
+    const wrap = document.getElementById('referral-card-wrap');
     if(!isPremiumApplicable || !partner.referral_active || !partner.referral_code){
-        document.getElementById('referral-card-wrap')?.classList.add('hidden');
+        wrap?.classList.add('hidden');
         return;
     }
     referralData = {
-        partnerId: partner.id,
-        code: partner.referral_code,
-        discount: partner.referral_discount || 10
+        partnerId: partner.id, code: partner.referral_code, discount: partner.referral_discount || 10,
+        hotel: partner.name || 'smeštaj', message: '', bookingUrl: ''
     };
-    const wrap = document.getElementById('referral-card-wrap');
-    const codeEl = document.getElementById('referral-code-display');
-    const pctEl = document.getElementById('referral-pct');
-    if(wrap) wrap.classList.remove('hidden');
-    if(codeEl) codeEl.textContent = partner.referral_code;
-    if(pctEl) pctEl.textContent = (partner.referral_discount || 10) + '%';
+    document.getElementById('referral-code-display').textContent = referralData.code;
+    document.getElementById('referral-pct').textContent = referralData.discount + '%';
+    document.getElementById('referral-pct-badge').textContent = '−' + referralData.discount + '%';
+    document.getElementById('referral-hotel').textContent = referralData.hotel;
+    wrap?.classList.remove('hidden');
+
+    // Poruka hotela i link ka ponudi; ako nešto nije dostupno, šalje se podrazumevana poruka
+    try{
+        const { data } = await sb.from('partner_content').select('referral_message').eq('partner_id', partner.id).maybeSingle();
+        referralData.message = data?.referral_message || '';
+    }catch(e){}
+    try{
+        const { data: listing } = await sb.from('accommodation_listings').select('id')
+            .eq('partner_id', partner.id).eq('is_active', true).limit(1).maybeSingle();
+        if(listing) referralData.bookingUrl = new URL('smestaj.html?id=' + listing.id, location.href).href;
+    }catch(e){}
 }
 
 async function loadCityInfo(blackoutPromise){
