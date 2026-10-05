@@ -105,7 +105,8 @@
                 var ld = document.getElementById('loader');
                 if(ld) ld.style.display = 'flex';
                 setTimeout(function(){
-                    if(typeof startApp === 'function') startApp(langCode);
+                    if(typeof maybeAskNights === 'function') maybeAskNights(langCode);
+                    else if(typeof startApp === 'function') startApp(langCode);
                 }, 200);
             } else {
                 if(langCode && langCode !== '') {
@@ -136,6 +137,16 @@
 
         /* Lang screen - fixed overlay, pokriva sve */
         #lang-screen{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;background:radial-gradient(circle at 20% 20%,rgba(251,191,36,0.18),transparent 30%),linear-gradient(145deg,#0f172a 0%,#162235 55%,#1f2937 100%);overflow-y:auto;}
+        #nights-screen{position:fixed;inset:0;z-index:9998;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 26px;text-align:center;background:radial-gradient(circle at 80% 15%,rgba(34,211,238,0.20),transparent 34%),radial-gradient(circle at 15% 85%,rgba(16,185,129,0.18),transparent 32%),linear-gradient(150deg,#0f172a 0%,#13263a 55%,#13303a 100%);overflow-y:auto}
+        .nights-icon{font-size:3.2rem;line-height:1;margin-bottom:14px}
+        .nights-title{font-size:1.75rem;font-weight:900;color:#fff;letter-spacing:-0.03em;margin:0 0 10px}
+        .nights-sub{font-size:13px;font-weight:600;color:rgba(226,232,240,0.78);line-height:1.6;max-width:330px;margin:0 0 26px}
+        .nights-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%;max-width:340px;margin-bottom:22px}
+        .nights-btn{padding:16px 6px;border-radius:18px;border:1.5px solid rgba(34,211,238,0.35);background:linear-gradient(160deg,rgba(34,211,238,0.16),rgba(16,185,129,0.10));color:#fff;font-family:inherit;cursor:pointer;transition:transform .15s,background .15s}
+        .nights-btn:active{transform:scale(0.94);background:linear-gradient(160deg,rgba(34,211,238,0.34),rgba(16,185,129,0.22))}
+        .nights-btn .n{display:block;font-size:1.5rem;font-weight:900;line-height:1}
+        .nights-btn .l{display:block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:rgba(165,243,252,0.8);margin-top:4px}
+        .nights-skip{background:none;border:none;color:rgba(226,232,240,0.55);font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;text-decoration:underline;padding:8px}
         .lang-logo-img{width:96px;height:96px;border-radius:28px;object-fit:cover;margin-bottom:20px;
     box-shadow:0 0 0 1px rgba(251,191,36,0.5),0 0 0 3px rgba(251,191,36,0.15),0 20px 40px rgba(0,0,0,0.45);
     border:1.5px solid rgba(251,191,36,0.60);}
@@ -427,6 +438,15 @@
           <button id="push-allow-btn" style="flex:2;padding:13px;border-radius:14px;background:linear-gradient(135deg,#fbbf24,#f59e0b);border:none;color:#1c1410;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit">✓ Uključi obaveštenja</button>
         </div>
       </div>
+    </div>
+
+    <!-- NIGHTS SCREEN — pitanje odmah posle izbora jezika -->
+    <div id="nights-screen" style="display:none">
+        <div class="nights-icon">🌙</div>
+        <h2 class="nights-title">Koliko noći ostajete?</h2>
+        <p class="nights-sub">Da vam pokažemo šta vredi videti baš tih dana, i da vas na vreme pitamo želite li da ostanete duže.</p>
+        <div class="nights-grid" id="nights-grid"></div>
+        <button class="nights-skip" onclick="pickNights(null)">Ne znam još</button>
     </div>
 
     <div id="loader" class="flex flex-col items-center justify-center h-screen">
@@ -1689,6 +1709,48 @@ window.addEventListener('beforeinstallprompt', async e => {
     showInstallBanner(androidApkEnabled ? 'android-install' : 'android-pwa');
 });
 window.addEventListener('appinstalled', () => { deferredPrompt = null; closeInstallPrompt(); });
+
+// ── Pitanje o broju noći, odmah posle izbora jezika ───────────────
+// Pita se samo gost koji je skenirao kod smeštaja, jer samo tu ima
+// smisla. Bez odgovora sistem ne zna kada je poslednji dan boravka.
+let nightsLang = '';
+
+async function maybeAskNights(langCode){
+    nightsLang = langCode || '';
+    const code = (new URLSearchParams(window.location.search).get('id') || '').toUpperCase();
+    if(!code){ startApp(nightsLang); return; }
+
+    try{
+        const { data: p } = await sb.from('partners')
+            .select('type').eq('partner_code', code).eq('is_active', true).maybeSingle();
+        if(!p || (p.type !== 'hotel' && p.type !== 'apartment')){ startApp(nightsLang); return; }
+    } catch(e){ startApp(nightsLang); return; }
+
+    const grid = document.getElementById('nights-grid');
+    grid.innerHTML = [1,2,3,4,5,6,7].map(n =>
+        `<button class="nights-btn" onclick="pickNights(${n})"><span class="n">${n}</span><span class="l">${n === 1 ? 'noć' : 'noći'}</span></button>`
+    ).join('') + '<button class="nights-btn" onclick="pickNights(10)"><span class="n">7+</span><span class="l">duže</span></button>';
+
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('nights-screen').style.display = 'flex';
+}
+
+async function pickNights(n){
+    const screen = document.getElementById('nights-screen');
+    screen.style.opacity = '0';
+    screen.style.transition = 'opacity 0.25s ease';
+    setTimeout(() => { screen.style.display = 'none'; screen.style.opacity = '1'; }, 250);
+    document.getElementById('loader').style.display = 'flex';
+
+    if(n){
+        const code = (new URLSearchParams(window.location.search).get('id') || '').toUpperCase();
+        try{
+            await sb.rpc('set_guest_checkout', {
+                p_guest_token: C.getOrCreateGuestToken(), p_nights: n, p_accommodation_code: code });
+        } catch(e){ /* nastavi i bez toga */ }
+    }
+    startApp(nightsLang);
+}
 
 // ── Produženje boravka ────────────────────────────────────────────
 // Gost na poslednji ceo dan boravka dobija ponudu: još jedna noć po
