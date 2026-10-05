@@ -11,7 +11,11 @@
     <meta name="apple-mobile-web-app-title" content="StayVB">
     <link rel="icon" type="image/png" sizes="192x192" href="icon192.png">
     <link rel="apple-touch-icon" href="icon192.png">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#15202b">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="theme.css?v=1">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -126,7 +130,6 @@
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
         :root{--bg:#f8fafc;--card:rgba(255,255,255,0.92);--slate-1:#0f172a;--amber-1:#f59e0b;--amber-2:#fbbf24;--shadow-card:0 12px 28px rgba(15,23,42,0.10);--radius-xl:2rem;}
         *{box-sizing:border-box;}
         html{scroll-behavior:smooth;}
@@ -360,7 +363,7 @@
             font-family:monospace;font-size:1.2rem;font-weight:900;
             letter-spacing:0.18em;color:#6ee7b7;text-align:center;}
         .referral-btn{width:100%;min-height:52px;border-radius:1.4rem;
-            background:linear-gradient(135deg,#10b981,#059669);color:white;
+            background:var(--sv-sage);color:white;
             border:none;font-size:13px;font-weight:900;text-transform:uppercase;
             letter-spacing:0.08em;cursor:pointer;font-family:inherit;
             display:flex;align-items:center;justify-content:center;gap:8px;
@@ -376,8 +379,185 @@
         .loyalty-progress{height:6px;background:rgba(255,255,255,0.10);border-radius:999px;margin-top:10px;overflow:hidden;}
         .loyalty-fill{height:100%;background:linear-gradient(90deg,#a78bfa,#fbbf24);border-radius:999px;transition:width 0.6s ease;}
     </style>
+
+    <!-- ═══ Vizuelni sistem: ujednačene površine, tipografija i dugmad ═══ -->
+    <style id="sv-index">
+        /* Osnova */
+        .app-shell{background:var(--sv-bg)!important;box-shadow:none!important}
+        #loader{background:var(--sv-bg)}
+
+        /* Naslovni deo */
+        .hero{padding:62px 22px 82px!important;
+            background:radial-gradient(120% 80% at 88% -10%,rgba(226,191,124,0.18),transparent 55%),
+                       linear-gradient(165deg,#15202b 0%,#1b2935 60%,#203140 100%)!important;
+            border-bottom-left-radius:30px!important;border-bottom-right-radius:30px!important}
+        .hero::after{display:none!important}
+        .hero-badge{font-size:11.5px!important;font-weight:600!important;letter-spacing:0.02em!important;text-transform:none!important;
+            background:rgba(255,255,255,0.05)!important;border:1px solid rgba(226,191,124,0.30)!important;
+            color:var(--sv-gold-on-night)!important;padding:6px 12px!important}
+        .hero h1{font-family:var(--sv-serif)!important;font-weight:600!important;font-size:2.2rem!important;
+            letter-spacing:-0.015em!important;line-height:1.1!important;margin:16px 0 8px!important}
+        .hero-sub{font-size:14px!important;font-weight:500!important;letter-spacing:0!important;text-transform:none!important;color:var(--sv-on-night-2)!important}
+
+        /* Jezici: jedan red, diskretno */
+        .lang-pills-bar{flex-wrap:nowrap!important;max-width:none!important;gap:5px!important;top:16px!important;right:16px!important}
+        .lang-pill{padding:2px!important;border-radius:6px!important;background:rgba(255,255,255,0.06)!important;border:1px solid rgba(255,255,255,0.10)!important}
+        .lang-pill img{width:22px!important;height:15px!important;border-radius:3px!important;opacity:.55!important}
+        .lang-pill.active{border-color:rgba(226,191,124,0.75)!important;background:rgba(226,191,124,0.14)!important}
+        .lang-pill.active img{opacity:1!important}
+
+        /* Raspored sadržaja */
+        .content-wrap{position:relative;z-index:2;margin-top:-46px!important;padding:0 16px 32px!important}
+        .preview-item{font-size:13px!important;font-weight:500!important;border-radius:12px!important;padding:11px 12px!important;backdrop-filter:none!important}
+        .preview-item span:last-child{font-size:12.5px!important;font-weight:600!important}
+        .stack{gap:14px!important}
+
+        /* Informacione kartice: bele, sa tankom ivicom */
+        .glass-card,.soft-card,.rules-card{background:var(--sv-surface)!important;border:1px solid var(--sv-line)!important;
+            border-radius:var(--sv-radius)!important;box-shadow:var(--sv-shadow)!important;backdrop-filter:none!important}
+        .section-label{font-size:11px!important;font-weight:600!important;letter-spacing:0.08em!important;color:var(--sv-muted)!important;margin-bottom:6px!important}
+        .top-panel{padding:18px 20px!important}
+        .sv-wifi-copy{flex-shrink:0;padding:10px 14px;border-radius:12px;border:1px solid var(--sv-line-2);background:var(--sv-surface-2);
+            color:var(--sv-ink);font:600 13px var(--sv-sans);cursor:pointer;transition:background .15s}
+        .sv-wifi-copy.done{background:var(--sv-sage-soft);border-color:#c9ddd2;color:var(--sv-sage)}
+        .wifi-name{font-size:1.2rem!important;font-weight:700!important;letter-spacing:-0.01em!important;color:var(--sv-ink)!important}
+        .wifi-pass{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace!important;font-size:13px!important;font-weight:500!important;color:var(--sv-ink-2)!important;margin-top:6px!important}
+
+        /* Bez stalnog pulsiranja, sjaja i lebdećih odsjaja */
+        .action-card{animation:none!important}
+        .action-card .action-glow,.action-card .action-shine,.action-card .action-ring,.action-open-badge,
+        .card-shine,.share-glow,.share-shine,.referral-shine,.property-cta-shine{display:none!important}
+        .treasure-strip::before,.treasure-strip::after,.cta-review::before,.cta-review::after{display:none!important}
+        .treasure-strip,.treasure-strip-icon,.share-btn,.property-cta-arrow-wrap,.property-cta-arrow{animation:none!important}
+
+        /* Kartice sa akcijom */
+        .feature-card{border-radius:var(--sv-radius)!important;box-shadow:var(--sv-shadow)!important;padding:20px!important}
+        .feature-card:active{transform:scale(0.99)!important}
+        .feature-head{margin-bottom:12px!important}
+        .feature-title{font-family:var(--sv-serif)!important;font-weight:600!important;font-size:1.5rem!important;letter-spacing:-0.015em!important;line-height:1.1!important}
+        .feature-sub{font-size:13px!important;font-weight:500!important;letter-spacing:0!important;text-transform:none!important;opacity:1!important;margin-top:5px!important}
+        .feature-hint{font-size:13px!important;font-weight:600!important;letter-spacing:0!important;text-transform:none!important;opacity:1!important;margin-top:14px!important;text-align:left!important}
+        .feature-hint::after{content:" →"}
+        .icon-bubble{width:46px!important;height:46px!important;border-radius:14px!important;font-size:1.3rem!important;box-shadow:none!important}
+
+        /* Happy Hour: bela kartica sa toplim akcentom */
+        .hh-card{background:var(--sv-surface)!important;border:1px solid var(--sv-line)!important}
+        .hh-card::before{display:none!important}
+        .hh-card .feature-title{color:var(--sv-ink)!important}
+        .hh-card .feature-sub{color:var(--sv-muted)!important}
+        .hh-card .feature-hint{color:var(--sv-terra)!important}
+        .hh-card .icon-bubble{background:var(--sv-terra-soft)!important;color:var(--sv-terra)!important}
+        .hh-badge{background:var(--sv-terra-soft)!important;color:var(--sv-terra)!important;font-size:11.5px!important;font-weight:600!important;
+            letter-spacing:0.02em!important;text-transform:none!important;padding:5px 10px!important;margin-bottom:12px!important}
+        .pulse-dot{background:var(--sv-terra)!important}
+
+        /* Istraži Banju: glavna akcija, tamna površina */
+        .explore-card{background:radial-gradient(90% 70% at 100% 0%,rgba(226,191,124,0.14),transparent 60%),
+                       linear-gradient(160deg,var(--sv-night) 0%,var(--sv-night-2) 100%)!important;
+            border:1px solid var(--sv-night-line)!important;box-shadow:0 12px 32px rgba(21,32,43,0.20)!important}
+        .explore-card .feature-title{color:var(--sv-on-night)!important}
+        .explore-card .feature-sub,.explore-card .feature-hint{color:var(--sv-gold-on-night)!important}
+        .explore-card .icon-bubble{background:rgba(226,191,124,0.16)!important;color:var(--sv-gold-on-night)!important}
+        .chip-dark{background:rgba(255,255,255,0.06)!important;border:1px solid rgba(255,255,255,0.10)!important;
+            color:var(--sv-on-night)!important;font-size:12.5px!important;font-weight:500!important;padding:8px 12px!important}
+
+        /* Smeštaj (ponuda za sledeći dolazak) */
+        #smestaj-card{background:var(--sv-surface)!important;border:1px solid var(--sv-line)!important}
+        #smestaj-card .feature-title{color:var(--sv-ink)!important}
+        #smestaj-card .feature-sub{color:var(--sv-muted)!important}
+        #smestaj-card .feature-hint{color:var(--sv-gold-strong)!important}
+        #smestaj-card .icon-bubble{background:var(--sv-gold-soft)!important;color:var(--sv-gold-strong)!important}
+
+        /* Boravak */
+        .stay-zone{background:var(--sv-surface)!important;border:1px solid var(--sv-line)!important;border-radius:var(--sv-radius)!important;
+            box-shadow:var(--sv-shadow)!important;padding:22px 16px 16px!important}
+        .stay-zone::before{display:none!important}
+        .stay-zone-title{font-size:11px!important;font-weight:600!important;letter-spacing:0.08em!important;text-transform:uppercase!important;
+            color:var(--sv-muted)!important;opacity:1!important;margin:0 0 6px!important}
+        .stay-zone-unit{font-family:var(--sv-serif)!important;font-size:1.65rem!important;font-weight:600!important;color:var(--sv-ink)!important;
+            line-height:1.15!important;letter-spacing:-0.015em!important;margin:0 0 6px!important}
+        .stay-zone-sub{font-size:14px!important;font-weight:500!important;color:var(--sv-muted)!important}
+        .stay-divider{background:var(--sv-line)!important;margin:18px 0 2px!important}
+        .stay-grid{gap:12px!important}
+        .mini-card,.extra-card,.room-card{background:var(--sv-surface-2)!important;color:var(--sv-ink)!important;
+            border:1px solid var(--sv-line)!important;border-radius:var(--sv-radius-md)!important;box-shadow:none!important;padding:18px!important}
+        .sv-mini-title{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;color:var(--sv-ink);margin:0 0 10px}
+        .sv-mini-title span{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+            background:var(--sv-gold-soft);font-size:1rem}
+        .sv-mini-text{font-size:14px;line-height:1.6;font-weight:500;color:var(--sv-ink-2);margin:0 0 14px}
+        .rules-card button{font-size:15px!important;font-weight:600!important;letter-spacing:0!important;text-transform:none!important;color:var(--sv-ink)!important}
+        #rules-box{font-size:14px!important;font-weight:500!important;color:var(--sv-ink-2)!important;border-color:var(--sv-line)!important}
+
+        /* Dugmad */
+        .cta-btn,.cta-link{min-height:52px!important;border-radius:var(--sv-radius-md)!important;font-size:15px!important;font-weight:600!important;
+            letter-spacing:0!important;text-transform:none!important;box-shadow:none!important}
+        .cta-blue{background:var(--sv-ink)!important}
+        .cta-green{background:var(--sv-sage)!important}
+        .cta-review{background:var(--sv-gold)!important;border:none!important;color:#fff!important}
+        .cta-review .stars{color:#fff7e6!important}
+        .cta-review-badge{background:var(--sv-ink)!important;color:var(--sv-gold-on-night)!important;border:none!important;
+            font-size:10.5px!important;font-weight:600!important;letter-spacing:0.02em!important;text-transform:none!important}
+        .cta-checkout{background:var(--sv-surface)!important;color:var(--sv-ink-2)!important;border:1px solid var(--sv-line-2)!important}
+
+        /* Tamne kartice: preporuka, Instagram, loyalty */
+        .referral-card,.share-card,.loyalty-combo{background:linear-gradient(160deg,var(--sv-night) 0%,var(--sv-night-2) 100%)!important;
+            border:1px solid var(--sv-night-line)!important;border-radius:var(--sv-radius)!important;box-shadow:0 10px 28px rgba(21,32,43,0.16)!important}
+        .referral-card::before{display:none!important}
+        .referral-code-box{background:rgba(255,255,255,0.04)!important;border:1px dashed rgba(226,191,124,0.5)!important;
+            color:var(--sv-gold-on-night)!important;font-size:1.1rem!important;letter-spacing:0.14em!important}
+        .referral-btn,.share-btn{background:var(--sv-gold)!important;box-shadow:none!important;text-transform:none!important;letter-spacing:0!important;
+            font-size:15px!important;font-weight:600!important;border-radius:var(--sv-radius-md)!important;min-height:52px!important}
+        .share-badge{background:rgba(226,191,124,0.12)!important;border:1px solid rgba(226,191,124,0.28)!important;color:var(--sv-gold-on-night)!important;
+            font-size:11.5px!important;font-weight:600!important;letter-spacing:0.02em!important;text-transform:none!important}
+        .share-icon{background:rgba(226,191,124,0.16)!important}
+        .share-title{font-family:var(--sv-serif)!important;font-weight:600!important;letter-spacing:-0.01em!important}
+        .share-text{font-weight:500!important}
+        .share-step{background:rgba(255,255,255,0.04)!important;border:1px solid rgba(255,255,255,0.07)!important;font-weight:500!important;font-size:13px!important}
+        .share-step span:last-child{color:var(--sv-gold-on-night)!important;font-weight:600!important;letter-spacing:0.04em!important}
+        .share-note{font-weight:500!important;color:var(--sv-on-night-2)!important}
+        .loyalty-fill{background:linear-gradient(90deg,var(--sv-gold),var(--sv-gold-on-night))!important}
+        .loyalty-progress{background:rgba(255,255,255,0.08)!important}
+        .treasure-strip{background:var(--sv-gold)!important;box-shadow:none!important}
+        .treasure-strip-title{text-transform:none!important;letter-spacing:0!important;font-weight:600!important;font-size:14px!important;text-shadow:none!important}
+        .treasure-strip-icon{background:rgba(0,0,0,0.12)!important;border:none!important}
+
+        /* Nekretnine (u modalu Istraži Banju) */
+        .property-cta{background:linear-gradient(160deg,var(--sv-night) 0%,var(--sv-night-2) 100%)!important;border:1px solid var(--sv-night-line)!important;box-shadow:none!important}
+        .property-cta::before{display:none!important}
+        .property-cta-text{font-family:var(--sv-serif)!important;color:var(--sv-on-night)!important;font-size:15px!important;font-weight:500!important}
+        .property-cta-link{color:var(--sv-gold-on-night)!important;font-family:var(--sv-sans)!important;text-transform:none!important;
+            letter-spacing:0!important;font-size:13px!important;font-weight:600!important}
+        .property-cta-arrow-wrap{background:rgba(226,191,124,0.14)!important;border:1px solid rgba(226,191,124,0.3)!important}
+        .property-cta-arrow{color:var(--sv-gold-on-night)!important}
+
+        /* Ostalo */
+        .chip{background:var(--sv-surface)!important;border:1px solid var(--sv-line)!important;color:var(--sv-ink-2)!important;
+            font-size:12.5px!important;font-weight:500!important;box-shadow:none!important}
+        .service-btn{background:var(--sv-surface-2)!important;border:1px solid var(--sv-line)!important;box-shadow:none!important}
+        .footer-note{font-size:11.5px!important;font-weight:500!important;letter-spacing:0.02em!important;text-transform:none!important;opacity:1!important;color:var(--sv-faint)!important}
+
+        /* Ekran jezika i ekran broja noći */
+        #lang-screen,#nights-screen{background:radial-gradient(120% 70% at 85% -5%,rgba(226,191,124,0.18),transparent 55%),
+            linear-gradient(165deg,#15202b 0%,#1b2935 60%,#203140 100%)!important}
+        .lang-logo-img{box-shadow:0 18px 40px rgba(0,0,0,0.35)!important;border:1px solid rgba(226,191,124,0.45)!important}
+        .lang-title{font-family:var(--sv-serif)!important;font-weight:600!important;letter-spacing:-0.015em!important}
+        .lang-sub-text{text-transform:none!important;letter-spacing:0!important;font-weight:500!important;font-size:14px!important;color:var(--sv-on-night-2)!important}
+        .lang-select-label{text-transform:none!important;letter-spacing:0!important;font-size:13px!important;font-weight:500!important;color:rgba(244,241,234,0.55)!important}
+        .lang-btn{background:rgba(255,255,255,0.05)!important;border:1px solid rgba(255,255,255,0.10)!important;border-radius:16px!important}
+        .lang-btn:active{background:rgba(226,191,124,0.16)!important;border-color:rgba(226,191,124,0.45)!important}
+        .lang-name{font-weight:600!important;font-size:13px!important}
+        .lang-native{display:none!important}
+        .nights-icon{font-size:2.6rem!important}
+        .nights-title{font-family:var(--sv-serif)!important;font-weight:600!important;letter-spacing:-0.015em!important;font-size:1.95rem!important;color:var(--sv-on-night)!important}
+        .nights-sub{font-weight:500!important;color:var(--sv-on-night-2)!important;font-size:14px!important}
+        .nights-btn{border:1px solid rgba(226,191,124,0.30)!important;background:rgba(255,255,255,0.05)!important;border-radius:16px!important}
+        .nights-btn:active{background:rgba(226,191,124,0.18)!important}
+        .nights-btn .n{font-family:var(--sv-serif)!important;font-weight:600!important;color:var(--sv-on-night)!important}
+        .nights-btn .l{color:var(--sv-gold-on-night)!important;font-weight:600!important;letter-spacing:0.02em!important;text-transform:none!important;font-size:11px!important}
+        .nights-skip{color:rgba(244,241,234,0.55)!important;font-weight:500!important;font-size:13px!important}
+    </style>
 </head>
-<body class="flex flex-col items-center min-h-screen">
+<body class="sv flex flex-col items-center min-h-screen">
 <div id="google_translate_element" style="display:none"></div>
 
 <div id="app" class="app-shell pb-8">
@@ -442,8 +622,8 @@
     </div>
 
     <div id="loader" class="flex flex-col items-center justify-center h-screen">
-        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-900"></div>
-        <p class="text-[10px] mt-4 font-bold text-slate-400 uppercase tracking-widest text-center px-4 italic">Sinhronizacija sa StayVB bazom...</p>
+        <div class="sv-spinner"></div>
+        <p style="margin-top:16px;font-size:14px;font-weight:500;color:var(--sv-muted);text-align:center;padding:0 16px">Pripremamo vaš vodič…</p>
     </div>
 
     <!-- CONTENT -->
@@ -466,23 +646,24 @@
             <div class="stack">
 
                 <!-- Produženje boravka: pitanje o odjavi i ponuda -->
-                <div id="ext-nights-card" class="hidden" style="background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.3);border-radius:1.5rem;padding:18px">
-                    <p style="font-size:13px;font-weight:900;color:#67e8f9;margin:0 0 4px">Do kad ostajete?</p>
-                    <p style="font-size:11px;color:rgba(255,255,255,0.55);font-weight:700;margin:0 0 12px;line-height:1.5">Da bismo znali šta da vam preporučimo za svaki dan boravka.</p>
+                <div id="ext-nights-card" class="hidden sv-card" style="padding:18px 20px">
+                    <p style="font-size:15px;font-weight:600;color:var(--sv-ink);margin:0 0 4px">Do kad ostajete?</p>
+                    <p style="font-size:13px;color:var(--sv-muted);font-weight:500;margin:0 0 14px;line-height:1.5">Da bismo znali šta da vam preporučimo za svaki dan boravka.</p>
                     <div id="ext-nights-btns" style="display:flex;gap:8px;flex-wrap:wrap"></div>
                 </div>
 
-                <div id="ext-banner" class="hidden" onclick="openExtSheet()" style="cursor:pointer;border-radius:1.5rem;padding:16px 18px;background:linear-gradient(135deg,rgba(34,211,238,0.18),rgba(16,185,129,0.14));border:1px solid rgba(34,211,238,0.45);align-items:center;gap:12px">
-                    <span id="ext-banner-icon" style="font-size:1.6rem">🌙</span>
+                <div id="ext-banner" class="hidden sv-card-night" onclick="openExtSheet()" style="cursor:pointer;padding:16px 18px;align-items:center;gap:14px;
+                    background:radial-gradient(90% 90% at 0% 0%,rgba(226,191,124,0.22),transparent 60%),linear-gradient(160deg,var(--sv-night) 0%,var(--sv-night-2) 100%)">
+                    <span id="ext-banner-icon" style="width:44px;height:44px;min-width:44px;border-radius:14px;background:rgba(226,191,124,0.16);display:flex;align-items:center;justify-content:center;font-size:1.3rem">🌙</span>
                     <div style="flex:1;min-width:0">
-                        <p id="ext-banner-title" style="font-size:13px;font-weight:900;color:#a5f3fc;margin:0 0 2px">Ostanite još jednu noć</p>
-                        <p id="ext-banner-sub" style="font-size:11px;color:rgba(255,255,255,0.65);font-weight:700;margin:0;line-height:1.45"></p>
+                        <p id="ext-banner-title" style="font-family:var(--sv-serif);font-size:17px;font-weight:600;color:var(--sv-on-night);margin:0 0 3px">Ostanite još jednu noć</p>
+                        <p id="ext-banner-sub" style="font-size:13px;color:var(--sv-on-night-2);font-weight:500;margin:0;line-height:1.45"></p>
                     </div>
-                    <span style="font-size:1.1rem;color:#67e8f9">›</span>
+                    <span style="font-size:1.3rem;color:var(--sv-gold-on-night)">›</span>
                 </div>
 
-                <div id="ext-banner-mini" class="hidden" onclick="openExtSheet()" style="cursor:pointer;text-align:center;font-size:11px;font-weight:800;color:rgba(103,232,249,0.85);padding:8px">
-                    Ponuda za produženje boravka · otvori
+                <div id="ext-banner-mini" class="hidden" onclick="openExtSheet()" style="cursor:pointer;text-align:center;font-size:13px;font-weight:600;color:var(--sv-gold-strong);padding:6px">
+                    Ponuda za produženje boravka →
                 </div>
 
                 <!-- WiFi -->
@@ -492,17 +673,18 @@
                         <p id="wifi-name" class="wifi-name">...</p>
                         <p id="wifi-pass" class="wifi-pass">...</p>
                     </div>
+                    <button id="wifi-copy" type="button" onclick="copyWifi()" class="sv-wifi-copy" style="display:none">Kopiraj</button>
                 </div>
 
                 <!-- Loyalty + Nagradna igra - jedinstvena celina -->
                 <div id="loyalty-section" class="loyalty-combo fade-in hidden">
                     <div class="loyalty-combo-top">
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-                            <span style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.6)">⭐ Loyalty pečati</span>
-                            <span id="loyalty-count" style="font-size:13px;font-weight:900;color:#fbbf24">0/10</span>
+                            <span style="font-size:14px;font-weight:600;color:var(--sv-on-night)">⭐&nbsp; Loyalty pečati</span>
+                            <span id="loyalty-count" style="font-family:var(--sv-serif);font-size:16px;font-weight:600;color:var(--sv-gold-on-night)">0/10</span>
                         </div>
                         <div class="loyalty-progress"><div class="loyalty-fill" id="loyalty-fill" style="width:0%"></div></div>
-                        <p style="font-size:10px;color:rgba(255,255,255,0.45);margin-top:6px;font-weight:700">Skupi 10 pečata i osvoji nagradu!</p>
+                        <p style="font-size:12.5px;color:var(--sv-on-night-2);margin-top:8px;font-weight:500">Skupi 10 pečata i osvoji nagradu</p>
                     </div>
                     <div id="treasure-strip-wrap" class="loyalty-combo-bottom">
                         <div onclick="goTo('stamp.html')" class="treasure-strip fade-in">
@@ -552,43 +734,43 @@
                 <div id="explore-modal" style="display:none;position:fixed;inset:0;z-index:998;background:rgba(15,23,42,0.92);backdrop-filter:blur(10px);align-items:flex-end;justify-content:center;padding:0">
                     <div style="background:white;border-top-left-radius:2rem;border-top-right-radius:2rem;width:100%;max-width:430px;max-height:88vh;overflow-y:auto">
                         <div style="padding:14px 20px 10px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:white;z-index:10">
-                            <span style="font-size:14px;font-weight:900;color:#0f172a">🧭 Istraži Banju</span>
+                            <span style="font-family:var(--sv-serif);font-size:19px;font-weight:600;color:var(--sv-ink)">Istraži Banju</span>
                             <button onclick="closeExploreHub()" style="width:30px;height:30px;border-radius:50%;background:#f1f5f9;border:none;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
                         </div>
                         <div style="padding:16px">
                             <!-- VBradar -->
-                            <div id="explore-row-radar" onclick="goTo('radar.html')" class="explore-row explore-row-lg" style="background:linear-gradient(180deg,#0f172a 0%,#111827 100%);border:1px solid rgba(250,204,21,0.16)">
+                            <div id="explore-row-radar" onclick="goTo('radar.html')" class="explore-row explore-row-lg" style="background:linear-gradient(160deg,var(--sv-night) 0%,var(--sv-night-2) 100%);border:1px solid var(--sv-night-line)">
                                 <div class="feature-head" style="margin-bottom:10px">
                                     <div class="text-left">
-                                        <h3 style="color:white;font-weight:900;font-size:15px;margin:0">VBradar</h3>
-                                        <p style="color:#fde68a;font-size:11px;font-weight:700;margin:2px 0 0">Pronađi mesta u blizini</p>
+                                        <h3 style="color:var(--sv-on-night);font-family:var(--sv-serif);font-weight:600;font-size:19px;margin:0">VBradar</h3>
+                                        <p style="color:var(--sv-gold-on-night);font-size:13px;font-weight:500;margin:3px 0 0">Pronađi mesta u blizini</p>
                                     </div>
-                                    <div class="icon-bubble explore-row-icon bg-yellow-400 text-slate-900">📡</div>
+                                    <div class="icon-bubble explore-row-icon" style="background:rgba(226,191,124,0.16)!important">📡</div>
                                 </div>
                                 <div class="preview-list">
-                                    <div class="preview-item bg-white/6 border border-white/8 text-white"><span>Skeniraj Banju i otkrij partnere</span><span class="text-yellow-300">OTVORI</span></div>
-                                    <div class="preview-item bg-white/6 border border-white/8 text-white"><span>Lokacije, popusti i aktuelne ponude</span><span class="text-yellow-300">MAPA</span></div>
+                                    <div class="preview-item" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);color:var(--sv-on-night)"><span>Skeniraj Banju i otkrij partnere</span><span style="color:var(--sv-gold-on-night)">Otvori</span></div>
+                                    <div class="preview-item" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);color:var(--sv-on-night)"><span>Lokacije, popusti i aktuelne ponude</span><span style="color:var(--sv-gold-on-night)">Mapa</span></div>
                                 </div>
                             </div>
                             <!-- Banja Live -->
-                            <div onclick="goTo('dogadjaji.html')" class="explore-row explore-row-lg" style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 45%,#9333ea 100%)">
+                            <div onclick="goTo('dogadjaji.html')" class="explore-row explore-row-lg" style="background:var(--sv-surface);border:1px solid var(--sv-line)">
                                 <div class="feature-head" style="margin-bottom:10px">
                                     <div class="text-left">
-                                        <h3 style="color:white;font-weight:900;font-size:15px;margin:0">Banja Live</h3>
-                                        <p style="color:rgba(255,255,255,0.8);font-size:11px;font-weight:700;margin:2px 0 0">Događaji, muzika i dešavanja</p>
+                                        <h3 style="color:var(--sv-ink);font-family:var(--sv-serif);font-weight:600;font-size:19px;margin:0">Banja Live</h3>
+                                        <p style="color:var(--sv-muted);font-size:13px;font-weight:500;margin:3px 0 0">Događaji, muzika i dešavanja</p>
                                     </div>
-                                    <div class="icon-bubble explore-row-icon bg-white/20 text-white">🎸</div>
+                                    <div class="icon-bubble explore-row-icon" style="background:#efe9f7!important">🎸</div>
                                 </div>
                                 <div id="events-preview" class="preview-list"></div>
                             </div>
                             <!-- Atrakcije -->
-                            <div onclick="goTo('atrakcije.html')" class="explore-row explore-row-lg" style="background:linear-gradient(180deg,#f0fdfa 0%,#ffffff 100%);border:1px solid #99f6e4">
+                            <div onclick="goTo('atrakcije.html')" class="explore-row explore-row-lg" style="background:var(--sv-surface);border:1px solid var(--sv-line)">
                                 <div class="feature-head" style="margin-bottom:10px">
                                     <div class="text-left">
-                                        <h3 style="color:#115e59;font-weight:900;font-size:15px;margin:0">Atrakcije i Zabava</h3>
-                                        <p style="color:#0f766e;font-size:11px;font-weight:700;margin:2px 0 0">Bazeni, ture, izleti i aktivnosti</p>
+                                        <h3 style="color:var(--sv-ink);font-family:var(--sv-serif);font-weight:600;font-size:19px;margin:0">Atrakcije i zabava</h3>
+                                        <p style="color:var(--sv-muted);font-size:13px;font-weight:500;margin:3px 0 0">Bazeni, ture, izleti i aktivnosti</p>
                                     </div>
-                                    <div class="icon-bubble explore-row-icon bg-teal-500 text-white">🎡</div>
+                                    <div class="icon-bubble explore-row-icon" style="background:var(--sv-sage-soft)!important">🎡</div>
                                 </div>
                                 <div class="chip-grid">
                                     <span class="chip">🏊 Bazeni</span><span class="chip">🚲 Bicikli</span>
@@ -660,8 +842,8 @@
 
                         <!-- Korak 1: raspoloženje -->
                         <div id="rg-step-mood">
-                            <p style="font-size:15px;font-weight:900;color:#0f172a;text-align:center;margin:6px 0 2px">Kakav je bio Vaš boravak?</p>
-                            <p style="font-size:11px;color:#94a3b8;font-weight:700;text-align:center;margin:0 0 20px">Vaše iskreno mišljenje nam znači</p>
+                            <p style="font-family:var(--sv-serif);font-size:21px;font-weight:600;color:var(--sv-ink);text-align:center;margin:6px 0 4px">Kakav je bio Vaš boravak?</p>
+                            <p style="font-size:13.5px;color:var(--sv-muted);font-weight:500;text-align:center;margin:0 0 20px">Vaše iskreno mišljenje nam znači</p>
                             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                                 <button onclick="pickMood('great')" class="rg-mood-btn" style="background:#f0fdf4;border:1.5px solid #bbf7d0"><span style="font-size:2rem">😍</span><span style="font-size:11px;font-weight:800;color:#166534;margin-top:6px">Odlično</span></button>
                                 <button onclick="pickMood('good')" class="rg-mood-btn" style="background:#f0f9ff;border:1.5px solid #bae6fd"><span style="font-size:2rem">🙂</span><span style="font-size:11px;font-weight:800;color:#075985;margin-top:6px">Dobro</span></button>
@@ -709,27 +891,24 @@
                     </div>
                     <div class="stay-grid">
                         <div id="extra-card" class="mini-card extra-card text-left">
-                            <div class="flex items-center gap-3 mb-3">
-                                <span class="text-2xl">✨</span>
-                                <p class="text-indigo-900 text-[10px] uppercase font-black tracking-widest">Posebne pogodnosti</p>
-                            </div>
-                            <div id="extra-offer-text" class="text-sm text-indigo-950 leading-relaxed font-semibold mb-4">...</div>
-                            <button onclick="orderService('extra')" class="w-full bg-indigo-600 text-white p-4 rounded-[1.4rem] text-[11px] font-black uppercase shadow-md active:scale-95">📩 Rezerviši / Book now</button>
+                            <p class="sv-mini-title"><span>✨</span>Posebne pogodnosti</p>
+                            <div id="extra-offer-text" class="sv-mini-text">...</div>
+                            <button onclick="orderService('extra')" class="sv-btn sv-btn-ink">Rezerviši</button>
                         </div>
                         <div id="service-card" class="mini-card room-card text-left">
-                            <p class="section-label text-center text-slate-400">Servisi za goste / Room service</p>
-                            <div id="service-prices-text" class="text-sm font-semibold space-y-3 mb-5 text-slate-100">...</div>
-                            <button onclick="orderService('service')" class="w-full bg-white text-slate-900 p-4 rounded-[1.5rem] text-[11px] font-black uppercase shadow-xl active:scale-95">🛒 Naruči / Order now</button>
+                            <p class="sv-mini-title"><span>🛎️</span>Usluge za goste</p>
+                            <div id="service-prices-text" class="sv-mini-text">...</div>
+                            <button onclick="orderService('service')" class="sv-btn sv-btn-ghost">Naruči</button>
                         </div>
                         <div id="rules-card" class="rules-card">
                             <button onclick="document.getElementById('rules-box').classList.toggle('hidden')" class="w-full p-5 flex justify-between items-center font-black text-[11px] uppercase tracking-widest text-slate-500">
-                                🏠 Kućni red / House rules <span class="text-xs">▼</span>
+                                <span>🏠&nbsp; Kućni red</span> <span style="font-size:12px;color:var(--sv-muted)">▼</span>
                             </button>
                             <div id="rules-box" class="hidden px-5 pb-5 text-left text-sm font-semibold text-slate-700 leading-relaxed border-t border-slate-100 pt-4">
                                 <div id="house-rules-text">...</div>
                             </div>
                         </div>
-                        <a id="wa-link" href="#" target="_blank" class="cta-link cta-green">💬 Pišite domaćinu / Host</a>
+                        <a id="wa-link" href="#" target="_blank" class="cta-link cta-green">💬 Pišite domaćinu</a>
                         <div id="review-link-wrap" class="hidden" style="position:relative">
                             <a id="review-link" href="javascript:void(0)" onclick="openReviewGate()" class="cta-link cta-review"><span class="stars">★★★★★</span><span class="cta-review-label">Ocenite nas</span></a>
                             <span class="cta-review-badge">Preporučeno</span>
@@ -784,7 +963,7 @@
                 <section id="history-section" class="soft-card fade-in" style="padding:18px;display:none">
                     <p class="section-label text-center">Gde ste bili</p>
                     <div id="history-list" style="display:flex;flex-direction:column;gap:8px;margin:12px 0"></div>
-                    <button onclick="shareApp()" class="cta-btn cta-green" style="margin-top:4px">🔗 Podeli sa prijateljem</button>
+                    <button onclick="shareApp()" class="cta-btn cta-checkout" style="margin-top:4px">🔗 Podeli sa prijateljem</button>
                 </section>
 
                 <div class="footer-note">StayVB Digital System</div>
@@ -797,14 +976,15 @@
 <!-- PRODUŽENJE BORAVKA -->
 <style>
 #ext-banner:not(.hidden){display:flex;animation:extPulse 3s ease-in-out infinite}
-@keyframes extPulse{0%,100%{box-shadow:0 0 0 0 rgba(34,211,238,0)}50%{box-shadow:0 0 0 10px rgba(34,211,238,0.10)}}
+@keyframes extPulse{0%,100%{box-shadow:0 10px 28px rgba(21,32,43,0.18),0 0 0 0 rgba(180,135,59,0)}50%{box-shadow:0 10px 28px rgba(21,32,43,0.18),0 0 0 8px rgba(180,135,59,0.16)}}
 #ext-sheet{display:none;position:fixed;inset:0;z-index:999;background:rgba(15,23,42,0.92);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center}
 #ext-sheet.open{display:flex}
+.ext-sheet-inner h2{font-family:var(--sv-serif);font-weight:600!important;letter-spacing:-0.015em}
 .ext-sheet-inner{background:white;border-top-left-radius:2.5rem;border-top-right-radius:2.5rem;width:100%;max-width:430px;max-height:92vh;overflow-y:auto;padding:28px 24px 36px;color:#0f172a}
 .ext-opt{border:1.5px solid #e2e8f0;border-radius:1.2rem;padding:14px;margin-bottom:10px;cursor:pointer;background:#f8fafc}
-.ext-opt.sel{border-color:#10b981;background:#ecfdf5}
+.ext-opt.sel{border-color:var(--sv-sage);background:var(--sv-sage-soft)}
 .ext-inp{width:100%;padding:13px 14px;border:1.5px solid #e2e8f0;border-radius:1rem;font-size:14px;font-weight:600;font-family:inherit;margin-bottom:10px;color:#0f172a;background:white}
-.ext-btn{width:100%;padding:16px;border:none;border-radius:1.2rem;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit}
+.ext-btn{width:100%;padding:15px;border:none;border-radius:var(--sv-radius-md);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
 </style>
 <div id="ext-sheet">
   <div class="ext-sheet-inner" id="ext-sheet-inner"></div>
@@ -1119,6 +1299,8 @@ async function loadPartnerData(){
 
     document.getElementById('wifi-name').innerText = pc.wifi_name || 'Nije podešeno';
     document.getElementById('wifi-pass').innerText = pc.wifi_pass ? 'Lozinka: ' + pc.wifi_pass : '';
+    currentWifiPass = pc.wifi_pass || '';
+    document.getElementById('wifi-copy').style.display = currentWifiPass ? '' : 'none';
 
     ownerPhone = partner.whatsapp || partner.phone || '';
     if(ownerPhone){
@@ -1168,6 +1350,11 @@ async function loadPartnerData(){
         if(el2) el2.style.display = 'none';
     }
 
+    // Kartica bez sadržaja se ne prikazuje, umesto da gost vidi "..."
+    if(!pc.extra_offer) document.getElementById('extra-card').style.display = 'none';
+    if(!pc.service_prices) document.getElementById('service-card').style.display = 'none';
+    if(!(partner.is_premium && pc.house_rules)) document.getElementById('rules-card').style.display = 'none';
+
     // Share kampanja - sakrij za ne-premium
     if(!isPremiumApplicable){
         document.getElementById('shareCampaignBox')?.classList.add('hidden');
@@ -1198,14 +1385,14 @@ async function loadHH(){
     });
 
     if(!active.length){
-        target.innerHTML = '<div class="preview-item bg-white border border-orange-100 text-orange-500"><span>Nema aktivnih akcija</span><span>PAUZA</span></div>';
+        target.innerHTML = '<div class="preview-item" style="background:var(--sv-surface-2);border:1px solid var(--sv-line);color:var(--sv-muted)"><span>Trenutno nema aktivnih akcija</span></div>';
         return;
     }
 
     target.innerHTML = active.slice(0,4).map(p => `
-        <div class="preview-item bg-white border border-orange-100 text-slate-700 shadow-sm cursor-pointer">
-            <span class="uppercase">${esc(p.name)}</span>
-            <span class="text-orange-600">${getRemainingLabel(p.hh_end, nowMins) || ('DO ' + esc(p.hh_end))}</span>
+        <div class="preview-item" style="background:var(--sv-surface-2);border:1px solid var(--sv-line);color:var(--sv-ink)">
+            <span style="font-weight:600">${esc(p.name)}</span>
+            <span style="color:var(--sv-terra)">${getRemainingLabel(p.hh_end, nowMins) || ('do ' + esc(p.hh_end))}</span>
         </div>`).join('');
 }
 
@@ -1227,13 +1414,13 @@ async function loadEvents(blackoutPromise){
     const target = document.getElementById('events-preview');
     if(!target) return;
     if(!events?.length){
-        target.innerHTML = '<div class="preview-item bg-white/10 border border-white/10 text-white/90"><span>Trenutno nema novih najava</span><span>USKORO</span></div>';
+        target.innerHTML = '<div class="preview-item" style="background:var(--sv-surface-2);border:1px solid var(--sv-line);color:var(--sv-muted)"><span>Trenutno nema novih najava</span></div>';
         return;
     }
     target.innerHTML = events.map(e => `
-        <div class="preview-item bg-white/12 border border-white/10 text-white">
-            <span>${esc(e.title)}</span>
-            <span>${e.event_date === todayStr ? '🔥 DANAS' : esc(e.event_date)}</span>
+        <div class="preview-item" style="background:var(--sv-surface-2);border:1px solid var(--sv-line);color:var(--sv-ink)">
+            <span style="font-weight:600">${esc(e.title)}</span>
+            <span style="color:var(--sv-gold-strong)">${e.event_date === todayStr ? 'Danas' : esc(e.event_date)}</span>
         </div>`).join('');
 }
 
@@ -1701,6 +1888,17 @@ async function pickNights(n){
     startApp(nightsLang);
 }
 
+// ── WiFi: kopiranje lozinke jednim dodirom ─────────────────────────
+let currentWifiPass = '';
+async function copyWifi(){
+    if(!currentWifiPass) return;
+    const btn = document.getElementById('wifi-copy');
+    try{ await navigator.clipboard.writeText(currentWifiPass); }catch(e){ return; }
+    btn.textContent = 'Kopirano ✓';
+    btn.classList.add('done');
+    setTimeout(() => { btn.textContent = 'Kopiraj'; btn.classList.remove('done'); }, 1800);
+}
+
 // ── Produženje boravka ────────────────────────────────────────────
 // Gost na poslednji ceo dan boravka dobija ponudu: još jedna noć po
 // ceni domaćina plus aktivnost po ceni mrtvog termina. Prihvatanje
@@ -1753,8 +1951,8 @@ async function loadExtOffer(){
 function renderNightsCard(){
     const btns = document.getElementById('ext-nights-btns');
     if(!btns) return;
-    btns.innerHTML = [1,2,3,4,5,6,7].map(n => `<button onclick="setExtNights(${n})" style="flex:1 1 auto;min-width:52px;padding:12px 8px;border-radius:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(34,211,238,0.3);color:white;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit">${n}</button>`).join('')
-        + '<span style="flex:1 1 100%;font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;margin-top:4px">noći</span>';
+    btns.innerHTML = [1,2,3,4,5,6,7].map(n => `<button onclick="setExtNights(${n})" style="flex:1 1 auto;min-width:44px;padding:11px 6px;border-radius:12px;background:var(--sv-surface-2);border:1px solid var(--sv-line-2);color:var(--sv-ink);font-family:var(--sv-serif);font-size:17px;font-weight:600;cursor:pointer">${n}</button>`).join('')
+        + '<span style="flex:1 1 100%;font-size:12px;color:var(--sv-muted);font-weight:500;margin-top:2px">broj noći</span>';
     document.getElementById('ext-nights-card').classList.remove('hidden');
 }
 
@@ -1784,7 +1982,7 @@ function openExtSheet(){
             <div style="font-size:2.5rem;margin-bottom:10px">✅</div>
             <h2 style="font-size:1.2rem;font-weight:900;margin:0 0 8px">Produženje je potvrđeno</h2>
             <p style="font-size:13px;color:#475569;font-weight:600;line-height:1.6;margin:0 0 20px">Ostajete do ${C.escapeHtml(d.new_checkout||'')}. Kod za aktivnost pokažite na licu mesta.</p>
-            <a href="atrakcije.html" class="ext-btn" style="display:block;background:linear-gradient(135deg,#10b981,#059669);color:white;text-decoration:none;box-sizing:border-box">🎫 Otvori moj kod</a>
+            <a href="atrakcije.html" class="ext-btn" style="display:block;background:var(--sv-sage);color:white;text-decoration:none;box-sizing:border-box">🎫 Otvori moj kod</a>
             <button class="ext-btn" style="background:#f1f5f9;color:#0f172a;margin-top:10px" onclick="closeExtSheet()">Zatvori</button></div>`;
     } else {
         const opts = Array.isArray(d.options) ? d.options : [];
@@ -1829,7 +2027,7 @@ function openExtSheet(){
             <div id="ext-total" style="background:#0f172a;color:white;border-radius:1.2rem;padding:14px;margin-bottom:14px"></div>
             <p id="ext-msg" style="font-size:12px;font-weight:800;color:#be123c;min-height:16px;margin:0 0 8px"></p>
 
-            <button class="ext-btn" style="background:linear-gradient(135deg,#10b981,#059669);color:white" onclick="acceptExt()">Prihvatam, ostajem još jednu noć</button>
+            <button class="ext-btn" style="background:var(--sv-sage);color:white" onclick="acceptExt()">Prihvatam, ostajem još jednu noć</button>
             <button class="ext-btn" style="background:#f1f5f9;color:#0f172a;margin-top:10px" onclick="dismissExt()">Ne, hvala</button>`;
         extRenderTotal();
     }
@@ -1899,20 +2097,21 @@ async function startApp(lang){
     const urlUnitId = (params.get('id') || '').toUpperCase();
 
     let isAccommodationStay = false;
+    let typeCheck = Promise.resolve();
     if(urlUnitId){
         currentUnitId = urlUnitId;
         // Čuvaj u localStorage SAMO ako je hotel ili apartman
-        // Restoran/biznis/atrakcija ne smeju da prebrišu smeštaj gosta
-        try{
-            const { data: pt } = await sb.from('partners')
-                .select('type').eq('partner_code', urlUnitId).eq('is_active',true).maybeSingle();
-            if(pt && (pt.type === 'hotel' || pt.type === 'apartment')){
-                localStorage.setItem('stayvb_unit_id', urlUnitId);
-                isAccommodationStay = true;
-            }
-            // Ako nije hotel/apartman — currentUnitId se koristi samo za ovaj posjet
-            // ali localStorage ostaje nepromijenjen (čuva stari smeštaj)
-        }catch(e){ /* nastavi normalno */ }
+        // Restoran/biznis/atrakcija ne smeju da prebrišu smeštaj gosta.
+        // Ide paralelno sa učitavanjem sadržaja, da ne produžava čekanje.
+        typeCheck = sb.from('partners')
+            .select('type').eq('partner_code', urlUnitId).eq('is_active',true).maybeSingle()
+            .then(({ data: pt }) => {
+                if(pt && (pt.type === 'hotel' || pt.type === 'apartment')){
+                    localStorage.setItem('stayvb_unit_id', urlUnitId);
+                    isAccommodationStay = true;
+                }
+            })
+            .catch(() => { /* nastavi normalno */ });
     } else {
         // Nema ?id= u URL-u (npr. otvoreno iz instalirane PWA ikonice) - koristi sacuvani
         try{ currentUnitId = localStorage.getItem('stayvb_unit_id') || ''; }catch(e){ currentUnitId = ''; }
@@ -1933,7 +2132,9 @@ async function startApp(lang){
     // "Smeštaj" (ponuda drugih apartmana/vila) nema smisla da se nudi gostu
     // dok je aktivno smešten - tek posle isteka boravka (10+ dana) postaje
     // relevantna preporuka za sledeću posetu.
-    document.getElementById('smestaj-card')?.classList.toggle('hidden', isAccommodationStay && !isExpiredStay);
+    typeCheck.then(() => {
+        document.getElementById('smestaj-card')?.classList.toggle('hidden', isAccommodationStay && !isExpiredStay);
+    });
 
     updateLangPills(lang || '');
 
@@ -1947,20 +2148,15 @@ async function startApp(lang){
 
     trackVisit();
 
-    try{ await sb.from('partners').select('id').limit(1); } catch(e){}
-
+    // Sadržaj se prikazuje čim stignu podaci o smeštaju (naslov, WiFi, boravak).
+    // Happy Hour, događaji i gradske informacije popunjavaju se u pozadini,
+    // pa gost ne čeka zbir svih poziva pre nego što vidi bilo šta.
+    const blackoutPromise = getHotelBlackout().then(v => { hotelBlackoutActive = v.active; return v; });
+    const corePromise = isExpiredStay ? Promise.resolve() : loadPartnerData();
+    Promise.all([loadHH(), loadEvents(blackoutPromise), loadCityInfo(blackoutPromise)])
+        .catch(e => console.error('Load error:', e));
     try{
-        const timeout = new Promise(resolve => setTimeout(resolve, 8000));
-        const blackoutPromise = getHotelBlackout().then(v => { hotelBlackoutActive = v.active; return v; });
-        await Promise.race([
-            Promise.all([
-                isExpiredStay ? Promise.resolve() : loadPartnerData(),
-                loadHH(),
-                loadEvents(blackoutPromise),
-                loadCityInfo(blackoutPromise)
-            ]),
-            timeout
-        ]);
+        await Promise.race([corePromise, new Promise(resolve => setTimeout(resolve, 4000))]);
     } catch(e){ console.error('Load error:', e); }
 
     renderHistory();
@@ -1979,8 +2175,10 @@ async function startApp(lang){
 
 }
 
-window.addEventListener('load', async () => {
-    await registerSW();
+// Aplikacija kreće čim je struktura stranice spremna, a ne tek kad se učitaju
+// svi fontovi i slike. Service worker se registruje paralelno.
+async function bootApp(){
+    registerSW();
 
     const hasLang = localStorage.getItem('stayvb_lang');
 
@@ -1995,7 +2193,9 @@ window.addEventListener('load', async () => {
     if(ls) ls.style.display = 'none';
 
     await startApp(hasLang);
-});
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootApp);
+else bootApp();
 </script>
     <!-- Google Translate async - ne blokira učitavanje -->
     <script>

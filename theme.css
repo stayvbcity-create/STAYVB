@@ -1,0 +1,279 @@
+/* ═══════════════════════════════════════════════════════════════════
+   StayVB — zajednički vizuelni sistem za sve stranice.
+   Boje, tipografija, površine i dugmad na jednom mestu.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root{
+  /* Tekst */
+  --sv-ink:#15202b;
+  --sv-ink-2:#3c4651;
+  --sv-muted:#787c82;
+  --sv-faint:#a3a6aa;
+
+  /* Površine */
+  --sv-bg:#f6f3ee;
+  --sv-surface:#ffffff;
+  --sv-surface-2:#fbf9f6;
+  --sv-line:#ebe6dd;
+  --sv-line-2:#e1dbcf;
+
+  /* Tamna površina za glavne akcije */
+  --sv-night:#16222e;
+  --sv-night-2:#1e2c39;
+  --sv-night-line:rgba(255,255,255,0.08);
+  --sv-on-night:#f4f1ea;
+  --sv-on-night-2:rgba(244,241,234,0.68);
+
+  /* Akcenti */
+  --sv-gold:#b4873b;
+  --sv-gold-strong:#9c722c;
+  --sv-gold-soft:#f5ecdc;
+  --sv-gold-on-night:#e2bf7c;
+  --sv-sage:#2f6b57;
+  --sv-sage-strong:#25584a;
+  --sv-sage-soft:#e6efea;
+  --sv-terra:#b5552f;
+  --sv-terra-soft:#f8e9e1;
+  --sv-danger:#b0413a;
+
+  /* Oblik */
+  --sv-radius:22px;
+  --sv-radius-md:16px;
+  --sv-radius-sm:12px;
+  --sv-shadow:0 1px 2px rgba(21,32,43,0.04),0 8px 24px rgba(21,32,43,0.06);
+  --sv-shadow-lift:0 2px 4px rgba(21,32,43,0.05),0 16px 36px rgba(21,32,43,0.10);
+
+  /* Tipografija */
+  --sv-serif:'Fraunces',Georgia,'Times New Roman',serif;
+  --sv-sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+
+/* ── Osnova ─────────────────────────────────────────────────────── */
+html{-webkit-text-size-adjust:100%}
+body.sv{background:var(--sv-bg)!important;color:var(--sv-ink);font-family:var(--sv-sans);
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+
+.sv-display{font-family:var(--sv-serif);font-weight:600;letter-spacing:-0.015em;line-height:1.1}
+.sv-eyebrow{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--sv-muted)}
+
+/* ── Površine ───────────────────────────────────────────────────── */
+.sv-card{background:var(--sv-surface);border:1px solid var(--sv-line);border-radius:var(--sv-radius);box-shadow:var(--sv-shadow)}
+.sv-card-night{background:linear-gradient(160deg,var(--sv-night) 0%,var(--sv-night-2) 100%);
+  border:1px solid var(--sv-night-line);border-radius:var(--sv-radius);color:var(--sv-on-night);
+  box-shadow:0 10px 30px rgba(21,32,43,0.18)}
+
+/* ── Dugmad ─────────────────────────────────────────────────────── */
+.sv-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;
+  padding:0 18px;border-radius:var(--sv-radius-md);border:1px solid transparent;
+  font-family:var(--sv-sans);font-size:15px;font-weight:600;letter-spacing:0;text-transform:none;
+  text-decoration:none;cursor:pointer;transition:transform .15s ease,background .15s ease,box-shadow .15s ease}
+.sv-btn:active{transform:scale(0.985)}
+.sv-btn-ink{background:var(--sv-ink);color:#fff}
+.sv-btn-gold{background:var(--sv-gold);color:#fff}
+.sv-btn-sage{background:var(--sv-sage);color:#fff}
+.sv-btn-ghost{background:var(--sv-surface);color:var(--sv-ink-2);border-color:var(--sv-line-2)}
+
+/* ── Učitavanje ─────────────────────────────────────────────────── */
+@keyframes svSpin{to{transform:rotate(360deg)}}
+.sv-spinner{width:34px;height:34px;border-radius:50%;border:2.5px solid var(--sv-line);
+  border-top-color:var(--sv-gold);animation:svSpin .9s linear infinite}
+
+/* Smanjeno kretanje za korisnike koji to traže u podešavanjima telefona */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PODSTRANICE SA TAMNIM NASLOVNIM DELOM
+   (atrakcije, Happy Hour, događaji, nekretnine) — body.sv-page
+   ═══════════════════════════════════════════════════════════════════ */
+body.sv-page{background:var(--sv-bg)!important;color:var(--sv-ink)!important;font-family:var(--sv-sans)!important}
+body.sv-page .hero{background:radial-gradient(120% 80% at 88% -10%,rgba(226,191,124,0.18),transparent 55%),
+    linear-gradient(165deg,#15202b 0%,#1b2935 60%,#203140 100%)!important;
+  border-bottom-left-radius:30px!important;border-bottom-right-radius:30px!important;
+  padding:66px 22px 84px!important;color:var(--sv-on-night)!important;overflow:visible!important}
+body.sv-page .hero::before,body.sv-page .hero::after,body.sv-page .hero-waves{display:none!important}
+body.sv-page .hero h1{font-family:var(--sv-serif)!important;font-weight:600!important;font-size:2.15rem!important;
+  letter-spacing:-0.015em!important;line-height:1.12!important;color:var(--sv-on-night)!important;margin:16px 0 8px!important;
+  background:none!important;-webkit-text-fill-color:currentColor!important}
+body.sv-page .hero > p:not(.hero-eyebrow){font-size:14px!important;font-weight:500!important;letter-spacing:0!important;
+  text-transform:none!important;color:var(--sv-on-night-2)!important;line-height:1.55!important}
+body.sv-page .hero > div:not(.lang-pills-bar):not(#hero-count):not(#hero-count-label):not(.hero-badge),
+body.sv-page .live-badge,body.sv-page .hero-eyebrow{display:inline-flex!important;align-items:center;gap:8px;
+  font-size:11.5px!important;font-weight:600!important;letter-spacing:0.02em!important;text-transform:none!important;
+  background:rgba(255,255,255,0.05)!important;border:1px solid rgba(226,191,124,0.30)!important;
+  color:var(--sv-gold-on-night)!important;padding:6px 12px!important;border-radius:999px!important;margin:0!important}
+body.sv-page .hero > #hero-count{font-family:var(--sv-serif)!important;font-weight:600!important;color:var(--sv-gold-on-night)!important;
+  font-size:1.25rem!important;letter-spacing:-0.01em!important;margin-top:14px!important}
+body.sv-page #hero-count-label{font-size:12.5px!important;font-weight:500!important;letter-spacing:0!important;text-transform:none!important;color:var(--sv-on-night-2)!important}
+body.sv-page .hero-badge{background:rgba(255,255,255,0.05)!important;border:1px solid rgba(255,255,255,0.12)!important;
+  color:var(--sv-on-night)!important;font-weight:500!important;font-size:13px!important}
+body.sv-page .back-btn{background:rgba(255,255,255,0.06)!important;border:1px solid rgba(255,255,255,0.12)!important;
+  color:var(--sv-on-night)!important;width:38px!important;height:38px!important}
+body.sv-page .lang-pills-bar,body.sv-radar .lang-pills-bar,body.sv-stamp .lang-pills-bar{flex-wrap:nowrap!important;max-width:none!important;gap:5px!important}
+body.sv-page .lang-pills-bar{top:16px!important;right:16px!important}
+body.sv-page .lang-pill,body.sv-radar .lang-pill,body.sv-stamp .lang-pill{padding:2px!important;border-radius:6px!important;
+  background:rgba(255,255,255,0.06)!important;border:1px solid rgba(255,255,255,0.10)!important}
+body.sv-page .lang-pill img,body.sv-radar .lang-pill img,body.sv-stamp .lang-pill img{width:22px!important;height:15px!important;border-radius:3px!important;opacity:.55!important}
+body.sv-page .lang-pill.active,body.sv-radar .lang-pill.active,body.sv-stamp .lang-pill.active{border-color:rgba(226,191,124,0.75)!important;background:rgba(226,191,124,0.14)!important}
+body.sv-page .lang-pill.active img,body.sv-radar .lang-pill.active img,body.sv-stamp .lang-pill.active img{opacity:1!important}
+body.sv-page .content{position:relative;z-index:2;margin-top:-46px!important}
+body.sv-page .empty-card{background:var(--sv-surface)!important;border:1px solid var(--sv-line)!important;
+  border-radius:var(--sv-radius)!important;box-shadow:var(--sv-shadow)!important}
+body.sv-page .empty-title{font-family:var(--sv-serif)!important;font-weight:600!important;font-size:1.25rem!important;color:var(--sv-ink)!important}
+body.sv-page .empty-sub,body.sv-page .empty-card p{color:var(--sv-muted)!important;font-weight:500!important;font-size:14px!important}
+body.sv-page .section-label{font-size:11px!important;font-weight:600!important;letter-spacing:0.08em!important;color:var(--sv-muted)!important}
+
+/* ── Atrakcije ──────────────────────────────────────────────────── */
+body.sv-atr .fchip{background:var(--sv-surface)!important;border:1px solid var(--sv-line-2)!important;color:var(--sv-ink-2)!important;
+  font-size:13px!important;font-weight:500!important;padding:8px 14px!important}
+body.sv-atr .fchip.active{background:var(--sv-ink)!important;border-color:var(--sv-ink)!important;color:#fff!important}
+body.sv-atr .attr-card{border:1px solid var(--sv-line)!important;border-radius:var(--sv-radius)!important;box-shadow:var(--sv-shadow)!important;padding:20px!important}
+body.sv-atr .attr-card::before{display:none!important}
+body.sv-atr .attr-icon{background:var(--sv-sage-soft)!important;border:none!important;width:46px!important;height:46px!important;border-radius:14px!important;font-size:1.3rem!important}
+body.sv-atr .attr-name{font-family:var(--sv-serif)!important;font-weight:600!important;font-size:1.3rem!important;letter-spacing:-0.015em!important;color:var(--sv-ink)!important}
+body.sv-atr .attr-cat::first-letter{text-transform:uppercase}
+body.sv-atr .attr-cat{font-size:12.5px!important;font-weight:500!important;letter-spacing:0!important;text-transform:none!important;color:var(--sv-muted)!important}
+body.sv-atr .attr-desc{color:var(--sv-ink-2)!important;font-weight:500!important;font-size:14px!important}
+body.sv-atr .attr-tag{background:var(--sv-surface-2)!important;border:1px solid var(--sv-line)!important;color:var(--sv-ink-2)!important;
+  font-size:12.5px!important;font-weight:500!important}
+body.sv-atr button.attr-tag{background:var(--sv-sage-soft)!important;border-color:#c9ddd2!important;color:var(--sv-sage-strong)!important;font-weight:600!important}
+body.sv-atr .btn-sm{font-size:14px!important;font-weight:600!important;letter-spacing:0!important;text-transform:none!important;
+  border-radius:var(--sv-radius-sm)!important;padding:13px 10px!important}
+body.sv-atr .btn-book{background:var(--sv-sage)!important}
+body.sv-atr .btn-wa{background:var(--sv-surface)!important;border:1px solid var(--sv-line-2)!important;color:var(--sv-ink)!important}
+body.sv-atr .btn-review{background:var(--sv-gold-soft)!important;border:1px solid #ead9b9!important;color:var(--sv-gold-strong)!important}
+body.sv-atr .modal-title{font-family:var(--sv-serif)!important;font-weight:600!important;font-size:1.45rem!important;letter-spacing:-0.015em!important}
+body.sv-atr .form-label{font-size:12px!important;font-weight:600!important;letter-spacing:0.02em!important;text-transform:none!important;color:var(--sv-muted)!important}
+body.sv-atr .form-input{font-weight:500!important;background:var(--sv-surface-2)!important;border:1px solid var(--sv-line-2)!important;border-radius:var(--sv-radius-sm)!important}
+body.sv-atr .form-input:focus{border-color:var(--sv-sage)!important;background:#fff!important}
+body.sv-atr .slot-option{font-weight:500!important;border:1px solid var(--sv-line-2)!important;background:var(--sv-surface)!important}
+body.sv-atr .slot-option.selected,body.sv-atr .slot-option:hover{border-color:var(--sv-sage)!important;background:var(--sv-sage-soft)!important;color:var(--sv-sage-strong)!important}
+body.sv-atr .spots-badge{color:var(--sv-sage)!important;background:var(--sv-sage-soft)!important;font-weight:600!important}
+body.sv-atr .btn-confirm{background:var(--sv-sage)!important;text-transform:none!important;letter-spacing:0!important;font-size:15px!important;
+  font-weight:600!important;border-radius:var(--sv-radius-md)!important}
+body.sv-atr .res-tab{font-weight:500!important}
+body.sv-atr .res-tab.active{background:var(--sv-ink)!important;border-color:var(--sv-ink)!important}
+body.sv-atr #my-code-btn{background:var(--sv-ink)!important;box-shadow:0 10px 26px rgba(21,32,43,0.28)!important;font-size:14px!important;font-weight:600!important}
+
+/* ── Happy Hour ─────────────────────────────────────────────────── */
+body.sv-hh .hh-card{border:1px solid var(--sv-line)!important;border-radius:var(--sv-radius)!important;box-shadow:var(--sv-shadow)!important}
+body.sv-hh .hh-card::before{display:none!important}
+body.sv-hh .hh-card-name{font-family:var(--sv-serif)!important;font-weight:600!important;font-size:1.25rem!important;letter-spacing:-0.01em!important}
+body.sv-hh .hh-card-type{font-size:12.5px!important;font-weight:500!important;letter-spacing:0!important;text-transform:none!important;color:var(--sv-muted)!important}
+body.sv-hh .hh-timer{background:var(--sv-terra)!important;border-radius:12px!important}
+body.sv-hh .hh-timer-label{text-transform:none!important;letter-spacing:0!important;font-weight:500!important;font-size:10.5px!important}
+body.sv-hh .hh-info-text{font-weight:500!important;color:var(--sv-ink-2)!important;font-size:14px!important}
+body.sv-hh .hh-time-bar{background:var(--sv-terra-soft)!important;color:var(--sv-terra)!important;font-weight:600!important;font-size:12.5px!important}
+body.sv-hh .hh-progress{background:#f1ddd2!important}
+body.sv-hh .hh-progress-fill{background:var(--sv-terra)!important}
+body.sv-hh .next-card{border:1px solid var(--sv-line)!important;box-shadow:none!important;border-radius:var(--sv-radius-md)!important}
+body.sv-hh .next-name{font-weight:600!important}
+body.sv-hh .next-time{font-weight:600!important;color:var(--sv-muted)!important}
+body.sv-hh .live-badge .pulse-dot{background:var(--sv-gold-on-night)!important}
+
+/* ── Događaji ───────────────────────────────────────────────────── */
+body.sv-dog .day-label{font-size:12px!important;font-weight:600!important;letter-spacing:0.06em!important;color:var(--sv-muted)!important}
+body.sv-dog .day-badge{background:var(--sv-gold)!important;font-weight:600!important;font-size:11px!important;letter-spacing:0.02em!important;text-transform:none!important}
+body.sv-dog .event-card{border:1px solid var(--sv-line)!important;border-radius:var(--sv-radius-md)!important;box-shadow:var(--sv-shadow)!important;padding:18px!important}
+body.sv-dog .event-card::before{display:none!important}
+body.sv-dog .event-time{color:var(--sv-gold-strong)!important;font-weight:600!important;letter-spacing:0.02em!important;text-transform:none!important;font-size:12px!important}
+body.sv-dog .event-title{font-family:var(--sv-serif)!important;font-weight:600!important;font-size:1.2rem!important;color:var(--sv-ink)!important;letter-spacing:-0.01em!important}
+body.sv-dog .event-loc{color:var(--sv-muted)!important;font-weight:500!important;font-size:13px!important}
+body.sv-dog .event-desc{color:var(--sv-ink-2)!important;font-weight:500!important;font-size:14px!important;border-top-color:var(--sv-line)!important}
+body.sv-dog .event-partner{background:var(--sv-gold-soft)!important;border:1px solid #ead9b9!important;color:var(--sv-gold-strong)!important;font-weight:600!important}
+
+/* ── Nekretnine ─────────────────────────────────────────────────── */
+body.sv-nek .direct-strip{background:var(--sv-surface)!important;border:1px solid var(--sv-line)!important;box-shadow:var(--sv-shadow)!important;border-radius:var(--sv-radius)!important}
+body.sv-nek .direct-strip p{color:var(--sv-ink-2)!important;font-weight:500!important;font-size:13.5px!important}
+body.sv-nek .direct-strip strong{color:var(--sv-ink)!important}
+body.sv-nek .section-divider .line{background:var(--sv-line-2)!important}
+body.sv-nek .section-divider span{color:var(--sv-muted)!important;font-weight:600!important;letter-spacing:0.08em!important;font-size:11px!important}
+body.sv-nek .prop-card{border:1px solid var(--sv-line)!important;border-radius:var(--sv-radius)!important;box-shadow:var(--sv-shadow)!important}
+body.sv-nek .prop-title{font-family:var(--sv-serif)!important;font-weight:600!important;color:var(--sv-ink)!important;font-size:1.3rem!important}
+body.sv-nek .prop-loc{color:var(--sv-muted)!important;font-weight:500!important;font-size:13px!important}
+body.sv-nek .prop-tag{background:var(--sv-surface-2)!important;border:1px solid var(--sv-line)!important;color:var(--sv-ink-2)!important;font-weight:500!important;font-size:12.5px!important}
+body.sv-nek .prop-desc{color:var(--sv-ink-2)!important;font-size:14px!important}
+body.sv-nek .prop-price{background:var(--sv-surface)!important;color:var(--sv-ink)!important;box-shadow:var(--sv-shadow-lift)!important;font-weight:700!important}
+body.sv-nek .prop-badge{background:rgba(21,32,43,0.72)!important;color:#fff!important;font-weight:600!important;letter-spacing:0.02em!important;text-transform:none!important;font-size:11px!important}
+body.sv-nek .btn-prop{font-size:14px!important;font-weight:600!important;letter-spacing:0!important;text-transform:none!important;border-radius:var(--sv-radius-sm)!important}
+body.sv-nek .btn-call{background:var(--sv-ink)!important;color:#fff!important}
+body.sv-nek .btn-wa{background:var(--sv-sage)!important}
+body.sv-nek .float-icon{animation:none!important}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SMEŠTAJ — svetli, urednički raspored; usklađeni font i akcenat
+   ═══════════════════════════════════════════════════════════════════ */
+body.sv-sme{background:var(--sv-bg)!important;color:var(--sv-ink)!important}
+body.sv-sme a{color:var(--sv-gold-strong)}
+body.sv-sme .wordmark{font-family:var(--sv-serif)!important;font-weight:600!important;letter-spacing:-0.01em!important}
+body.sv-sme .premium-pill,body.sv-sme .badge-premium{background:var(--sv-gold-soft)!important;border-color:#ead9b9!important;color:var(--sv-gold-strong)!important;
+  font-size:11px!important;font-weight:600!important;letter-spacing:0.02em!important;text-transform:none!important}
+body.sv-sme .hero-eyebrow{color:var(--sv-gold-strong)!important;font-weight:600!important;font-size:11px!important;letter-spacing:0.08em!important}
+body.sv-sme .hero h1{font-family:var(--sv-serif)!important;font-weight:500!important;letter-spacing:-0.015em!important}
+body.sv-sme .hero h1 em{color:var(--sv-gold-strong)!important}
+body.sv-sme .panel,body.sv-sme .card,body.sv-sme .booking-panel{border:1px solid var(--sv-line)!important;border-radius:var(--sv-radius)!important;box-shadow:var(--sv-shadow)!important}
+body.sv-sme .field label,body.sv-sme .field-lbl{font-size:12px!important;font-weight:600!important;letter-spacing:0.02em!important;text-transform:none!important;color:var(--sv-muted)!important}
+body.sv-sme input[type="range"]{accent-color:var(--sv-gold)!important}
+body.sv-sme .stepper .plus{background:var(--sv-gold-soft)!important;color:var(--sv-gold-strong)!important}
+body.sv-sme .chip{font-size:13px!important;font-weight:500!important;color:var(--sv-ink-2)!important}
+body.sv-sme .chip.active{background:var(--sv-gold-soft)!important;border-color:#ead9b9!important;color:var(--sv-gold-strong)!important}
+body.sv-sme .card-loc{font-size:11px!important;font-weight:600!important;letter-spacing:0.06em!important;color:var(--sv-muted)!important}
+body.sv-sme .card-name{font-family:var(--sv-serif)!important;font-weight:600!important;font-size:1.25rem!important;letter-spacing:-0.01em!important}
+body.sv-sme .card-hl{font-size:13px!important;font-weight:500!important;color:var(--sv-muted)!important}
+body.sv-sme .card-meta{font-size:12.5px!important;font-weight:500!important;color:var(--sv-ink-2)!important}
+body.sv-sme .card-price,body.sv-sme .bp-price{color:var(--sv-ink)!important;font-weight:700!important}
+body.sv-sme .bp-cta{background:var(--sv-ink)!important;color:#fff!important;font-size:15px!important;font-weight:600!important;
+  letter-spacing:0!important;text-transform:none!important;border-radius:var(--sv-radius-md)!important}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RADAR — mapa; zaglavlje, filteri i donji panel usklađeni
+   (markeri na mapi namerno ostaju upadljivi)
+   ═══════════════════════════════════════════════════════════════════ */
+body.sv-radar{background:var(--sv-bg)!important;font-family:var(--sv-sans)!important}
+body.sv-radar .header{background:radial-gradient(120% 90% at 90% -20%,rgba(226,191,124,0.16),transparent 55%),
+  linear-gradient(165deg,#15202b 0%,#1b2935 100%)!important}
+body.sv-radar .header h1{font-family:var(--sv-serif)!important;font-weight:600!important;font-size:1.6rem!important;letter-spacing:-0.015em!important}
+body.sv-radar .header p{font-size:13px!important;font-weight:500!important;letter-spacing:0!important;text-transform:none!important;color:var(--sv-on-night-2)!important}
+body.sv-radar .back-btn{background:rgba(255,255,255,0.06)!important;border:1px solid rgba(255,255,255,0.12)!important}
+body.sv-radar .filter-bar{background:var(--sv-surface)!important;border-bottom:1px solid var(--sv-line)!important}
+body.sv-radar .chip{font-size:13px!important;font-weight:500!important;background:var(--sv-surface-2)!important;border:1px solid var(--sv-line-2)!important;color:var(--sv-ink-2)!important}
+body.sv-radar .chip.active{background:var(--sv-ink)!important;border-color:var(--sv-ink)!important;color:#fff!important}
+body.sv-radar .chip.active.hh{background:var(--sv-terra)!important;border-color:var(--sv-terra)!important}
+body.sv-radar .chip.active.stamp{background:var(--sv-gold)!important;border-color:var(--sv-gold)!important;color:#fff!important}
+body.sv-radar .sheet-name{font-family:var(--sv-serif)!important;font-weight:600!important;font-size:1.4rem!important;letter-spacing:-0.015em!important}
+body.sv-radar .sheet-type{font-size:12px!important;font-weight:500!important;letter-spacing:0!important;text-transform:none!important;color:var(--sv-muted)!important}
+body.sv-radar .sheet-info{font-weight:500!important;color:var(--sv-ink-2)!important;font-size:14px!important}
+body.sv-radar .sheet-btn{background:var(--sv-ink)!important;font-size:15px!important;font-weight:600!important;letter-spacing:0!important;
+  text-transform:none!important;border-radius:var(--sv-radius-md)!important}
+body.sv-radar .sheet-btn.wa{background:var(--sv-sage)!important}
+body.sv-radar .sheet-btn.stamp-btn{background:var(--sv-gold)!important;color:#fff!important}
+body.sv-radar .sheet-promo-label{text-transform:none!important;letter-spacing:0.02em!important;font-weight:600!important;font-size:11.5px!important}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PEČAT / PROFIL PARTNERA — tamna varijanta sistema
+   ═══════════════════════════════════════════════════════════════════ */
+body.sv-stamp{background:radial-gradient(120% 60% at 90% -10%,rgba(226,191,124,0.14),transparent 55%),
+  linear-gradient(165deg,#15202b 0%,#1b2935 60%,#203140 100%)!important;background-attachment:fixed!important;
+  color:var(--sv-on-night)!important;font-family:var(--sv-sans)!important}
+body.sv-stamp .app{padding-top:64px!important}
+body.sv-stamp .lang-pills-bar{position:absolute!important;top:16px!important;right:16px!important}
+body.sv-stamp .card,body.sv-stamp .pub-card{background:rgba(255,255,255,0.04)!important;border:1px solid var(--sv-night-line)!important;border-radius:var(--sv-radius)!important}
+body.sv-stamp .gold-card{background:rgba(255,255,255,0.04)!important;border:1px solid rgba(226,191,124,0.28)!important;border-radius:var(--sv-radius)!important}
+body.sv-stamp .pub-offer{background:linear-gradient(160deg,rgba(226,191,124,0.16),rgba(226,191,124,0.06))!important;
+  border:1px solid rgba(226,191,124,0.35)!important;box-shadow:none!important;border-radius:var(--sv-radius)!important}
+body.sv-stamp .pub-offer-lbl,body.sv-stamp .pub-prices-lbl{text-transform:none!important;letter-spacing:0.02em!important;font-weight:600!important;
+  font-size:12px!important;color:var(--sv-gold-on-night)!important}
+body.sv-stamp .pub-offer-txt{font-family:var(--sv-serif)!important;font-weight:600!important;font-size:1.25rem!important;line-height:1.3!important}
+body.sv-stamp .pub-prices-txt{font-weight:500!important;color:var(--sv-on-night)!important}
+body.sv-stamp .pub-link,body.sv-stamp .pub-wa{background:rgba(255,255,255,0.04)!important;border:1px solid var(--sv-night-line)!important;border-radius:var(--sv-radius-md)!important}
+body.sv-stamp .pub-loyalty-banner{background:rgba(255,255,255,0.04)!important;border:1px solid rgba(226,191,124,0.25)!important;border-radius:var(--sv-radius)!important}
+body.sv-stamp .btn-gold,body.sv-stamp .btn-scan{background:var(--sv-gold)!important;color:#fff!important;text-transform:none!important;
+  letter-spacing:0!important;font-size:15px!important;font-weight:600!important;border-radius:var(--sv-radius-md)!important;box-shadow:none!important}
+body.sv-stamp .btn-ghost{border-radius:var(--sv-radius-md)!important;font-weight:600!important;font-size:14px!important}
+body.sv-stamp .tab-btn{text-transform:none!important;letter-spacing:0!important;font-weight:600!important;font-size:13px!important}
+body.sv-stamp .tab-btn.active{color:var(--sv-gold-on-night)!important;border-bottom-color:var(--sv-gold-on-night)!important}
+body.sv-stamp .progress-fill{background:linear-gradient(90deg,var(--sv-gold),var(--sv-gold-on-night))!important}
+body.sv-stamp .loc-name{font-weight:600!important}
+body.sv-stamp .form-label{text-transform:none!important;letter-spacing:0.02em!important;font-weight:600!important;font-size:12px!important}
+body.sv-stamp .form-input{font-weight:500!important;border-radius:var(--sv-radius-sm)!important}
