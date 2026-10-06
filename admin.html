@@ -1857,7 +1857,7 @@ function renderPartners(list){
         <td>${expiryBadge(p.subscription_expires)}<div style="font-size:9px;color:var(--muted);margin-top:3px">${fmtDate(p.subscription_expires)}</div></td>
         <td><label class="tog"><input type="checkbox" ${p.is_active?'checked':''} onchange="tog('${p.id}','is_active',this.checked)"><span class="tog-s"></span></label></td>
         <td>
-          ${(p.type==='apartment'||p.type==='hotel') ? `
+          ${['apartment','hotel','restaurant','business'].includes(p.type) ? `
           <label class="tog"><input type="checkbox" ${p.is_premium?'checked':''} onchange="togPremium('${p.id}',this.checked)"><span class="tog-s"></span></label>
           ` : `<span style="font-size:10px;color:var(--muted);font-weight:700">N/A</span>`}
         </td>
@@ -2072,11 +2072,13 @@ async function deleteProperty(id){
 }
 
 async function togPremium(id,val){
-  const {error} = await sb.from('partners').update({is_premium:val, loyalty_enabled:val}).eq('id',id);
-  if(error){ console.error('togPremium error:', error); return; }
-  // Ažuriraj lokalno
   const p = allPartners.find(x=>x.id===id);
-  if(p){ p.is_premium = val; p.loyalty_enabled = val; }
+  // Nagradna igra (loyalty_enabled) ide uz premium samo kod smeštaja
+  const isStay = !!p && (p.type==='apartment' || p.type==='hotel');
+  const upd = isStay ? {is_premium:val, loyalty_enabled:val} : {is_premium:val};
+  const {error} = await sb.from('partners').update(upd).eq('id',id);
+  if(error){ console.error('togPremium error:', error); return; }
+  if(p){ p.is_premium = val; if(isStay) p.loyalty_enabled = val; }
   renderPartners(getFilteredPartners());
 }
 
@@ -2156,7 +2158,10 @@ function openEdit(id){
   const premDesc = document.getElementById('edit-premium-desc');
   if(p.type==='apartment' || p.type==='hotel'){
     premWrap.style.display='block';
-    premDesc.textContent = 'Nagradna igra · VIP karta · Posebne pogodnosti · Room service · Instagram kampanja · Referral';
+    premDesc.textContent = 'Nagradna igra · Posebne pogodnosti · Room service · Instagram kampanja · Pozovi prijatelja';
+  } else if(p.type==='restaurant' || p.type==='business'){
+    premWrap.style.display='block';
+    premDesc.textContent = 'QR na stolu: meni, aktuelna ponuda i cenovnik vidljivi gostu čim skenira kod';
   } else {
     premWrap.style.display='none';
     // Za atrakcije i biznise - uvek isključi premium
@@ -2211,20 +2216,24 @@ async function saveEdit(){
     subscription_expires:expires,
     payment_status:document.getElementById('edit-paystatus').value,
     is_premium:document.getElementById('edit-premium').checked,
-    loyalty_enabled:document.getElementById('edit-premium').checked,
     has_booking:document.getElementById('edit-booking').checked,
     ...(()=>{
+      // Nagradna igra, preporuka i skrivanje konkurencije postoje samo za smeštaj;
+      // za ostale tipove ne šaljemo ta polja (forma može da drži vrednosti prethodnog partnera)
+      const t = document.getElementById('modal-edit').dataset.partnerType;
+      if(t!=='apartment' && t!=='hotel') return {};
       const isPrem = document.getElementById('edit-premium').checked;
       if(isPrem){
         return {
+          loyalty_enabled: true,
           referral_active: document.getElementById('edit-referral-active')?.checked||false,
           referral_code: (document.getElementById('edit-referral-code')?.value||'').trim().toUpperCase()||null,
           referral_discount: parseInt(document.getElementById('edit-referral-discount')?.value)||10,
           hide_competitors: document.getElementById('edit-hide-competitors')?.checked||false,
         };
       }
-      // Nije premium — ugasi referral i blackout, ali ne diraj kod
-      return { referral_active: false, hide_competitors: false };
+      // Nije premium — ugasi nagradnu igru, referral i blackout, ali ne diraj kod
+      return { loyalty_enabled: false, referral_active: false, hide_competitors: false };
     })(),
   };
   if(pin && pin.length===4) u.pin=pin;

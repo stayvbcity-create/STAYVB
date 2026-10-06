@@ -4,9 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>StayVB — Pečati</title>
-<link rel="manifest" href="./manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0f172a">
 <link rel="apple-touch-icon" href="icon192.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -96,6 +94,20 @@ body.translated-ltr,body.translated-rtl{margin-top:0!important}
 .pub-wa{display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:1.4rem;background:rgba(16,185,129,0.10);border:1px solid rgba(16,185,129,0.22);text-decoration:none;margin-bottom:12px}
 .pub-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);margin:8px 0 16px}
 .pub-loyalty-banner{background:linear-gradient(135deg,rgba(251,191,36,0.10),rgba(245,158,11,0.05));border:1px solid rgba(251,191,36,0.22);border-radius:1.5rem;padding:20px;text-align:center;margin-bottom:12px}
+
+html{background:#16222e}
+body.sv-stamp{background-attachment:scroll!important}
+/* ── Danas u Banji ── */
+.today-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:22px;padding:18px;margin-bottom:12px}
+.today-head{font-family:'Fraunces',Georgia,serif;font-size:1.3rem;font-weight:600;margin-bottom:6px;color:#f4f1ea}
+.today-item{padding:11px 0;border-top:1px solid rgba(255,255,255,0.08)}
+.today-item:first-of-type{border-top:none}
+.today-when{font-size:12px;font-weight:600;color:#e2bf7c;letter-spacing:.02em}
+.today-title{font-size:15px;font-weight:600;color:#f4f1ea;margin-top:3px}
+.today-loc{font-size:12.5px;color:rgba(244,241,234,0.68);margin-top:3px}
+.today-empty{font-size:13.5px;color:rgba(244,241,234,0.68);padding:4px 0 8px}
+.today-links{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.today-links a{display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:#f4f1ea;font-size:13px;font-weight:600;text-decoration:none}
 </style>
 </head>
 <body class="sv sv-stamp">
@@ -407,7 +419,7 @@ async function renderPublicViewByCode(partnerCode, isGuest, stampResult){
   screen.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh"><div style="width:36px;height:36px;border:3px solid rgba(255,255,255,0.08);border-top-color:#fbbf24;border-radius:50%;animation:spin 0.8s linear infinite"></div></div>`;
 
   const {data:p} = await sb.from('partners')
-    .select('id,name,type,phone,whatsapp,google_review_url')
+    .select('id,name,type,phone,whatsapp,google_review_url,is_premium')
     .eq('partner_code', partnerCode)
     .eq('is_active', true)
     .maybeSingle();
@@ -444,7 +456,7 @@ async function renderPublicView(locationCode, isGuest, stampResult){
   }
 
   const {data:p} = await sb.from('partners')
-    .select('id,name,type,phone,whatsapp,google_review_url')
+    .select('id,name,type,phone,whatsapp,google_review_url,is_premium')
     .eq('id', loc.partner_id)
     .eq('is_active', true)
     .maybeSingle();
@@ -463,6 +475,8 @@ async function renderPublicViewWithPartner(p, c, isGuest, stampResult){
   const ICONS = {hotel:'🏨',restaurant:'🍽️',attraction:'🎡',business:'🛍️',apartment:'🏠'};
   const LABELS = {hotel:'Hotel',restaurant:'Restoran',attraction:'Atrakcija',business:'Biznis',apartment:'Apartman'};
   const activeOffer = c.current_offer || c.extra_offer;
+  // Meni, ponuda i cenovnik restorana i malih biznisa vide se samo uz premium
+  const showContent = !['restaurant','business'].includes(p.type) || p.is_premium === true;
 
   let html = '';
 
@@ -489,7 +503,7 @@ async function renderPublicViewWithPartner(p, c, isGuest, stampResult){
       </div>
     </div>`;
 
-  if(activeOffer){
+  if(showContent && activeOffer){
     const offerLabel = {restaurant:'🔥 Aktuelna ponuda',business:'🎯 Posebna promocija',attraction:'✨ Posebna ponuda'}[p.type]||'🎯 Ponuda';
     html += `<div class="pub-offer">
       <div class="pub-offer-lbl">${offerLabel}</div>
@@ -498,7 +512,7 @@ async function renderPublicViewWithPartner(p, c, isGuest, stampResult){
     </div>`;
   }
 
-  if(c.service_prices){
+  if(showContent && c.service_prices){
     const priceLabel = {restaurant:'🍽️ Meni i cene',business:'📋 Naše usluge',attraction:'🎟️ Cene ulaznica'}[p.type]||'📋 Cenovnik';
     html += `<div class="pub-card">
       <div class="pub-prices-lbl">${priceLabel}</div>
@@ -506,7 +520,7 @@ async function renderPublicViewWithPartner(p, c, isGuest, stampResult){
     </div>`;
   }
 
-  if(c.menu_url){
+  if(showContent && c.menu_url){
     const menuLabel = {restaurant:'🍽️ Pogledaj meni',business:'📋 Pogledaj ponudu',attraction:'🎟️ Cene i informacije'}[p.type]||'🔗 Više informacija';
     html += `<a href="${c.menu_url}" target="_blank" rel="noopener" class="pub-link">
       <span style="font-size:1.4rem">🔗</span>
@@ -535,6 +549,7 @@ async function renderPublicViewWithPartner(p, c, isGuest, stampResult){
     </a>`;
   }
 
+  html += await renderTodayInBanja();
   html += `<div class="pub-divider"></div>`;
 
   if(isGuest){
@@ -553,6 +568,36 @@ async function renderPublicViewWithPartner(p, c, isGuest, stampResult){
   }
 
   document.getElementById('main-screen').innerHTML = html;
+}
+
+// Šta se dešava u Banji danas i narednih dana — za gosta za stolom
+async function renderTodayInBanja(){
+  const today = new Date().toLocaleDateString('sv-SE');
+  const until = new Date(Date.now() + 3 * 864e5).toLocaleDateString('sv-SE');
+  let events = [];
+  try{
+    const { data } = await sb.from('events').select('title,event_date,event_time,location')
+      .eq('is_active', true).gte('event_date', today).lte('event_date', until)
+      .order('event_date').order('event_time', { nullsFirst: true }).limit(4);
+    events = data || [];
+  }catch(e){}
+  const dayLabel = d => d === today ? 'Danas'
+    : new Date(d + 'T12:00').toLocaleDateString('sr-Latn-RS', { weekday:'short', day:'numeric', month:'short' });
+  const list = events.length ? events.map(e => `
+      <div class="today-item">
+        <div class="today-when">${dayLabel(e.event_date)}${e.event_time ? ' · ' + esc(String(e.event_time).slice(0,5)) : ''}</div>
+        <div class="today-title">${esc(e.title)}</div>
+        ${e.location ? `<div class="today-loc">📍 ${esc(e.location)}</div>` : ''}
+      </div>`).join('')
+    : '<div class="today-empty">Pogledajte šta još nudi Banja.</div>';
+  return `<div class="today-card">
+      <div class="today-head">Danas u Banji</div>
+      ${list}
+      <div class="today-links">
+        <a href="atrakcije.html">🎡 Atrakcije</a><a href="happy-hour.html">🍹 Happy Hour</a>
+        <a href="dogadjaji.html">🎸 Događaji</a><a href="radar.html">📡 Radar</a>
+      </div>
+    </div>`;
 }
 
 function enterLoyalty(){
