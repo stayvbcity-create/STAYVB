@@ -108,6 +108,54 @@ body.sv-stamp{background-attachment:scroll!important}
 .today-empty{font-size:13.5px;color:rgba(244,241,234,0.68);padding:4px 0 8px}
 .today-links{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
 .today-links a{display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:#f4f1ea;font-size:13px;font-weight:600;text-decoration:none}
+/* ── Ostanite večeras ── */
+.tn{position:relative;margin:0 -20px 14px;padding:22px 0 18px;background:radial-gradient(120% 90% at 85% 0%,rgba(226,191,124,0.16),transparent 60%),linear-gradient(180deg,#1b2a3a,#121c26);border-top:1px solid rgba(226,191,124,0.22);border-bottom:1px solid rgba(226,191,124,0.22)}
+.tn-head{padding:0 20px}
+.tn-kicker{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#e2bf7c}
+.tn-title{font-family:'Fraunces',Georgia,serif;font-size:1.65rem;font-weight:600;color:#f4f1ea;line-height:1.15;margin:6px 0 6px;letter-spacing:-.01em}
+.tn-sub{font-size:13.5px;line-height:1.55;color:rgba(244,241,234,0.72);margin:0}
+.tn-row{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 20px;padding:16px 20px 6px;scrollbar-width:none}
+.tn-row::-webkit-scrollbar{display:none}
+.tn-stay{flex:0 0 80%;max-width:300px;scroll-snap-align:start;background:#f6f3ee;color:#15202b;border-radius:20px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,0.35);display:flex;flex-direction:column}
+.tn-stay:only-child{flex-basis:100%;max-width:none}
+.tn-photo{position:relative;height:150px;background:#2a3846}
+.tn-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.tn-badge{position:absolute;top:10px;left:10px;background:#b5552f;color:#fff;font-size:12px;font-weight:800;padding:5px 10px;border-radius:999px;letter-spacing:.02em}
+.tn-type{position:absolute;top:10px;right:10px;background:rgba(21,32,43,0.72);color:#f4f1ea;font-size:11px;font-weight:600;padding:4px 9px;border-radius:999px;backdrop-filter:blur(6px)}
+.tn-body{padding:14px 15px 15px;display:flex;flex-direction:column;flex:1}
+.tn-name{font-family:'Fraunces',Georgia,serif;font-size:1.12rem;font-weight:600;line-height:1.2}
+.tn-meta{font-size:12.5px;color:#5b6670;margin-top:4px}
+.tn-price{display:flex;align-items:baseline;gap:8px;margin:12px 0 12px}
+.tn-now{font-size:1.35rem;font-weight:800;color:#15202b;letter-spacing:-.01em}
+.tn-was{font-size:13px;color:#8a929a;text-decoration:line-through}
+.tn-per{font-size:12px;color:#5b6670}
+.tn-btn{margin-top:auto;width:100%;padding:13px;border:none;border-radius:14px;background:#15202b;color:#f6f3ee;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.tn-btn:active{transform:scale(.98)}
+.tn-acts{margin:12px 20px 0;padding:14px 16px;border-radius:18px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09)}
+.tn-acts-h{font-size:13px;font-weight:700;color:#e2bf7c;margin-bottom:4px}
+.tn-act{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid rgba(255,255,255,0.07);font-size:13px}
+.tn-act:first-of-type{border-top:none}
+.tn-act-n{color:#f4f1ea;font-weight:600}
+.tn-act-s{color:rgba(244,241,234,0.6);font-size:12px;margin-top:2px}
+.tn-act-p{text-align:right;white-space:nowrap;color:#f4f1ea;font-weight:700}
+.tn-act-p s{display:block;color:rgba(244,241,234,0.45);font-weight:500;font-size:11.5px}
+.tn-foot{font-size:12px;color:rgba(244,241,234,0.5);padding:12px 20px 0;line-height:1.5}
+/* zahtev */
+#tn-sheet{display:none;position:fixed;inset:0;z-index:9996;background:rgba(10,16,22,0.72);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center}
+#tn-sheet.open{display:flex}
+.tn-panel{width:100%;max-width:430px;max-height:92vh;overflow-y:auto;background:#f6f3ee;color:#15202b;border-radius:26px 26px 0 0;padding:22px 20px 30px;animation:sheetUp .32s cubic-bezier(0.22,1,0.36,1)}
+.tn-panel h3{font-family:'Fraunces',Georgia,serif;font-size:1.35rem;font-weight:600;margin:0 0 4px}
+.tn-panel .tn-lbl{display:block;font-size:12px;font-weight:700;color:#5b6670;margin:14px 0 6px}
+.tn-panel input,.tn-panel select{width:100%;padding:13px 14px;border:1px solid #d9d2c5;border-radius:12px;background:#fff;color:#15202b;font-family:inherit;font-size:15px;outline:none}
+.tn-panel input:focus,.tn-panel select:focus{border-color:#b4873b}
+.tn-opt{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid #e3ddd1;border-radius:12px;background:#fff;margin-bottom:6px;font-size:13.5px;cursor:pointer}
+.tn-opt input{width:18px;height:18px;accent-color:#2f6b57;flex-shrink:0}
+.tn-opt b{margin-left:auto;white-space:nowrap}
+.tn-send{width:100%;margin-top:18px;padding:15px;border:none;border-radius:14px;background:#2f6b57;color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer}
+.tn-send:disabled{opacity:.6}
+.tn-err{color:#b5552f;font-size:13px;font-weight:600;min-height:18px;margin-top:8px}
+.tn-wa{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:16px;padding:15px;border-radius:14px;background:#25d366;color:#fff;font-weight:700;font-size:15px;text-decoration:none}
+.tn-x{position:absolute;right:16px;top:14px;width:34px;height:34px;border-radius:50%;border:none;background:#ebe5da;color:#15202b;font-size:15px;cursor:pointer}
 </style>
 </head>
 <body class="sv sv-stamp">
@@ -137,6 +185,11 @@ body.sv-stamp{background-attachment:scroll!important}
     </div>
     <button class="btn-gold" id="email-submit-btn" onclick="submitEmail()" style="margin-top:20px">Potvrdi i nastavi →</button>
   </div>
+</div>
+
+<!-- Ostanite večeras: zahtev -->
+<div id="tn-sheet" onclick="if(event.target===this)closeTonight()">
+  <div class="tn-panel" style="position:relative" id="tn-panel"></div>
 </div>
 
 <!-- Scanner Modal -->
@@ -550,6 +603,7 @@ async function renderPublicViewWithPartner(p, c, isGuest, stampResult){
   }
 
   html += await renderTodayInBanja();
+  if(p.type === 'restaurant' && p.is_premium === true) html += await renderTonight(p);
   html += `<div class="pub-divider"></div>`;
 
   if(isGuest){
@@ -598,6 +652,119 @@ async function renderTodayInBanja(){
         <a href="dogadjaji.html">🎸 Događaji</a><a href="radar.html">📡 Radar</a>
       </div>
     </div>`;
+}
+
+// ── Ostanite večeras: slobodan smeštaj za noćas, za goste koji su tu samo na dan ──
+let TONIGHT = null;
+const rsd = n => (Number(n)||0).toLocaleString('sr-RS') + ' RSD';
+const waNum = ph => String(ph||'').replace(/\D/g,'').replace(/^0/,'381');
+
+async function renderTonight(p){
+  let d = null;
+  try{
+    const { data } = await sb.rpc('tonight_offers', { p_restaurant_id: p.id, p_guest_token: C.getOrCreateGuestToken() });
+    d = data;
+  }catch(e){}
+  if(!d || d.state !== 'offered' || !(d.stays||[]).length) return '';
+  TONIGHT = Object.assign(d, { restaurant_id: p.id });
+
+  const stays = d.stays.map((s, i) => {
+    const off = s.regular_price ? Math.round((1 - s.price / s.regular_price) * 100) : 0;
+    const photo = (s.photos||[]).find(Boolean);
+    const meta = [s.location_label, s.guests ? `do ${s.guests} osobe` : '', s.type === 'apartment' && s.bedrooms ? `${s.bedrooms} spav.` : '']
+      .filter(Boolean).map(esc).join(' · ');
+    return `<div class="tn-stay">
+      <div class="tn-photo">
+        ${photo ? `<img src="${esc(photo)}" alt="" loading="lazy">` : ''}
+        ${off > 0 ? `<span class="tn-badge">−${off}% noćas</span>` : ''}
+        <span class="tn-type">${s.type === 'hotel' ? 'Hotel' : 'Apartman'}</span>
+      </div>
+      <div class="tn-body">
+        <div class="tn-name">${esc(s.title)}</div>
+        ${meta ? `<div class="tn-meta">${meta}</div>` : ''}
+        ${s.highlight ? `<div class="tn-meta">${esc(s.highlight)}</div>` : ''}
+        <div class="tn-price"><span class="tn-now">${rsd(s.price)}</span>${s.regular_price ? `<span class="tn-was">${rsd(s.regular_price)}</span>` : ''}<span class="tn-per">/ noć</span></div>
+        <button class="tn-btn" onclick="openTonight(${i})">Ostajem noćas</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  const acts = (d.activities||[]).length ? `<div class="tn-acts">
+      <div class="tn-acts-h">Sutra, uz noćenje — po nižoj ceni</div>
+      ${d.activities.map(a => `<div class="tn-act">
+        <div><div class="tn-act-n">${esc(a.resource_name)}</div><div class="tn-act-s">${esc(a.attraction_name)}${a.time_from ? ' · ' + esc(a.time_from) + (a.time_to && a.time_to !== a.time_from ? '–' + esc(a.time_to) : '') : ''}</div></div>
+        <div class="tn-act-p">${rsd(a.price)}${a.regular_price > a.price ? `<s>${rsd(a.regular_price)}</s>` : ''}</div>
+      </div>`).join('')}
+    </div>` : '';
+
+  return `<section class="tn">
+    <div class="tn-head">
+      <div class="tn-kicker">🌙 Samo za goste za stolom</div>
+      <div class="tn-title">Ostanite večeras u Banji</div>
+      <p class="tn-sub">Ne žurite nazad. Ovi smeštaji su slobodni za noćas i nude vam nižu cenu — večera, šetnja, a sutra bez gužve na putu.</p>
+    </div>
+    <div class="tn-row">${stays}</div>
+    ${acts}
+    <div class="tn-foot">Plaćate direktno domaćinu. Zahtev ne obavezuje dok ga domaćin ne potvrdi.</div>
+  </section>`;
+}
+
+function openTonight(i){
+  const s = TONIGHT?.stays?.[i];
+  if(!s) return;
+  const acts = TONIGHT.activities || [];
+  const maxG = Math.max(1, Math.min(s.guests || 4, 8));
+  document.getElementById('tn-panel').innerHTML = `
+    <button class="tn-x" onclick="closeTonight()" aria-label="Zatvori">✕</button>
+    <h3>${esc(s.title)}</h3>
+    <div class="tn-meta">Noćas · ${rsd(s.price)}${s.regular_price ? ` <s style="color:#8a929a">${rsd(s.regular_price)}</s>` : ''} / noć</div>
+    <label class="tn-lbl" for="tn-name">Ime i prezime</label>
+    <input id="tn-name" autocomplete="name" placeholder="npr. Marko Marković">
+    <label class="tn-lbl" for="tn-phone">Telefon (Viber / WhatsApp)</label>
+    <input id="tn-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="06x xxx xxxx">
+    <label class="tn-lbl" for="tn-guests">Koliko vas je</label>
+    <select id="tn-guests">${Array.from({length:maxG}, (_, k) => `<option value="${k+1}" ${k+1 === Math.min(2, maxG) ? 'selected' : ''}>${k+1}</option>`).join('')}</select>
+    ${acts.length ? `<label class="tn-lbl">Sutra uz noćenje (nije obavezno)</label>
+      <label class="tn-opt"><input type="radio" name="tn-act" value="" checked> Bez aktivnosti</label>
+      ${acts.map(a => `<label class="tn-opt"><input type="radio" name="tn-act" value="${esc(a.resource_id)}"> <span>${esc(a.resource_name)}<br><small style="color:#5b6670">${esc(a.attraction_name)}</small></span><b>${rsd(a.price)}</b></label>`).join('')}` : ''}
+    <button class="tn-send" id="tn-send" onclick="sendTonight(${i})">Pošalji zahtev domaćinu</button>
+    <div class="tn-err" id="tn-err"></div>`;
+  document.getElementById('tn-sheet').classList.add('open');
+}
+
+function closeTonight(){ document.getElementById('tn-sheet').classList.remove('open'); }
+
+async function sendTonight(i){
+  const s = TONIGHT.stays[i];
+  const name = document.getElementById('tn-name').value.trim();
+  const phone = document.getElementById('tn-phone').value.trim();
+  const guests = parseInt(document.getElementById('tn-guests').value) || 2;
+  const act = document.querySelector('input[name="tn-act"]:checked')?.value || null;
+  const err = document.getElementById('tn-err');
+  if(!name || phone.replace(/\D/g,'').length < 6){ err.textContent = 'Upišite ime i broj telefona.'; return; }
+  const btn = document.getElementById('tn-send');
+  btn.disabled = true; btn.textContent = 'Šaljem…'; err.textContent = '';
+  let res = null;
+  try{
+    const { data, error } = await sb.rpc('request_tonight_stay', {
+      p_restaurant_id: TONIGHT.restaurant_id, p_listing_id: s.listing_id, p_name: name,
+      p_phone: phone, p_guests: guests, p_resource_id: act });
+    if(!error) res = data;
+  }catch(e){}
+  if(!res?.ok){
+    btn.disabled = false; btn.textContent = 'Pošalji zahtev domaćinu';
+    err.textContent = res?.msg || 'Zahtev nije poslat. Pokušajte ponovo.';
+    return;
+  }
+  const actName = act ? (TONIGHT.activities.find(a => a.resource_id === act)?.resource_name || '') : '';
+  const text = `Zdravo! Upravo sam preko StayVB poslao/la zahtev za noćas: ${s.title}, ${rsd(s.price)}, ${guests} os.${actName ? ' Sutra i: ' + actName + '.' : ''} Ime: ${name}.`;
+  document.getElementById('tn-panel').innerHTML = `
+    <button class="tn-x" onclick="closeTonight()" aria-label="Zatvori">✕</button>
+    <div style="font-size:2.4rem;margin-bottom:6px">🌙</div>
+    <h3>Zahtev je poslat</h3>
+    <p style="font-size:14px;line-height:1.6;color:#3d4852;margin:6px 0 0">Domaćin <b>${esc(res.host_name || s.title)}</b> vam se javlja na ${esc(phone)} da potvrdi noćenje. Ako želite brže — javite se odmah:</p>
+    ${res.host_phone ? `<a class="tn-wa" href="https://wa.me/${waNum(res.host_phone)}?text=${encodeURIComponent(text)}" target="_blank" rel="noopener">💬 Piši domaćinu na WhatsApp</a>
+    <a href="tel:${esc(res.host_phone)}" style="display:block;text-align:center;margin-top:12px;color:#15202b;font-weight:700;font-size:14px">📞 ${esc(res.host_phone)}</a>` : ''}`;
 }
 
 function enterLoyalty(){
