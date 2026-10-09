@@ -8,9 +8,9 @@
 <meta name="theme-color" content="#16222e">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
 <style>
-html,body{margin:0;height:100%;background:#0d151c;overflow:hidden;font-family:Inter,system-ui,sans-serif;color:#f4f1ea;-webkit-font-smoothing:antialiased}
+html,body{margin:0;height:100%;background:#0d151c;overflow:hidden;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#f4f1ea;-webkit-font-smoothing:antialiased}
 #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
 canvas{display:block;box-shadow:0 30px 90px rgba(0,0,0,.5);cursor:pointer}
 .bar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;
@@ -32,8 +32,8 @@ canvas{display:block;box-shadow:0 30px 90px rgba(0,0,0,.5);cursor:pointer}
 <div class="bar" id="bar">
   <button id="b-play" aria-label="Pusti ili pauziraj"></button>
   <button id="b-restart" aria-label="Od početka"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button>
-  <input type="range" id="seek" min="0" max="45" step="0.01" value="0" aria-label="Vreme">
-  <span class="time" id="time">0:00 / 0:45</span>
+  <input type="range" id="seek" min="0" max="64" step="0.01" value="0" aria-label="Vreme">
+  <span class="time" id="time">0:00 / 1:04</span>
   <button id="b-full" aria-label="Ceo ekran"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg></button>
 </div>
 
@@ -43,7 +43,25 @@ canvas{display:block;box-shadow:0 30px 90px rgba(0,0,0,.5);cursor:pointer}
    funkcije render(t), pa pauza i premotavanje rade u svakom trenutku.
    Parametri: ?t=12 (početak), ?pause=1, ?loop=1 (za ekrane u holu)
    ═══════════════════════════════════════════════════════════════════ */
-const W = 1600, H = 900, DUR = 45;
+const W = 1600, H = 900, DUR = 64;
+/* Vremenska mapa: prava sekunda -> sekunda koreografije. Delovi u kojima
+   publika čita teče sporije, pa tekst ostaje duže na ekranu. */
+const WARP = [
+  [0, 0], [4.5, 3.8], [7.5, 4.8], [8.3, 5.6],                // uvod
+  [13.0, 9.7], [16.5, 11.0], [17.1, 11.6],                     // problem
+  [22.6, 17.3], [25.6, 17.6], [26.2, 18.2],                    // jedan sken
+  [33.5, 25.2], [34.3, 25.7], [38.3, 28.0], [39.4, 29.4],      // mreža
+  [44.5, 34.2], [49.5, 37.6], [50.1, 38.2],                    // svi zarađuju
+  [55.0, 41.9], [57.5, 42.4], [58.0, 42.9],                    // ostanite večeras
+  [61.0, 44.5], [64.0, 45.0],                                  // kraj
+];
+function warp(t) {
+  for (let i = 1; i < WARP.length; i++) {
+    const [n1, o1] = WARP[i - 1], [n2, o2] = WARP[i];
+    if (t <= n2) return o1 + (o2 - o1) * ((t - n1) / (n2 - n1));
+  }
+  return WARP[WARP.length - 1][1];
+}
 const ON = '#f4f1ea', ON2 = 'rgba(244,241,234,0.68)', GOLD = '#e2bf7c', GOLD_D = '#b4873b';
 const TERRA = '#e8946c', SAGE = '#7cc4a6', CREAM = '#d6dde6';
 const TYPE = {
@@ -95,7 +113,7 @@ function rr(x, y, w, h, r) {
   ctx.closePath();
 }
 function font(size, serif, weight) {
-  return `${weight || (serif ? 600 : 500)} ${size}px ${serif ? 'Fraunces, Georgia, serif' : 'Inter, system-ui, sans-serif'}`;
+  return `${weight || (serif ? 600 : 500)} ${size}px ${serif ? "'Playfair Display', Georgia, serif" : "'Plus Jakarta Sans', system-ui, sans-serif"}`;
 }
 function txt(s, x, y, o = {}) {
   const { size = 32, serif = false, weight, color = ON, align = 'left', a = 1, ls = 0, base = 'alphabetic' } = o;
@@ -191,6 +209,10 @@ function iconSpark(x, y, s, col) {
   ctx.closePath(); ctx.fill();
   ctx.restore();
 }
+function iconStay(x, y, s, col) {
+  iconHotel(x - s * .2, y, s * .78, col);
+  iconHouse(x + s * .36, y + s * .16, s * .5, col, 0);
+}
 function iconGuest(x, y, s, col) {
   ctx.save(); ctx.translate(x, y); ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = s * .08;
   ctx.beginPath(); ctx.arc(0, -s * .2, s * .17, 0, Math.PI * 2); ctx.fill();
@@ -284,7 +306,7 @@ function scene1(t) {
 // ═══════════════════════════════════════════════════════════════════
 const S2 = {
   places: [
-    { type: 'H', x: 250, y: 610, label: 'Vaš hotel' },
+    { type: 'S', x: 250, y: 610, label: 'Hotel ili apartman' },
     { type: 'R', x: 700, y: 450, label: 'Restoran' },
     { type: 'A', x: 1040, y: 650, label: 'Atrakcija' },
     { type: 'E', x: 1370, y: 450, label: 'Događaj' },
@@ -323,7 +345,7 @@ function scene2(t) {
     const k = eback(seg(t, 5.8 + i * .2, 6.4 + i * .2));
     if (k <= 0) return;
     const hit = i > 0 ? seg(t, S2.legs[i - 1].b, S2.legs[i - 1].b + .8) : 0;
-    const col = i === 0 ? GOLD : TYPE[p.type].col;
+    const col = p.type === 'S' ? GOLD : TYPE[p.type].col;
     ctx.save(); ctx.translate(p.x, p.y); ctx.scale(k, k);
     ctx.fillStyle = 'rgba(255,255,255,.05)'; ctx.strokeStyle = rgba(col.startsWith('#') ? col : '#e2bf7c', .35); ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(0, 0, 62, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
@@ -331,7 +353,7 @@ function scene2(t) {
       ctx.strokeStyle = rgba(col, 1 - hit); ctx.lineWidth = 3;
       ctx.beginPath(); ctx.arc(0, 0, 62 + hit * 40, 0, Math.PI * 2); ctx.stroke();
     }
-    typeIcon(p.type, 0, 0, 60, col, t);
+    if (p.type === 'S') iconStay(0, 0, 66, col); else typeIcon(p.type, 0, 0, 60, col, t);
     ctx.restore();
     txt(p.label, p.x, p.y + 100, { size: 22, align: 'center', color: ON2, a: k });
   });
@@ -360,16 +382,16 @@ function scene2(t) {
   // brojač hotela
   const km = eo(seg(t, 8.6, 9.3));
   ctx.save(); ctx.globalAlpha *= km;
-  rr(110, 735, 330, 110, 20); ctx.fillStyle = 'rgba(255,255,255,.05)'; ctx.fill();
+  rr(110, 735, 380, 110, 20); ctx.fillStyle = 'rgba(255,255,255,.05)'; ctx.fill();
   ctx.strokeStyle = 'rgba(232,148,108,.45)'; ctx.lineWidth = 1.5; ctx.stroke();
   ctx.restore();
-  txt('Hotel zaradi od tog gosta u gradu', 135, 772, { size: 17, color: ON2, a: km });
-  txt('0 RSD', 135, 825, { size: 44, serif: true, color: TERRA, a: km });
+  txt('Smeštaj zaradi od tog gosta u gradu', 135, 772, { size: 17, color: ON2, a: km });
+  txt('0 RSD', 135, 825, { size: 42, weight: 700, color: TERRA, a: km });
   // tekst
   const k1 = eo(seg(t, 5.9, 6.7));
   txt('Gost ceo dan troši po gradu.', 110, 160 + (1 - k1) * 20, { size: 56, serif: true, a: k1 });
   const k2 = eo(seg(t, 9.0, 9.7));
-  txt('A hotel koji ga je doveo — nema ništa od toga.', 110, 222 + (1 - k2) * 16, { size: 30, color: TERRA, a: k2, weight: 600 });
+  txt('A smeštaj koji ga je doveo — nema ništa od toga.', 110, 222 + (1 - k2) * 16, { size: 30, color: TERRA, a: k2, weight: 600 });
   ctx.restore();
 }
 
@@ -418,12 +440,12 @@ function phoneScreen(t, sx, sy, sw, sh) {
   const hg = ctx.createLinearGradient(sx, sy, sx + sw, sy + 170);
   hg.addColorStop(0, '#15202b'); hg.addColorStop(1, '#203140');
   ctx.save(); rr(sx, sy - 30, sw, 200, 26); ctx.fillStyle = hg; ctx.fill(); ctx.restore();
-  txt('Vaš Hotel', sx + sw / 2, sy + 98, { size: 30, serif: true, align: 'center' });
+  txt('Vaš smeštaj', sx + sw / 2, sy + 98, { size: 30, serif: true, align: 'center' });
   const li = Math.floor(Math.max(0, t - 14) / .55) % LANGS.length;
   const lk = frac(Math.max(0, t - 14) / .55);
   txt(LANGS[li], sx + sw / 2, sy + 130, { size: 15, align: 'center', color: GOLD, a: Math.min(1, lk * 5, (1 - lk) * 5), weight: 600 });
   const cards = [
-    { y: 188, h: 58, dark: false, title: 'WiFi · VasHotel-Gosti', btn: 'Kopiraj' },
+    { y: 188, h: 58, dark: false, title: 'WiFi · Gosti-WiFi', btn: 'Kopiraj' },
     { y: 256, h: 92, dark: true, title: 'Istraži Banju', sub: 'Radar · Događaji · Atrakcije' },
     { y: 358, h: 66, dark: false, title: 'Happy Hour uživo', dot: TERRA },
     { y: 434, h: 74, dark: true, title: 'Ostanite još jednu noć', gold: true },
@@ -495,8 +517,8 @@ function scene3(t) {
   // tekst desno
   const lines = [
     { s: 'Jedan sken.', at: 15.0, y: 340, o: { size: 66, serif: true } },
-    { s: 'Bez instalacije i bez naloga.', at: 15.6, y: 410, o: { size: 30, color: ON2 } },
-    { s: 'Na jeziku gosta — šest jezika.', at: 16.1, y: 458, o: { size: 30, color: ON2 } },
+    { s: 'Instalacija bez Play prodavnice.', at: 15.6, y: 410, o: { size: 30, color: ON2 } },
+    { s: 'Bez naloga, na jeziku gosta.', at: 16.1, y: 458, o: { size: 30, color: ON2 } },
     { s: 'Ceo grad u džepu.', at: 16.7, y: 560, o: { size: 48, serif: true, color: GOLD } },
   ];
   for (const l of lines) {
@@ -595,10 +617,10 @@ function drawNetwork(t, alpha, opt = {}) {
     const n = nodes.filter(m => t >= m.spawn).length, links = n * (n - 1) / 2;
     const ck = eo(seg(t, 19.2, 19.8));
     txt('PARTNERA', 110, 742, { size: 15, color: ON2, ls: 2.5, weight: 600, a: ck });
-    txt(String(n), 110, 812, { size: 70, serif: true, a: ck });
+    txt(String(n), 110, 812, { size: 64, weight: 700, a: ck });
     txt('→', 255, 800, { size: 40, color: ON2, a: ck });
     txt('MOGUĆIH VEZA', 320, 742, { size: 15, color: ON2, ls: 2.5, weight: 600, a: ck });
-    txt(links.toLocaleString('sr-RS'), 320, 812, { size: 70, serif: true, color: GOLD, a: ck });
+    txt(links.toLocaleString('sr-RS'), 320, 812, { size: 64, weight: 700, color: GOLD, a: ck });
     // legenda
     ['H', 'R', 'A', 'E'].forEach((ty, i) => {
       const lk = eo(seg(t, 19.6 + i * .15, 20.2 + i * .15));
@@ -630,8 +652,8 @@ function scene4(t) {
 // ═══════════════════════════════════════════════════════════════════
 const CARDS = [
   { type: 'H', title: 'Hoteli i apartmani', items: ['Provizija od aktivnosti gostiju', 'Dodatne noći bez provizije', 'Direktne rezervacije preko preporuka'] },
-  { type: 'R', title: 'Restorani i kafići', items: ['Meni i ponuda na svakom stolu', 'Gost ostaje i na večeri', 'Novi gosti iz hotela'] },
-  { type: 'A', title: 'Atrakcije', items: ['Popunjeni prazni termini', 'Rezervacije i potvrda skenom', 'Gosti iz celog grada'] },
+  { type: 'R', title: 'Restorani i kafići', items: ['Zarada od gostiju iz hotela i apartmana', 'Više gostiju za stolom, veći račun', 'Meni i ponuda na svakom stolu'] },
+  { type: 'A', title: 'Atrakcije', items: ['Zarada od termina koji bi propali', 'Rezervacije gostiju iz celog grada', 'Naplata na licu mesta, potvrda skenom'] },
   { type: 'G', title: 'Gosti', items: ['Ceo grad na jednom mestu', 'Popusti i nagrade', 'Na svom jeziku, bez instalacije'] },
 ];
 function scene5(t) {
@@ -642,7 +664,7 @@ function scene5(t) {
   txt('Svi zarađuju.', 800, 168 + (1 - k0) * 20, { size: 84, serif: true, align: 'center', a: k0 });
   const k1 = eo(seg(t, 29.9, 30.6));
   txt('Svako dobija ono što mu je najvrednije.', 800, 222, { size: 26, align: 'center', color: ON2, a: k1 });
-  const x0 = 95, cw = 330, gap = 30, y0 = 282, ch = 430;
+  const x0 = 95, cw = 330, gap = 30, y0 = 258, ch = 474;
   CARDS.forEach((c, i) => {
     const st = 30.3 + i * .42;
     const k = eo(seg(t, st, st + .7));
@@ -656,6 +678,13 @@ function scene5(t) {
     ctx.fillStyle = rgba(col, .14); ctx.beginPath(); ctx.arc(x + 58, y + 68, 34, 0, Math.PI * 2); ctx.fill();
     if (c.type === 'G') iconGuest(x + 58, y + 68, 40, col); else typeIcon(c.type, x + 58, y + 68, 34, col, t);
     txt(c.title, x + 28, y + 150, { size: 30, serif: true });
+    if (c.type !== 'G') {
+      // novčić zarade koji iskače iznad kartice
+      const ek = seg(t, st + .5, st + 1.4);
+      const bob = Math.sin(t * 2.2 + i) * 3;
+      coin(x + cw - 54, y + 68 - eo(ek) * 10 + bob, 18, eo(ek));
+      txt('+', x + cw - 84, y + 60 - eo(ek) * 10 + bob, { size: 26, color: GOLD, a: eo(ek), weight: 700, align: 'center' });
+    }
     let yy = y + 205;
     c.items.forEach((it, j) => {
       const bk = eo(seg(t, st + .55 + j * .3, st + 1 + j * .3));
@@ -679,13 +708,13 @@ function scene5(t) {
   if (fk > 0) {
     ctx.save(); ctx.globalAlpha *= fk;
     ctx.strokeStyle = 'rgba(226,191,124,.25)'; ctx.lineWidth = 2; ctx.setLineDash([3, 10]);
-    ctx.beginPath(); ctx.moveTo(x0, 745); ctx.lineTo(x0 + 4 * cw + 3 * gap, 745); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(x0, 768); ctx.lineTo(x0 + 4 * cw + 3 * gap, 768); ctx.stroke(); ctx.setLineDash([]);
     for (let i = 0; i < 16; i++) {
       const u = frac(i / 16 + t * .07);
-      coin(x0 + u * (4 * cw + 3 * gap), 745 + Math.sin(u * Math.PI * 8 + i) * 4, 9, Math.sin(u * Math.PI));
+      coin(x0 + u * (4 * cw + 3 * gap), 768 + Math.sin(u * Math.PI * 8 + i) * 4, 9, Math.sin(u * Math.PI));
     }
     ctx.restore();
-    txt('Novac ostaje u gradu i kruži među partnerima.', 800, 800, { size: 26, align: 'center', color: GOLD, a: eo(seg(t, 33.5, 34.2)), weight: 600 });
+    txt('Novac ostaje u gradu i kruži među partnerima.', 800, 815, { size: 26, align: 'center', color: GOLD, a: eo(seg(t, 33.5, 34.2)), weight: 600 });
   }
   ctx.restore();
 }
@@ -801,19 +830,20 @@ function scene7(t) {
   const k2 = eo(seg(t, 43.4, 44.1));
   ctx.strokeStyle = GOLD; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.moveTo(800 - 170 * k2, 492); ctx.lineTo(800 + 170 * k2, 492); ctx.stroke();
-  txt('Svi zarađuju. Grad raste.', 800, 562, { size: 48, serif: true, align: 'center', a: k2 });
+  txt('Neka svaki gost u gradu zarađuje i za vas.', 800, 562, { size: 46, serif: true, align: 'center', a: k2 });
   const k3 = eo(seg(t, 43.9, 44.5));
-  txt('vb.staytag.rs   ·   Postanite partner', 800, 632, { size: 26, align: 'center', color: GOLD, a: k3, weight: 600, ls: .5 });
+  txt('Postanite partner već danas   ·   vb.staytag.rs', 800, 632, { size: 26, align: 'center', color: GOLD, a: k3, weight: 600, ls: .5 });
   ctx.restore();
 }
 
 // ═══════════════════════════════════════════════════════════════════
 // RENDER + KONTROLE
 // ═══════════════════════════════════════════════════════════════════
-function render(t) {
+function render(real) {
   ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
   ctx.globalAlpha = 1;
-  background(t);
+  background(real);
+  const t = warp(real);
   scene1(t);
   scene2(t);
   scene3(t);
@@ -892,8 +922,8 @@ addEventListener('keydown', e => {
 bPlay.innerHTML = ICON_PLAY;
 const fontsReady = Promise.race([
   Promise.all([
-    document.fonts.load('600 40px Fraunces'), document.fonts.load('500 20px Inter'),
-    document.fonts.load('600 20px Inter'), document.fonts.load('700 20px Inter'),
+    document.fonts.load("600 40px 'Playfair Display'"), document.fonts.load("500 20px 'Plus Jakarta Sans'"),
+    document.fonts.load("600 20px 'Plus Jakarta Sans'"), document.fonts.load("700 20px 'Plus Jakarta Sans'"),
   ]),
   new Promise(r => setTimeout(r, 2500)),
 ]);
