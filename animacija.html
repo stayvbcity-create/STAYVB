@@ -32,8 +32,8 @@ canvas{display:block;box-shadow:0 30px 90px rgba(0,0,0,.5);cursor:pointer}
 <div class="bar" id="bar">
   <button id="b-play" aria-label="Pusti ili pauziraj"></button>
   <button id="b-restart" aria-label="Od početka"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button>
-  <input type="range" id="seek" min="0" max="64" step="0.01" value="0" aria-label="Vreme">
-  <span class="time" id="time">0:00 / 1:04</span>
+  <input type="range" id="seek" min="0" max="75.5" step="0.01" value="0" aria-label="Vreme">
+  <span class="time" id="time">0:00 / 1:15</span>
   <button id="b-full" aria-label="Ceo ekran"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg></button>
 </div>
 
@@ -43,7 +43,7 @@ canvas{display:block;box-shadow:0 30px 90px rgba(0,0,0,.5);cursor:pointer}
    funkcije render(t), pa pauza i premotavanje rade u svakom trenutku.
    Parametri: ?t=12 (početak), ?pause=1, ?loop=1 (za ekrane u holu)
    ═══════════════════════════════════════════════════════════════════ */
-const W = 1600, H = 900, DUR = 64;
+const W = 1600, H = 900, DUR = 75.5;
 /* Vremenska mapa: prava sekunda -> sekunda koreografije. Delovi u kojima
    publika čita teče sporije, pa tekst ostaje duže na ekranu. */
 const WARP = [
@@ -52,8 +52,9 @@ const WARP = [
   [22.6, 17.3], [25.6, 17.6], [26.2, 18.2],                    // jedan sken
   [33.5, 25.2], [34.3, 25.7], [38.3, 28.0], [39.4, 29.4],      // mreža
   [44.5, 34.2], [49.5, 37.6], [50.1, 38.2],                    // svi zarađuju
-  [55.0, 41.9], [57.5, 42.4], [58.0, 42.9],                    // ostanite večeras
-  [61.0, 44.5], [64.0, 45.0],                                  // kraj
+  [56.5, 42.6], [61.0, 44.6], [61.6, 45.2],                    // rast zarade
+  [66.5, 48.9], [69.0, 49.4], [69.5, 49.9],                    // ostanite večeras
+  [72.5, 51.5], [75.5, 52.0],                                  // kraj
 ];
 function warp(t) {
   for (let i = 1; i < WARP.length; i++) {
@@ -162,6 +163,56 @@ function coin(x, y, r, a = 1) {
   ctx.strokeStyle = 'rgba(122,84,24,.75)'; ctx.lineWidth = Math.max(1, r * .12);
   ctx.beginPath(); ctx.arc(x, y, r * .68, 0, Math.PI * 2); ctx.stroke();
   ctx.restore();
+}
+
+// ── Krive i grafici ────────────────────────────────────────────────
+function mkCurve(f, x0, x1, yBase, yTop, n = 28) {
+  return Array.from({ length: n }, (_, i) => { const u = i / (n - 1); return [lerp(x0, x1, u), yBase - f(u) * (yBase - yTop)]; });
+}
+function curvePath(pts) {
+  ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length - 1; i++) {
+    ctx.quadraticCurveTo(pts[i][0], pts[i][1], (pts[i][0] + pts[i + 1][0]) / 2, (pts[i][1] + pts[i + 1][1]) / 2);
+  }
+  const l = pts[pts.length - 1]; ctx.lineTo(l[0], l[1]);
+}
+function yAt(pts, x) {
+  for (let i = 1; i < pts.length; i++) if (x <= pts[i][0]) {
+    const k = (x - pts[i - 1][0]) / (pts[i][0] - pts[i - 1][0]);
+    return [x, lerp(pts[i - 1][1], pts[i][1], k)];
+  }
+  return pts[pts.length - 1];
+}
+// crta krivu do udela k (0–1) sa svetlom ispunom ispod; vraća tačku na vrhu
+function drawCurve(pts, k, col, o = {}) {
+  const { width = 3, fill = true, base = H, glow = true } = o;
+  const x0 = pts[0][0], x1 = pts[pts.length - 1][0], xc = x0 + (x1 - x0) * clamp(k);
+  if (k <= 0) return [x0, pts[0][1]];
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x0 - 30, -10, xc - x0 + 30, H + 20); ctx.clip();
+  if (fill) {
+    curvePath(pts); ctx.lineTo(x1, base); ctx.lineTo(x0, base); ctx.closePath();
+    const top = Math.min(...pts.map(p => p[1]));
+    const g = ctx.createLinearGradient(0, top, 0, base);
+    g.addColorStop(0, rgba(col, .26)); g.addColorStop(1, rgba(col, 0));
+    ctx.fillStyle = g; ctx.fill();
+  }
+  curvePath(pts);
+  ctx.strokeStyle = col; ctx.lineWidth = width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  if (glow) { ctx.shadowColor = col; ctx.shadowBlur = 12; }
+  ctx.stroke();
+  ctx.restore();
+  return yAt(pts, xc);
+}
+function pill(s, x, y, col, a = 1, align = 'left') {
+  if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha *= a;
+  ctx.font = font(14, false, 700);
+  const w = ctx.measureText(s).width + 24, xx = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
+  rr(xx, y - 15, w, 30, 15); ctx.fillStyle = rgba(col, .14); ctx.fill();
+  ctx.strokeStyle = rgba(col, .5); ctx.lineWidth = 1.2; ctx.stroke();
+  ctx.restore();
+  txt(s, xx + w / 2, y + 5, { size: 14, weight: 700, color: col, align: 'center', a });
 }
 
 // ── Ikonice (crtane linijom, centrirane) ────────────────────────────
@@ -379,6 +430,29 @@ function scene2(t) {
     ctx.restore();
     txt('Gost', g.x, g.y - 34, { size: 18, align: 'center', color: ON, a: ga, weight: 600 });
   }
+  // grafik: potrošnja u gradu raste, prihod smeštaja stoji
+  const ck = eo(seg(t, 6.2, 6.9));
+  if (ck > 0) {
+    ctx.save(); ctx.globalAlpha *= ck;
+    rr(1020, 66, 490, 236, 22); ctx.fillStyle = 'rgba(255,255,255,.04)'; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.08)'; ctx.lineWidth = 1.5; ctx.stroke();
+    for (let g = 0; g < 4; g++) { ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.beginPath(); ctx.moveTo(1050, 140 + g * 36); ctx.lineTo(1480, 140 + g * 36); ctx.stroke(); }
+    ctx.restore();
+    txt('JEDAN DAN GOSTA', 1050, 106, { size: 14, color: ON2, ls: 2.5, weight: 700, a: ck });
+    const spend = tt => S2.legs.reduce((acc, L) => acc + eo(seg(tt, L.b - .1, L.b + .6)), 0) / 3;
+    const T0 = 6.4, T1 = 10.8, upto = clamp((t - T0) / (T1 - T0));
+    const ptsC = [], ptsH = [];
+    for (let j = 0; j <= 60; j++) {
+      const u = j / 60, tt = lerp(T0, T1, u);
+      ptsC.push([lerp(1050, 1400, u), 248 - spend(tt) * 112]);
+      ptsH.push([lerp(1050, 1400, u), 248]);
+    }
+    const e1 = drawCurve(ptsC, upto, GOLD, { width: 3, base: 248 });
+    const e2 = drawCurve(ptsH, upto, TERRA, { width: 3, fill: false });
+    if (upto > 0) { glowDot(e1[0], e1[1], 5, GOLD, ck, 14); glowDot(e2[0], e2[1], 5, TERRA, ck, 14); }
+    txt('Potrošnja u gradu', 1050, 286, { size: 15, color: GOLD, weight: 600, a: ck });
+    txt('Prihod smeštaja', 1250, 286, { size: 15, color: TERRA, weight: 600, a: ck });
+  }
   // brojač hotela
   const km = eo(seg(t, 8.6, 9.3));
   ctx.save(); ctx.globalAlpha *= km;
@@ -541,8 +615,8 @@ const NET = (() => {
     const x = HUB.x + Math.cos(a) * 650 * d, y = HUB.y + Math.sin(a) * 300 * d;
     if (Math.hypot((x - HUB.x) / 1.6, y - HUB.y) < 95) continue;
     if (x < 860 && y < 265) continue;          // naslov
-    if (x < 640 && y > 690) continue;          // brojač
-    if (x > 660 && y > 760) continue;          // legenda
+    if (x < 900 && y > 680) continue;          // brojači i kriva
+    if (x > 1290 && y > 620) continue;         // legenda
     if (x < 60 || x > W - 60 || y < 130 || y > H - 60) continue;
     if (nodes.some(n => Math.hypot(n.x - x, n.y - y) < 78)) continue;
     nodes.push({ x, y, type: types[Math.floor(r() * types.length)], ph: r() });
@@ -621,10 +695,19 @@ function drawNetwork(t, alpha, opt = {}) {
     txt('→', 255, 800, { size: 40, color: ON2, a: ck });
     txt('MOGUĆIH VEZA', 320, 742, { size: 15, color: ON2, ls: 2.5, weight: 600, a: ck });
     txt(links.toLocaleString('sr-RS'), 320, 812, { size: 64, weight: 700, color: GOLD, a: ck });
+    // kriva: vrednost mreže raste brže od broja partnera
+    txt('RAST VREDNOSTI', 560, 742, { size: 15, color: ON2, ls: 2.5, weight: 600, a: ck });
+    ctx.save(); ctx.globalAlpha *= ck;
+    ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(560, 760); ctx.lineTo(560, 830); ctx.lineTo(870, 830); ctx.stroke();
+    const vp = mkCurve(u => u * u, 562, 866, 830, 764, 30);
+    const ve = drawCurve(vp, n / nodes.length, GOLD, { width: 3, base: 830 });
+    if (n > 0) glowDot(ve[0], ve[1], 6, GOLD, 1, 16);
+    ctx.restore();
     // legenda
     ['H', 'R', 'A', 'E'].forEach((ty, i) => {
       const lk = eo(seg(t, 19.6 + i * .15, 20.2 + i * .15));
-      const lx = [700, 905, 1110, 1265][i], ly = 812;
+      const lx = 1320, ly = 668 + i * 38;
       glowDot(lx, ly - 6, 7, TYPE[ty].col, lk, 10);
       txt(TYPE[ty].label, lx + 18, ly, { size: 18, color: ON2, a: lk });
     });
@@ -664,7 +747,7 @@ function scene5(t) {
   txt('Svi zarađuju.', 800, 168 + (1 - k0) * 20, { size: 84, serif: true, align: 'center', a: k0 });
   const k1 = eo(seg(t, 29.9, 30.6));
   txt('Svako dobija ono što mu je najvrednije.', 800, 222, { size: 26, align: 'center', color: ON2, a: k1 });
-  const x0 = 95, cw = 330, gap = 30, y0 = 258, ch = 474;
+  const x0 = 95, cw = 330, gap = 30, y0 = 258, ch = 490;
   CARDS.forEach((c, i) => {
     const st = 30.3 + i * .42;
     const k = eo(seg(t, st, st + .7));
@@ -685,10 +768,10 @@ function scene5(t) {
       coin(x + cw - 54, y + 68 - eo(ek) * 10 + bob, 18, eo(ek));
       txt('+', x + cw - 84, y + 60 - eo(ek) * 10 + bob, { size: 26, color: GOLD, a: eo(ek), weight: 700, align: 'center' });
     }
-    let yy = y + 205;
+    let yy = y + 200;
     c.items.forEach((it, j) => {
       const bk = eo(seg(t, st + .55 + j * .3, st + 1 + j * .3));
-      const lines = wrapLines(it, cw - 86, 20, false, 500);
+      const lines = wrapLines(it, cw - 86, 19, false, 500);
       ctx.save(); ctx.globalAlpha *= bk;
       ctx.fillStyle = rgba(col, .18); ctx.beginPath(); ctx.arc(x + 42, yy - 7, 14, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = col; ctx.lineWidth = 2.6; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -698,9 +781,16 @@ function scene5(t) {
       else { ctx.lineTo(x + 40, yy - 2); ctx.lineTo(x + 40 + 9 * (ck - .4) / .6, yy - 2 - 11 * (ck - .4) / .6); }
       ctx.stroke();
       ctx.restore();
-      lines.forEach((ln, li) => txt(ln, x + 68, yy + li * 26, { size: 20, a: bk }));
-      yy += 30 + lines.length * 26;
+      lines.forEach((ln, li) => txt(ln, x + 68, yy + li * 24, { size: 19, a: bk }));
+      yy += 22 + lines.length * 24;
     });
+    // kriva rasta u dnu kartice
+    const sk = eio(seg(t, st + 1.5, st + 2.7));
+    if (sk > 0) {
+      const sp = mkCurve(u => .1 + .82 * Math.pow(u, 1.7) + .035 * Math.sin(u * 9 + i * 1.7), x + 28, x + cw - 28, y + ch - 22, y + ch - 76, 26);
+      const se = drawCurve(sp, sk, col, { width: 2.6, base: y + ch - 22 });
+      glowDot(se[0], se[1], 4.5, col, 1, 12);
+    }
     ctx.restore();
   });
   // novac kruži kroz grad
@@ -708,14 +798,60 @@ function scene5(t) {
   if (fk > 0) {
     ctx.save(); ctx.globalAlpha *= fk;
     ctx.strokeStyle = 'rgba(226,191,124,.25)'; ctx.lineWidth = 2; ctx.setLineDash([3, 10]);
-    ctx.beginPath(); ctx.moveTo(x0, 768); ctx.lineTo(x0 + 4 * cw + 3 * gap, 768); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(x0, 782); ctx.lineTo(x0 + 4 * cw + 3 * gap, 782); ctx.stroke(); ctx.setLineDash([]);
     for (let i = 0; i < 16; i++) {
       const u = frac(i / 16 + t * .07);
-      coin(x0 + u * (4 * cw + 3 * gap), 768 + Math.sin(u * Math.PI * 8 + i) * 4, 9, Math.sin(u * Math.PI));
+      coin(x0 + u * (4 * cw + 3 * gap), 782 + Math.sin(u * Math.PI * 8 + i) * 4, 9, Math.sin(u * Math.PI));
     }
     ctx.restore();
-    txt('Novac ostaje u gradu i kruži među partnerima.', 800, 815, { size: 26, align: 'center', color: GOLD, a: eo(seg(t, 33.5, 34.2)), weight: 600 });
+    txt('Novac ostaje u gradu i kruži među partnerima.', 800, 830, { size: 26, align: 'center', color: GOLD, a: eo(seg(t, 33.5, 34.2)), weight: 600 });
   }
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SCENA 5b · rast zarade po vrstama partnera (ilustracija)
+// ═══════════════════════════════════════════════════════════════════
+function sceneGrowth(t) {
+  const a = vis(t, 38.2, 45.2, .6, .6);
+  if (!a) return;
+  ctx.save(); ctx.globalAlpha = a;
+  const k0 = eo(seg(t, 38.3, 39.0));
+  txt('RAST', 110, 112, { size: 16, color: GOLD, ls: 3.5, weight: 700, a: k0 });
+  txt('Što je mreža veća, svi zarađuju više.', 110, 172 + (1 - k0) * 14, { size: 52, serif: true, a: k0 });
+  const X0 = 150, X1 = 1320, Y0 = 720, Y1 = 290;
+  const gk = eo(seg(t, 38.6, 39.3));
+  ctx.save(); ctx.globalAlpha *= gk;
+  for (let g = 0; g <= 4; g++) {
+    const y = lerp(Y0, Y1, g / 4);
+    ctx.strokeStyle = g === 0 ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.07)'; ctx.lineWidth = g === 0 ? 2 : 1;
+    ctx.beginPath(); ctx.moveTo(X0, y); ctx.lineTo(X1, y); ctx.stroke();
+  }
+  ctx.restore();
+  txt('Zarada partnera', X0, Y1 - 30, { size: 17, color: ON2, weight: 600, a: gk });
+  pill('Ilustracija', X1, Y1 - 36, ON2, gk, 'right');
+  [1, 3, 6, 9, 12].forEach(m => txt(m + '. mesec', lerp(X0, X1, (m - 1) / 11), Y0 + 36, { size: 16, color: ON2, align: 'center', a: gk }));
+  // prekretnice
+  [[4, 'Novi partneri u mreži', 40.0], [8, 'Ostanite večeras', 40.8]].forEach(([m, label, at]) => {
+    const mk = eo(seg(t, at, at + .6)), x = lerp(X0, X1, (m - 1) / 11);
+    if (mk <= 0) return;
+    ctx.save(); ctx.globalAlpha *= mk; ctx.setLineDash([3, 8]); ctx.strokeStyle = 'rgba(226,191,124,.45)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x, Y0); ctx.lineTo(x, Y1 + 30); ctx.stroke(); ctx.restore();
+    pill(label, x, Y1 + 14, GOLD, mk, 'center');
+  });
+  const series = [
+    { col: GOLD, label: 'Smeštaj', f: u => .08 + .8 * Math.pow(u, 1.55) },
+    { col: TERRA, label: 'Restorani', f: u => .06 + .6 * Math.pow(u, 1.45) },
+    { col: SAGE, label: 'Atrakcije', f: u => .05 + .46 * Math.pow(u, 1.35) },
+  ];
+  series.forEach((sr, i) => {
+    const ck = eio(seg(t, 39.1 + i * .25, 42.0 + i * .25));
+    const pts = mkCurve(u => sr.f(u) + .022 * Math.sin(u * 11 + i * 2), X0, X1, Y0, Y1 + 40, 34);
+    const e = drawCurve(pts, ck, sr.col, { width: 3.5, base: Y0 });
+    if (ck > 0) glowDot(e[0], e[1], 7, sr.col, 1, 18);
+    txt(sr.label, X1 + 22, e[1] + 7, { size: 22, color: sr.col, weight: 700, a: eo(seg(t, 41.9 + i * .25, 42.5 + i * .25)) });
+  });
+  txt('Svaki novi partner dovodi goste svima ostalima.', 800, 812, { size: 26, align: 'center', color: GOLD, weight: 600, a: eo(seg(t, 42.6, 43.2)) });
   ctx.restore();
 }
 
@@ -805,6 +941,20 @@ function scene6(t) {
     gr.addColorStop(0, `rgba(246,201,138,${.35 * light})`); gr.addColorStop(1, 'rgba(246,201,138,0)');
     ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(hx, hy, 190, 0, Math.PI * 2); ctx.fill();
   }
+  // popunjenost smeštaja: današnji stub skoči kad se gost smesti
+  const ok = eo(seg(t, 38.8, 39.4));
+  if (ok > 0) {
+    const bx = 1160, by = 470, bw = 34, gb = 12;
+    txt('POPUNJENOST SMEŠTAJA', bx, 334, { size: 14, color: ON2, ls: 2, weight: 700, a: ok });
+    ['Pon', 'Uto', 'Sre', 'Čet', 'Pet', 'Sub', 'Danas'].forEach((d, i) => {
+      const h = i < 6 ? [.52, .46, .5, .6, .78, .9][i] : .26 + .64 * light;
+      const x = bx + i * (bw + gb), hh = 112 * h * ok;
+      ctx.save(); ctx.globalAlpha *= ok;
+      rr(x, by - hh, bw, hh, 6); ctx.fillStyle = i < 6 ? 'rgba(244,241,234,.22)' : 'rgba(226,191,124,.92)'; ctx.fill();
+      ctx.restore();
+      txt(d, x + bw / 2, by + 22, { size: 13, align: 'center', color: i < 6 ? ON2 : GOLD, a: ok, weight: i < 6 ? 500 : 700 });
+    });
+  }
   iconHouse(hx, hy, 120, GOLD, light);
   txt('Slobodna soba', hx, hy + 110, { size: 20, align: 'center', color: ON2 });
   // tekst
@@ -822,6 +972,12 @@ function scene7(t) {
   const a = eo(seg(t, 42.8, 43.5));
   if (!a) return;
   ctx.save(); ctx.globalAlpha = a;
+  const rk = eio(seg(t, 42.9, 44.4));
+  const rp = mkCurve(u => .06 + .8 * Math.pow(u, 1.9) + .015 * Math.sin(u * 14), 0, W, 880, 110, 36);
+  ctx.save(); ctx.globalAlpha *= .6;
+  const re = drawCurve(rp, rk, GOLD, { width: 4, base: H });
+  ctx.restore();
+  if (rk > 0) glowDot(re[0], re[1], 8, GOLD, .9, 24);
   const gr = ctx.createRadialGradient(800, 450, 0, 800, 450, 520);
   gr.addColorStop(0, 'rgba(22,34,46,.92)'); gr.addColorStop(1, 'rgba(22,34,46,0)');
   ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
@@ -830,9 +986,9 @@ function scene7(t) {
   const k2 = eo(seg(t, 43.4, 44.1));
   ctx.strokeStyle = GOLD; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.moveTo(800 - 170 * k2, 492); ctx.lineTo(800 + 170 * k2, 492); ctx.stroke();
-  txt('Neka svaki gost u gradu zarađuje i za vas.', 800, 562, { size: 46, serif: true, align: 'center', a: k2 });
+  txt('Uđite u mrežu. Zarađujte od celog grada.', 800, 562, { size: 50, serif: true, align: 'center', a: k2 });
   const k3 = eo(seg(t, 43.9, 44.5));
-  txt('Postanite partner već danas   ·   vb.staytag.rs', 800, 632, { size: 26, align: 'center', color: GOLD, a: k3, weight: 600, ls: .5 });
+  txt('Postanite partner StayVB-a već danas.', 800, 632, { size: 27, align: 'center', color: GOLD, a: k3, weight: 600, ls: .3 });
   ctx.restore();
 }
 
@@ -850,9 +1006,11 @@ function render(real) {
   scene4(t);
   drawNetwork(t, .16 * vis(t, 29.2, 38.4, .6, .6), { hub: false });
   scene5(t);
-  drawNetwork(t, .32 * eo(seg(t, 42.8, 43.8)), { hub: false });
-  scene6(t);
-  scene7(t);
+  sceneGrowth(t);
+  const t2 = t - 7;   // scene posle grafika rasta zadržavaju svoja vremena
+  drawNetwork(t2, .32 * eo(seg(t2, 42.8, 43.8)), { hub: false });
+  scene6(t2);
+  scene7(t2);
   // vinjeta
   const v = ctx.createRadialGradient(800, 450, 380, 800, 450, 980);
   v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.35)');
