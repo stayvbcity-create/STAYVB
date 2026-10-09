@@ -73,7 +73,10 @@ const TYPE = {
 };
 
 const cv = document.getElementById('cv');
-const ctx = cv.getContext('2d');
+const mainCtx = cv.getContext('2d');
+let ctx = mainCtx;   // scene crtaju u svoj sloj, pa se sloj sa kamerom prenosi na ekran
+const layer = document.createElement('canvas');
+const lctx = layer.getContext('2d');
 let scale = 1, dpr = 1;
 
 // ── Pomoćne funkcije ───────────────────────────────────────────────
@@ -995,26 +998,135 @@ function scene7(t) {
 // ═══════════════════════════════════════════════════════════════════
 // RENDER + KONTROLE
 // ═══════════════════════════════════════════════════════════════════
+// ── Filmski prelazi: kamera, zamućenje u pokretu, odsjaj svetla, zrno ──
+// Svaka scena ima svoj ulaz i izlaz; pokret traje koliko i njeno pretapanje.
+const SCENES = [
+  { f: t => scene1(t), a: 0, b: 5.6, inD: .8, outD: .7, inT: 'none', outT: 'through' },
+  { f: t => scene2(t), a: 5.6, b: 11.6, inD: .8, outD: .6, inT: 'zoomin', outT: 'left' },
+  { f: t => scene3(t), a: 11.6, b: 18.2, inD: .8, outD: .6, inT: 'right', outT: 'phone' },
+  { f: t => scene4(t), a: 18.2, b: 29.4, inD: .8, outD: .7, inT: 'outofphone', outT: 'recede' },
+  { f: t => { drawNetwork(t, .16 * vis(t, 29.2, 38.4, .6, .6), { hub: false }); scene5(t); },
+    a: 29.2, b: 38.4, inD: .8, outD: .8, inT: 'rise', outT: 'upout' },
+  { f: t => sceneGrowth(t), a: 38.2, b: 45.2, inD: .8, outD: .6, inT: 'fromdown', outT: 'through' },
+  { f: t => scene6(t - 7), a: 45.2, b: 49.9, inD: .8, outD: .5, inT: 'zoomin', outT: 'none' },
+  { f: t => { const t2 = t - 7; drawNetwork(t2, .32 * eo(seg(t2, 42.8, 43.8)), { hub: false }); scene7(t2); },
+    a: 49.8, b: 999, inD: 1.2, outD: 0, inT: 'pullback', outT: 'none' },
+];
+const CUTS = [5.6, 11.6, 18.2, 29.3, 38.2, 45.2, 49.85];
+const CAN_BLUR = 'filter' in ctx;
+
+function withCamera(sc, t) {
+  const tail = sc.outD * .6;
+  if (t < sc.a || t > sc.b + tail) return;
+  // scena koja odlazi se "zamrzne" pre svog pretapanja i ostaje cela dok je kamera nosi,
+  // a nova scena već ulazi preko nje — kao rez u filmu
+  const tf = sc.outD ? Math.min(t, sc.b - sc.outD - .02) : t;
+  const kin = 1 - eo(seg(t, sc.a, sc.a + sc.inD));
+  const kout = sc.outD ? eio(seg(t, sc.b - tail, sc.b + tail)) : 0;
+  let s = 1 + .035 * seg(t, sc.a, Math.min(sc.b, sc.a + 14)), x = 0, y = 0, blur = 0;
+  let cx = 800, cy = 450, shift = 0;
+  switch (sc.inT) {
+    case 'zoomin': s *= 1 + .18 * kin; blur += 12 * kin; break;
+    case 'outofphone': s *= 1 + .35 * kin; blur += 14 * kin; break;
+    case 'right': x += 560 * kin; blur += 16 * kin; break;
+    case 'rise': y += 160 * kin; blur += 8 * kin; break;
+    case 'fromdown': y += 460 * kin; blur += 16 * kin; break;
+    case 'pullback': s *= 1 + .14 * kin; blur += 8 * kin; break;
+  }
+  switch (sc.outT) {
+    case 'through': s *= 1 + .7 * kout * kout; blur += 18 * kout; break;
+    case 'left': x -= 640 * kout; blur += 18 * kout; break;
+    case 'phone': cx = 520; cy = 470; shift = kout; s *= 1 + 2.6 * kout * kout; blur += 8 * kout; break;
+    case 'recede': s *= 1 - .16 * kout; blur += 10 * kout; break;
+    case 'upout': y -= 520 * kout; blur += 18 * kout; break;
+  }
+  const alpha = 1 - kout * kout;
+  if (alpha <= .01) return;
+  const S = scale * dpr;
+  // 1) scena u svoj sloj
+  lctx.setTransform(1, 0, 0, 1, 0, 0);
+  lctx.clearRect(0, 0, layer.width, layer.height);
+  lctx.setTransform(S, 0, 0, S, 0, 0);
+  lctx.globalAlpha = 1;
+  ctx = lctx;
+  try { sc.f(tf); } finally { ctx = mainCtx; }
+  // 2) sloj na ekran, sa pokretom kamere i zamućenjem
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = alpha;
+  ctx.translate((lerp(cx, 800, shift) + x) * S, (lerp(cy, 450, shift) + y) * S);
+  ctx.scale(s, s);
+  ctx.translate(-cx * S, -cy * S);
+  if (CAN_BLUR && blur > .4) ctx.filter = `blur(${(blur * S).toFixed(1)}px)`;
+  ctx.drawImage(layer, 0, 0);
+  ctx.restore();
+}
+
+// zlatni odsjaj svetla koji prelazi preko ekrana pri rezu
+function lightSweep(t, at) {
+  const k = seg(t, at - .45, at + .55);
+  if (k <= 0 || k >= 1) return;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = `rgba(226,191,124,${.10 * Math.sin(k * Math.PI)})`;
+  ctx.fillRect(0, 0, W, H);
+  ctx.translate(800, 450); ctx.rotate(-.42); ctx.translate(-800, -450);
+  const bx = lerp(-700, W + 700, eio(k));
+  const g = ctx.createLinearGradient(bx - 320, 0, bx + 320, 0);
+  g.addColorStop(0, 'rgba(255,214,150,0)');
+  g.addColorStop(.42, 'rgba(255,214,150,.20)');
+  g.addColorStop(.5, 'rgba(255,248,232,.34)');
+  g.addColorStop(.58, 'rgba(255,214,150,.20)');
+  g.addColorStop(1, 'rgba(255,214,150,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(bx - 320, -600, 640, H + 1200);
+  ctx.restore();
+}
+
+// filmsko zrno: nekoliko unapred napravljenih pločica šuma
+const GRAIN = (() => {
+  const r = rng(99), tiles = [];
+  for (let n = 0; n < 4; n++) {
+    const c = document.createElement('canvas'); c.width = c.height = 180;
+    const g = c.getContext('2d'), img = g.createImageData(180, 180);
+    for (let i = 0; i < img.data.length; i += 4) {
+      const v = Math.floor(r() * 255);
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+    tiles.push(c);
+  }
+  return tiles;
+})();
+let grainPatterns = null;
+function grain(real) {
+  if (!grainPatterns) grainPatterns = GRAIN.map(c => ctx.createPattern(c, 'repeat'));
+  const i = Math.floor(real * 24) % grainPatterns.length;
+  ctx.save();
+  ctx.globalAlpha = .045;
+  ctx.globalCompositeOperation = 'overlay';
+  ctx.translate((i * 37) % 180, (i * 61) % 180);
+  ctx.fillStyle = grainPatterns[i];
+  ctx.fillRect(-180, -180, W + 360, H + 360);
+  ctx.restore();
+}
+
 function render(real) {
   ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
   ctx.globalAlpha = 1;
+  ctx.filter = 'none';
   background(real);
   const t = warp(real);
-  scene1(t);
-  scene2(t);
-  scene3(t);
-  scene4(t);
-  drawNetwork(t, .16 * vis(t, 29.2, 38.4, .6, .6), { hub: false });
-  scene5(t);
-  sceneGrowth(t);
-  const t2 = t - 7;   // scene posle grafika rasta zadržavaju svoja vremena
-  drawNetwork(t2, .32 * eo(seg(t2, 42.8, 43.8)), { hub: false });
-  scene6(t2);
-  scene7(t2);
+  for (const sc of SCENES) withCamera(sc, t);
+  for (const c of CUTS) lightSweep(t, c);
   // vinjeta
   const v = ctx.createRadialGradient(800, 450, 380, 800, 450, 980);
-  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.35)');
+  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.38)');
   ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+  grain(real);
+  // otvaranje iz crnog
+  const fade = 1 - eo(seg(real, 0, 1.1));
+  if (fade > 0) { ctx.fillStyle = `rgba(5,8,11,${fade})`; ctx.fillRect(0, 0, W, H); }
 }
 
 function resize() {
@@ -1023,6 +1135,7 @@ function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
   cv.style.width = cw + 'px'; cv.style.height = ch + 'px';
   cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr);
+  layer.width = cv.width; layer.height = cv.height;
   scale = s;
 }
 addEventListener('resize', resize);
@@ -1031,6 +1144,7 @@ resize();
 const qs = new URLSearchParams(location.search);
 const LOOP = qs.get('loop') === '1';
 let t = clamp(parseFloat(qs.get('t')) || 0, 0, DUR), playing = false, last = null, hideTimer = null;
+let drawnAt = -1, drawnScale = 0;
 const bar = document.getElementById('bar'), seek = document.getElementById('seek'), timeEl = document.getElementById('time');
 const bPlay = document.getElementById('b-play');
 const ICON_PLAY = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>';
@@ -1056,7 +1170,8 @@ function frame(now) {
       if (LOOP) t = 0; else { t = DUR; setPlaying(false); }
     }
   }
-  render(t);
+  // u pauzi se crta samo kad se nešto promeni (premotavanje, veličina ekrana)
+  if (playing || t !== drawnAt || drawnScale !== scale) { render(t); drawnAt = t; drawnScale = scale; }
   seek.value = t;
   timeEl.textContent = fmt(t) + ' / ' + fmt(DUR);
   requestAnimationFrame(frame);
